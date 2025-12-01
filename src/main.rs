@@ -1,11 +1,12 @@
 use clap::{ArgAction, Parser};
+use derive_debug::Dbg;
 use glam::{Vec2, Vec3, Vec4};
+use std::io::Result as ioResult;
 use std::{
     io,
     path::{Path, PathBuf},
 };
 use walkdir::WalkDir;
-use derive_debug::Dbg;
 
 mod error;
 mod fields;
@@ -13,6 +14,7 @@ mod logging;
 mod parser;
 mod types;
 
+use fields::animation::*;
 use parser::*;
 use types::*;
 

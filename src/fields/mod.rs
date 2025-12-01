@@ -3,4 +3,4 @@ pub mod sequence;
 pub mod globalseq;
 pub mod texture;
 pub mod material;
-// pub mod animation;
+pub mod animation;

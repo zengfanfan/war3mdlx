@@ -1,5 +1,5 @@
 use crate::*;
-use byteorder::{BigEndian,LittleEndian, ReadBytesExt};
+use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use derive_debug::Dbg;
 use std::io::{Cursor, Read};
 
@@ -21,8 +21,8 @@ pub struct Layer {
     #[dbg(skip)]
     pub unknown_1: u32,
     pub alpha: f32,
-    // pub alpha_anim: Animation<f32>,
-    // pub texid_anim: Animation<f32>,
+    pub alpha_anim: Option<Animation<f32>>,
+    pub texid_anim: Option<Animation<i32>>,
 }
 
 impl Material {
@@ -44,11 +44,11 @@ impl Material {
         this.priority_plane = cur.read_u32::<LittleEndian>()?;
         this.flags = cur.read_u32::<LittleEndian>()?;
 
-        let anim_len = cur.get_ref().len() as u64 - cur.position();
-        if anim_len>8 && cur.read_u32::<BigEndian>()? == Layer::ID {
+        let layers_len = cur.get_ref().len() as u64 - cur.position();
+        if layers_len > 8 && cur.read_u32::<BigEndian>()? == Layer::ID {
             let count = cur.read_i32::<LittleEndian>()?;
             for _ in 0..count {
-                let sz = cur.read_u32::<LittleEndian>()? -4;
+                let sz = cur.read_u32::<LittleEndian>()? - 4;
                 let mut body = vec![0u8; sz as usize];
                 cur.read_exact(&mut body)?;
                 let mut cur2 = Cursor::new(&body);
@@ -65,8 +65,23 @@ impl Layer {
     pub const ID_ALPHA: u32 = MdlxMagic::KMTA as u32;
     pub const ID_TEXID: u32 = MdlxMagic::KMTF as u32;
 
-    pub fn xxx(&self) -> bool {
+    pub fn unshaded(&self) -> bool {
         return self.flags & 0x1 != 0;
+    }
+    pub fn sphere_env_map(&self) -> bool {
+        return self.flags & 0x2 != 0;
+    }
+    pub fn two_sided(&self) -> bool {
+        return self.flags & 0x10 != 0;
+    }
+    pub fn unfogged(&self) -> bool {
+        return self.flags & 0x20 != 0;
+    }
+    pub fn no_depth_test(&self) -> bool {
+        return self.flags & 0x40 != 0;
+    }
+    pub fn no_depth_set(&self) -> bool {
+        return self.flags & 0x80 != 0;
     }
 
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
@@ -89,20 +104,15 @@ impl Layer {
         this.unknown_1 = cur.read_u32::<LittleEndian>()?;
         this.alpha = cur.read_f32::<LittleEndian>()?;
 
-        while cur.position() < cur.get_ref().len() as u64 {
+        while cur.position() + 16 < cur.get_ref().len() as u64 {
             let id = cur.read_u32::<BigEndian>()?;
-            let kfn = cur.read_i32::<LittleEndian>()?;
-
-            // is intan/outtan always there? [?]
-
-            // let chunk = MdlxChunk::parse_mdx(cur)?;
-            // if chunk.id == Layer::ID_ALPHA {
-            //     let mut _cur = Cursor::new(&chunk.body);
-            //         this.alpha_anim = Animation<f32>::parse_mdx(&mut _cur)?;
-            // } else if chunk.id == Layer::ID_ALPHA {
-            //     let mut _cur = Cursor::new(&chunk.body);
-            //         this.texid_anim = Animation<f32>::parse_mdx(&mut _cur)?;
-            // }
+            if id == Layer::ID_ALPHA {
+                this.alpha_anim = Some(Animation::parse_mdx(cur, id)?);
+            } else if id == Layer::ID_TEXID {
+                this.texid_anim = Some(Animation::parse_mdx(cur, id)?);
+            } else {
+                return Err(MyError::String("Unknown animation type".to_string()));
+            }
         }
 
         return Ok(this);
