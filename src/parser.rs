@@ -1,7 +1,9 @@
 use crate::*;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use error::MyError;
+use fields::globalseq::GlobalSequence;
 use fields::model::Model;
+use fields::sequence::Sequence;
 use std::io::{Cursor, Read};
 use std::path::Path;
 
@@ -104,10 +106,13 @@ pub enum MdlxMagic {
     KRTX = 0x4B525458, /* Ribbon Emitter TextureSlot */
 }
 
-#[derive(Debug, Default)]
+#[derive(Dbg, Default)]
 pub struct MdlxData {
     version: u32,
     model: Model,
+    sequences: Vec<Sequence>,
+    #[dbg(fmt = "{:?}")] // compact
+    globalseqs: Vec<u32>,
 }
 
 pub struct MdlxChunk {
@@ -184,6 +189,14 @@ impl MdlxData {
             log!("version = {}", self.version);
         } else if chunk.id == Model::ID {
             self.model = Model::parse_mdx(&mut cur)?;
+        } else if chunk.id == Sequence::ID {
+            while cur.position() < cur.get_ref().len() as u64 {
+                self.sequences.push(Sequence::parse_mdx(&mut cur)?);
+            }
+        } else if chunk.id == GlobalSequence::ID {
+            while cur.position() < cur.get_ref().len() as u64 {
+                self.globalseqs.push(GlobalSequence::parse_mdx(&mut cur)?.duration);
+            }
         }
         return Ok(());
     }

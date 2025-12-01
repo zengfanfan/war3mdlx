@@ -5,6 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use walkdir::WalkDir;
+use derive_debug::Dbg;
 
 mod error;
 mod fields;
