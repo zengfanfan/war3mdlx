@@ -3,6 +3,7 @@ use std::sync::Mutex;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum LogLevel {
+    VeryVerbose,
     Verbose,
     Info,
     // Warn,
@@ -33,7 +34,16 @@ macro_rules! log {
 #[macro_export]
 macro_rules! vlog {
     ($($arg:tt)*) => {{
-        if logging::get_level() == logging::LogLevel::Verbose {
+        if logging::get_level() <= logging::LogLevel::Verbose {
+            println!($($arg)*);
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! vvlog {
+    ($($arg:tt)*) => {{
+        if logging::get_level() <= logging::LogLevel::VeryVerbose {
             println!($($arg)*);
         }
     }};

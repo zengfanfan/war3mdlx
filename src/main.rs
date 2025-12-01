@@ -1,11 +1,21 @@
-use clap::Parser;
+use clap::{ArgAction, Parser};
+use glam::{Vec2, Vec3, Vec4};
 use std::{
     io,
     path::{Path, PathBuf},
 };
 use walkdir::WalkDir;
 
+mod error;
+mod fields;
 mod logging;
+mod parser;
+mod types;
+
+use parser::*;
+use types::*;
+
+use crate::error::MyError;
 
 #[derive(Debug, Parser, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -26,20 +36,18 @@ struct Args {
     stop_on_error: bool,
     #[arg(long, short, help = "Do not print log messages")]
     quiet: bool,
-    #[arg(long, short, help = "Print verbose log messages")]
-    verbose: bool,
-    #[arg(
-        long,
-        short = 'd',
-        default_value_t = 255,
-        value_name = "0..255",
-        help = "Max depth of directory traversal"
-    )]
+    #[arg(long, short, action = ArgAction::Count, help = "Print verbose log messages (-vv very verbose)")]
+    verbose: u8,
+    #[arg(long, short = 'd', default_value_t = 255, value_name = "0..255", help = "Max depth of directory traversal")]
     max_depth: u8,
 }
 
 macro_rules! EXIT {
     () => {{
+        return Ok(());
+    }};
+    ($s:expr) => {{
+        eprintln!("{}", $s);
         return Ok(());
     }};
     ($($arg:tt)*) => {{
@@ -54,8 +62,12 @@ fn main() -> io::Result<()> {
 
     if args.quiet {
         logging::set_level(logging::LogLevel::Error);
-    } else if args.verbose {
-        logging::set_level(logging::LogLevel::Verbose);
+    } else {
+        match args.verbose {
+            1 => logging::set_level(logging::LogLevel::Verbose),
+            2.. => logging::set_level(logging::LogLevel::VeryVerbose),
+            _ => (),
+        }
     }
 
     if input.is_file() {
@@ -77,7 +89,12 @@ fn main() -> io::Result<()> {
             EXIT!();
         }
 
-        process_file(&input, &ouput, &args)?;
+        if let Err(e) = process_file(&input, &ouput) {
+            EXIT!(match e {
+                MyError::String(s) => s,
+                _ => format!("{:?}", e),
+            });
+        }
     } else if input.is_dir() {
         let mut ouput: Option<PathBuf> = None;
         if let Some(o) = &args.output {
@@ -89,11 +106,7 @@ fn main() -> io::Result<()> {
             }
         }
 
-        for entry in WalkDir::new(&input)
-            .max_depth(args.max_depth as usize + 1)
-            .into_iter()
-            .filter_map(|e| e.ok())
-        {
+        for entry in WalkDir::new(&input).max_depth(args.max_depth as usize + 1).into_iter().filter_map(|e| e.ok()) {
             let p = entry.path();
             if !p.is_file() {
                 continue;
@@ -123,7 +136,12 @@ fn main() -> io::Result<()> {
                 continue;
             }
 
-            process_file(p, &ofile, &_args)?;
+            if let Err(e) = process_file(p, &ofile) {
+                EXIT!(match e {
+                    MyError::String(s) => s,
+                    _ => format!("{:?}", e),
+                });
+            }
         }
     } else {
         EXIT!("Not a file or directory: {:?}", input);
@@ -159,8 +177,8 @@ fn check_output_file(output: &Path, args: &Args) -> Result<(), String> {
     return Ok(());
 }
 
-fn process_file(input: &Path, output: &Path, args: &Args) -> io::Result<()> {
-    dbg!(&args);
+fn process_file(input: &Path, output: &Path) -> Result<(), MyError> {
     log!("Converting {:?} -> {:?} ...", input, output);
-    return Ok(());
+    let data = MdlxData::read(input)?;
+    return data.write(output);
 }
