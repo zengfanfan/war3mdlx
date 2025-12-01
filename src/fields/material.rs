@@ -1,5 +1,4 @@
 use crate::*;
-use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use derive_debug::Dbg;
 use std::io::{Cursor, Read};
 
@@ -106,9 +105,9 @@ impl Layer {
 
         while cur.position() + 16 < cur.get_ref().len() as u64 {
             let id = cur.read_u32::<BigEndian>()?;
-            if id == Layer::ID_ALPHA {
+            if id == Self::ID_ALPHA {
                 this.alpha_anim = Some(Animation::parse_mdx(cur, id)?);
-            } else if id == Layer::ID_TEXID {
+            } else if id == Self::ID_TEXID {
                 this.texid_anim = Some(Animation::parse_mdx(cur, id)?);
             } else {
                 return Err(MyError::String("Unknown animation type".to_string()));

@@ -1,12 +1,11 @@
 use crate::*;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use error::MyError;
-use fields::globalseq::GlobalSequence;
-use fields::material::Material;
-use fields::model::Model;
-use fields::sequence::Sequence;
-use fields::texture::Texture;
-use std::io::{Cursor, Read};
+use fields::globalseq::*;
+use fields::material::*;
+use fields::model::*;
+use fields::sequence::*;
+use fields::texture::*;
 use std::path::Path;
 
 #[derive(Debug)]
@@ -117,6 +116,7 @@ pub struct MdlxData {
     globalseqs: Vec<u32>,
     textures: Vec<Texture>,
     materials: Vec<Material>,
+    texanims: Vec<TextureAnim>,
 }
 
 pub struct MdlxChunk {
@@ -129,8 +129,7 @@ impl MdlxChunk {
         let id = cur.read_u32::<BigEndian>()?;
         let sz = cur.read_u32::<LittleEndian>()?;
         vvlog!("chunk = 0x{:08X} ({}) [{}]", id, u32_to_ascii(id), sz);
-        let mut body = vec![0u8; sz as usize];
-        cur.read_exact(&mut body)?;
+        let body = cursor_read_bytes(cur, sz)?;
         return Ok(MdlxChunk { id, size: sz, body });
     }
 }
@@ -210,11 +209,17 @@ impl MdlxData {
             }
         } else if chunk.id == Material::ID {
             while cur.position() < cur.get_ref().len() as u64 {
-                let sz = cur.read_u32::<LittleEndian>()? -4;
-                let mut body = vec![0u8; sz as usize];
-                cur.read_exact(&mut body)?;
+                let sz = cur.read_u32::<LittleEndian>()? - 4;
+                let body = cursor_read_bytes(&mut cur, sz)?;
                 let mut cur2 = Cursor::new(&body);
                 self.materials.push(Material::parse_mdx(&mut cur2)?);
+            }
+        } else if chunk.id == TextureAnim::ID {
+            while cur.position() < cur.get_ref().len() as u64 {
+                let sz = cur.read_u32::<LittleEndian>()? - 4;
+                let body = cursor_read_bytes(&mut cur, sz)?;
+                let mut cur2 = Cursor::new(&body);
+                self.texanims.push(TextureAnim::parse_mdx(&mut cur2)?);
             }
         }
         return Ok(());

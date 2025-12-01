@@ -1,7 +1,9 @@
+use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use clap::{ArgAction, Parser};
 use derive_debug::Dbg;
 use glam::{Vec2, Vec3, Vec4};
 use std::io::Result as ioResult;
+use std::io::{Cursor, Read};
 use std::{
     io,
     path::{Path, PathBuf},
@@ -13,10 +15,12 @@ mod fields;
 mod logging;
 mod parser;
 mod types;
+mod util;
 
 use fields::animation::*;
 use parser::*;
 use types::*;
+use util::*;
 
 use crate::error::MyError;
 

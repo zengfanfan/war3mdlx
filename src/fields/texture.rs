@@ -1,7 +1,6 @@
 use crate::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 use derive_debug::Dbg;
-use std::io::{Cursor, Read};
 
 #[derive(Dbg, Default)]
 pub struct Texture {
@@ -37,6 +36,39 @@ impl Texture {
 
         this.unknown_1 = cur.read_u32::<LittleEndian>()?;
         this.flags = cur.read_u32::<LittleEndian>()?;
+        return Ok(this);
+    }
+}
+
+#[derive(Dbg, Default)]
+pub struct TextureAnim {
+    pub translation: Option<Animation<Vec3>>,
+    pub rotation: Option<Animation<Vec4>>,
+    pub scaling: Option<Animation<Vec3>>,
+}
+
+impl TextureAnim {
+    pub const ID: u32 = MdlxMagic::TXAN as u32;
+    pub const ID_T: u32 = MdlxMagic::KTAT as u32;
+    pub const ID_R: u32 = MdlxMagic::KTAR as u32;
+    pub const ID_S: u32 = MdlxMagic::KTAS as u32;
+
+    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+        let mut this = Self::default();
+
+        while cur.position() + 16 < cur.get_ref().len() as u64 {
+            let id = cur.read_u32::<BigEndian>()?;
+            if id == Self::ID_T {
+                this.translation = Some(Animation::parse_mdx(cur, id)?);
+            } else if id == Self::ID_R {
+                this.rotation = Some(Animation::parse_mdx(cur, id)?);
+            } else if id == Self::ID_S {
+                this.scaling = Some(Animation::parse_mdx(cur, id)?);
+            } else {
+                return Err(MyError::String("Unknown animation type".to_string()));
+            }
+        }
+
         return Ok(this);
     }
 }
