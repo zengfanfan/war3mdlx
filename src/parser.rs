@@ -2,6 +2,7 @@ use crate::*;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use error::MyError;
 use fields::globalseq::GlobalSequence;
+use fields::material::Material;
 use fields::model::Model;
 use fields::sequence::Sequence;
 use fields::texture::Texture;
@@ -115,12 +116,23 @@ pub struct MdlxData {
     #[dbg(fmt = "{:?}")] // compact
     globalseqs: Vec<u32>,
     textures: Vec<Texture>,
+    materials: Vec<Material>,
 }
 
 pub struct MdlxChunk {
-    id: u32,
-    size: u32,
-    body: Vec<u8>,
+    pub id: u32,
+    pub size: u32,
+    pub body: Vec<u8>,
+}
+impl MdlxChunk {
+    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+        let id = cur.read_u32::<BigEndian>()?;
+        let sz = cur.read_u32::<LittleEndian>()?;
+        vvlog!("chunk = 0x{:08X} ({}) [{}]", id, u32_to_ascii(id), sz);
+        let mut body = vec![0u8; sz as usize];
+        cur.read_exact(&mut body)?;
+        return Ok(MdlxChunk { id, size: sz, body });
+    }
 }
 
 macro_rules! EXIT {
@@ -169,14 +181,8 @@ impl MdlxData {
             EXIT!("Invalid magic: 0x{:08X}", magic);
         }
 
-        // chunks
         while cur.position() < cur.get_ref().len() as u64 {
-            let id = cur.read_u32::<BigEndian>()?;
-            let sz = cur.read_u32::<LittleEndian>()?;
-            log!("chunk = 0x{:08X} ({}) [{}]", id, u32_to_ascii(id), sz);
-            let mut body = vec![0u8; sz as usize];
-            cur.read_exact(&mut body)?;
-            let chunk = MdlxChunk { id, size: sz, body };
+            let chunk = MdlxChunk::parse_mdx(&mut cur)?;
             ret.parse_chunk(&chunk)?;
         }
 
@@ -188,7 +194,6 @@ impl MdlxData {
         let mut cur = Cursor::new(&chunk.body);
         if chunk.id == MdlxMagic::VERS as u32 {
             self.version = cur.read_u32::<LittleEndian>()?;
-            log!("version = {}", self.version);
         } else if chunk.id == Model::ID {
             self.model = Model::parse_mdx(&mut cur)?;
         } else if chunk.id == Sequence::ID {
@@ -203,12 +208,15 @@ impl MdlxData {
             while cur.position() < cur.get_ref().len() as u64 {
                 self.textures.push(Texture::parse_mdx(&mut cur)?);
             }
+        } else if chunk.id == Material::ID {
+            while cur.position() < cur.get_ref().len() as u64 {
+                let sz = cur.read_u32::<LittleEndian>()? -4;
+                let mut body = vec![0u8; sz as usize];
+                cur.read_exact(&mut body)?;
+                let mut cur2 = Cursor::new(&body);
+                self.materials.push(Material::parse_mdx(&mut cur2)?);
+            }
         }
         return Ok(());
     }
-}
-
-fn u32_to_ascii(n: u32) -> String {
-    let bytes = n.to_be_bytes(); // 大端字节顺序，高位在前
-    String::from_utf8_lossy(&bytes).into_owned()
 }
