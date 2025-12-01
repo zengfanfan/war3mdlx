@@ -4,6 +4,7 @@ use error::MyError;
 use fields::globalseq::GlobalSequence;
 use fields::model::Model;
 use fields::sequence::Sequence;
+use fields::texture::Texture;
 use std::io::{Cursor, Read};
 use std::path::Path;
 
@@ -113,6 +114,7 @@ pub struct MdlxData {
     sequences: Vec<Sequence>,
     #[dbg(fmt = "{:?}")] // compact
     globalseqs: Vec<u32>,
+    textures: Vec<Texture>,
 }
 
 pub struct MdlxChunk {
@@ -196,6 +198,10 @@ impl MdlxData {
         } else if chunk.id == GlobalSequence::ID {
             while cur.position() < cur.get_ref().len() as u64 {
                 self.globalseqs.push(GlobalSequence::parse_mdx(&mut cur)?.duration);
+            }
+        } else if chunk.id == Texture::ID {
+            while cur.position() < cur.get_ref().len() as u64 {
+                self.textures.push(Texture::parse_mdx(&mut cur)?);
             }
         }
         return Ok(());
