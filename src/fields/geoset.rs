@@ -44,7 +44,7 @@ impl Geoset {
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
-        while cur.left() > 16 {
+        while cur.left() >= 16 {
             let (id, n) = (cur.read_be::<u32>()?, cur.readx::<u32>()?);
             if id == MdlxMagic::VRTX as u32 {
                 this.vertices = cur.read_array(n)?;
@@ -119,7 +119,7 @@ impl GeosetAnim {
         this.color = cur.readx()?;
         this.geoset_id = cur.readx()?;
 
-        while cur.left() > 16 {
+        while cur.left() >= 16 {
             match cur.read_be()? {
                 id @ Self::ID_ALPHA => this.alpha_anim = Some(Animation::parse_mdx(cur, id)?),
                 id @ Self::ID_COLOR => this.color_anim = Some(Animation::parse_mdx(cur, id)?),

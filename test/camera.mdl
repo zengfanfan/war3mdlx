@@ -1,0 +1,68 @@
+Version {
+    FormatVersion 800,
+}
+Model "Name" {
+    BlendTime 150,
+}
+Camera "default" {
+    FieldOfView 0.785398,
+    FarClip 10000,
+    NearClip 1,
+    Position { 141.421, 0, 141.421 },
+    Target {
+        Position { 0, 0, 0 },
+    }
+}
+Camera "values" {
+    FieldOfView 3.14159265,
+    FarClip 9999,
+    NearClip 111,
+    Position { 1, 22, 33 },
+    Target {
+        Position { 4.4, 5.05, 66.66 },
+    }
+}
+Camera "anims" {
+    FieldOfView 1,
+    FarClip 1000,
+    NearClip 10,
+    Position { 0, 0, 0 },
+    Translation 4 {
+        Hermite,
+        0000: { -500, -50, 0 },
+            InTan  { 0, 0, 0 },
+            OutTan { 1000, 0, 0 },// Linear xTan = delta value
+        4000: { +500, -50, 0 },
+            InTan  { 1000, 0, 0 },
+            OutTan { 0, 0, 0 },
+        4001: { +500, -50, 0 },
+            InTan  { 0, 0, 0 },
+            OutTan { -1000, 0, 0 },
+        8000: { -500, -50, 0 },
+            InTan  { -1000, 0, 0 },
+            OutTan { 0, 0, 0 },
+    }
+    Rotation 5 {
+        Linear,
+        0: 0,
+        1: 90,
+        2: 180,
+        3: 270,
+        4: -12,
+    }
+    Target {
+        Position { 111,222,333 },
+        Translation 3 {
+            Bezier,
+            0000: { -500, -50, 0 },
+                InTan  { 0, 0, 0 },
+                OutTan { -200, -50, 0 },// Linear outTan = (v1-v0)/3 + v0
+            4000: { +400, -50, 0 },
+                InTan  { +100, -50, 0 },// Linear inTan = v1 - (v1-v0)/3
+                OutTan { +100, -50, 0 },
+            8000: { -500, -50, 0 },
+                InTan  { -200, -50, 0 },
+                OutTan { 0, 0, 0 },
+        }
+    }
+}

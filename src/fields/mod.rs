@@ -1,4 +1,5 @@
 pub mod animation;
+pub mod camera;
 pub mod geoset;
 pub mod globalseq;
 pub mod material;
@@ -8,6 +9,7 @@ pub mod sequence;
 pub mod texture;
 
 pub use animation::*;
+pub use camera::*;
 pub use geoset::*;
 pub use globalseq::*;
 pub use material::*;

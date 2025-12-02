@@ -45,7 +45,7 @@ impl TextureAnim {
     pub const ID_S: u32 = MdlxMagic::KTAS as u32;
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
-        while cur.left() > 16 {
+        while cur.left() >= 16 {
             match cur.read_be()? {
                 id @ Self::ID_T => this.translation = Some(Animation::parse_mdx(cur, id)?),
                 id @ Self::ID_R => this.rotation = Some(Animation::parse_mdx(cur, id)?),

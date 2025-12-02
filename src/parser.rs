@@ -113,6 +113,7 @@ pub struct MdlxData {
     geoanims: Vec<GeosetAnim>,
     #[dbg(formatter = "fmtx")]
     pivot_points: Vec<Vec3>,
+    cameras: Vec<Camera>,
 }
 
 pub struct MdlxChunk {
@@ -223,6 +224,13 @@ impl MdlxData {
         } else if chunk.id == PivotPoint::ID {
             while !cur.eol() {
                 self.pivot_points.push(PivotPoint::parse_mdx(&mut cur)?.position);
+            }
+        } else if chunk.id == Camera::ID {
+            while !cur.eol() {
+                let sz = cur.readx::<u32>()? - 4;
+                let body = cur.read_bytes(sz)?;
+                let mut cur2 = Cursor::new(&body);
+                self.cameras.push(Camera::parse_mdx(&mut cur2)?);
             }
         }
         return Ok(());

@@ -1,40 +1,40 @@
 Version {
-	FormatVersion 800,
+    FormatVersion 800,
 }
 Model "Name" {
-	BlendTime 150,
+    BlendTime 150,
 }
 Sequences 2 {
-	Anim "1" {
-		Interval { 0, 1000 },
-		Rarity 1,
-		MoveSpeed 2,
-		NonLooping,
-		MinimumExtent { 1.1, 2.2, 3 },
-		MaximumExtent { 4, 5, 6 },
-		BoundsRadius 3,
-	}
-	Anim "0" {
-		Interval { 0, 0 },
-	}
+    Anim "1" {
+        Interval { 0, 1000 },
+        Rarity 1,
+        MoveSpeed 2,
+        NonLooping,
+        MinimumExtent { 1.1, 2.2, 3 },
+        MaximumExtent { 4, 5, 6 },
+        BoundsRadius 3,
+    }
+    Anim "0" {
+        Interval { 0, 0 },
+    }
 }
 GlobalSequences 2 {
-	Duration 1000,
-	Duration 500,
+    Duration 1000,
+    Duration 500,
 }
 Textures 4 {
-	Bitmap {
-		ReplaceableId 1,
-	}
-	Bitmap {
-		ReplaceableId 2,
-	}
-	Bitmap {
-		ReplaceableId 35,
-	}
-	Bitmap {
-		Image "Units\Critters\Rat\Rat.blp",
-		WrapWidth,
-		WrapHeight,
-	}
+    Bitmap {
+        ReplaceableId 1,
+    }
+    Bitmap {
+        ReplaceableId 2,
+    }
+    Bitmap {
+        ReplaceableId 35,
+    }
+    Bitmap {
+        Image "Units\Critters\Rat\Rat.blp",
+        WrapWidth,
+        WrapHeight,
+    }
 }

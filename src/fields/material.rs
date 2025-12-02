@@ -91,7 +91,7 @@ impl Layer {
         this.unknown_1 = cur.readx()?;
         this.alpha = cur.readx()?;
 
-        while cur.left() > 16 {
+        while cur.left() >= 16 {
             match cur.read_be()? {
                 id @ Self::ID_ALPHA => this.alpha_anim = Some(Animation::parse_mdx(cur, id)?),
                 id @ Self::ID_TEXID => this.texid_anim = Some(Animation::parse_mdx(cur, id)?),
