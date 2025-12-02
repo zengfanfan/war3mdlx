@@ -1,12 +1,4 @@
 use crate::*;
-use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
-use error::MyError;
-use fields::globalseq::*;
-use fields::material::*;
-use fields::model::*;
-use fields::sequence::*;
-use fields::texture::*;
-use std::path::Path;
 
 #[derive(Debug)]
 #[repr(u32)]
@@ -117,27 +109,23 @@ pub struct MdlxData {
     textures: Vec<Texture>,
     materials: Vec<Material>,
     texanims: Vec<TextureAnim>,
+    geosets: Vec<Geoset>,
+    geoanims: Vec<GeosetAnim>,
 }
 
 pub struct MdlxChunk {
     pub id: u32,
-    pub size: u32,
     pub body: Vec<u8>,
 }
 impl MdlxChunk {
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let id = cur.read_u32::<BigEndian>()?;
-        let sz = cur.read_u32::<LittleEndian>()?;
+        let id = cur.read_be()?;
+        let sz = cur.readx()?;
         vvlog!("chunk = 0x{:08X} ({}) [{}]", id, u32_to_ascii(id), sz);
-        let body = cursor_read_bytes(cur, sz)?;
-        return Ok(MdlxChunk { id, size: sz, body });
+        let body = cur.read_bytes(sz)?;
+        vvvlog!("{}", pretty_hex(&body).replace("\n", "\n\t"));
+        return Ok(MdlxChunk { id, body });
     }
-}
-
-macro_rules! EXIT {
-    ($($arg:tt)*) => {{
-        return Err(MyError::String(format!($($arg)*)));
-    }};
 }
 
 impl MdlxData {
@@ -145,20 +133,14 @@ impl MdlxData {
         let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
         match ext {
             "mdl" => match std::fs::read_to_string(path) {
-                Err(e) => {
-                    return Err(MyError::String(format!("Failed to read file: {:?}, {}", path, e)));
-                },
-                Ok(s) => return Self::parse_mdl(&s),
+                Err(e) => ERR!("Failed to read file: {:?}, {}", path, e),
+                Ok(s) => Self::parse_mdl(&s),
             },
             "mdx" => match std::fs::read(path) {
-                Err(e) => {
-                    return Err(MyError::String(format!("Failed to read file: {:?}, {}", path, e)));
-                },
-                Ok(s) => return Self::parse_mdx(&s),
+                Err(e) => ERR!("Failed to read file: {:?}, {}", path, e),
+                Ok(s) => Self::parse_mdx(&s),
             },
-            _ => {
-                return Err(MyError::String(format!("Invalid input path: {:?}, expected *.mdl or *.mdx", path)));
-            },
+            _ => ERR!("Invalid input path: {:?}, expected *.mdl or *.mdx", path),
         }
     }
 
@@ -166,7 +148,7 @@ impl MdlxData {
         return Ok(());
     }
 
-    pub fn parse_mdl(_: &String) -> Result<Self, MyError> /* [todo] */ {
+    pub fn parse_mdl(_: &str) -> Result<Self, MyError> /* [todo] */ {
         let mut ret = MdlxData::default();
         return Ok(ret);
     }
@@ -175,52 +157,67 @@ impl MdlxData {
         let mut ret = MdlxData::default();
         let mut cur = Cursor::new(input);
 
-        let magic = cur.read_u32::<BigEndian>()?;
+        let magic = cur.read_be::<u32>()?;
         if magic != MdlxMagic::MDLX as u32 {
-            EXIT!("Invalid magic: 0x{:08X}", magic);
+            return ERR!("Invalid magic: 0x{:08X}", magic);
         }
 
-        while cur.position() < cur.get_ref().len() as u64 {
+        while !cur.eol() {
             let chunk = MdlxChunk::parse_mdx(&mut cur)?;
             ret.parse_chunk(&chunk)?;
         }
 
-        dbg!(&ret); //[test]
+        dbgx!(&ret); //[test]
         return Ok(ret);
     }
 
     fn parse_chunk(&mut self, chunk: &MdlxChunk) -> Result<(), MyError> /* [todo] */ {
         let mut cur = Cursor::new(&chunk.body);
         if chunk.id == MdlxMagic::VERS as u32 {
-            self.version = cur.read_u32::<LittleEndian>()?;
+            self.version = cur.readx()?;
         } else if chunk.id == Model::ID {
             self.model = Model::parse_mdx(&mut cur)?;
         } else if chunk.id == Sequence::ID {
-            while cur.position() < cur.get_ref().len() as u64 {
+            while !cur.eol() {
                 self.sequences.push(Sequence::parse_mdx(&mut cur)?);
             }
         } else if chunk.id == GlobalSequence::ID {
-            while cur.position() < cur.get_ref().len() as u64 {
+            while !cur.eol() {
                 self.globalseqs.push(GlobalSequence::parse_mdx(&mut cur)?.duration);
             }
         } else if chunk.id == Texture::ID {
-            while cur.position() < cur.get_ref().len() as u64 {
+            while !cur.eol() {
                 self.textures.push(Texture::parse_mdx(&mut cur)?);
             }
         } else if chunk.id == Material::ID {
-            while cur.position() < cur.get_ref().len() as u64 {
-                let sz = cur.read_u32::<LittleEndian>()? - 4;
-                let body = cursor_read_bytes(&mut cur, sz)?;
+            while !cur.eol() {
+                let sz = cur.readx::<u32>()? - 4;
+                let body = cur.read_bytes(sz)?;
                 let mut cur2 = Cursor::new(&body);
                 self.materials.push(Material::parse_mdx(&mut cur2)?);
             }
         } else if chunk.id == TextureAnim::ID {
-            while cur.position() < cur.get_ref().len() as u64 {
-                let sz = cur.read_u32::<LittleEndian>()? - 4;
-                let body = cursor_read_bytes(&mut cur, sz)?;
+            while !cur.eol() {
+                let sz = cur.readx::<u32>()? - 4;
+                let body = cur.read_bytes(sz)?;
                 let mut cur2 = Cursor::new(&body);
                 self.texanims.push(TextureAnim::parse_mdx(&mut cur2)?);
             }
+        } else if chunk.id == Geoset::ID {
+            while !cur.eol() {
+                let sz = cur.readx::<u32>()? - 4;
+                let body = cur.read_bytes(sz)?;
+                vvvlog!("{}", pretty_hex(&body).replace("\n", "\n\t"));
+                let mut cur2 = Cursor::new(&body);
+                self.geosets.push(Geoset::parse_mdx(&mut cur2)?);
+            }
+            // } else if chunk.id == GeosetAnim::ID {
+            //     while !cur.eol() {
+            //         let sz = cur.readx::<u32>()? - 4;
+            //         let body = cur.read_bytes(sz)?;
+            //         let mut cur2 = Cursor::new(&body);
+            //         self.geoanims.push(GeosetAnim::parse_mdx(&mut cur2)?);
+            //     }
         }
         return Ok(());
     }

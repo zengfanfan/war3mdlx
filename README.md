@@ -22,7 +22,7 @@ Options:
   -f, --overwrite           Overwrite existing output files (default: skip)
   -E, --stop-on-error       Stop walking the directory hierarchy when an error occurs
   -q, --quiet               Do not print log messages
-  -v, --verbose             Print verbose log messages
+  -v, --verbose...          Print verbose log messages (-vv very verbose)
   -d, --max-depth <0..255>  Max depth of directory traversal [default: 255]
   -h, --help                Print help
   -V, --version             Print version

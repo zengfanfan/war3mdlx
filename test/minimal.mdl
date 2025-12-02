@@ -1,0 +1,6 @@
+Version {
+	FormatVersion 800,
+}
+Model "Name" {
+	BlendTime 150,
+}

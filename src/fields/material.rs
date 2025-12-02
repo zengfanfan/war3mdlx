@@ -1,6 +1,4 @@
 use crate::*;
-use derive_debug::Dbg;
-use std::io::{Cursor, Read};
 
 #[derive(Dbg, Default)]
 pub struct Material {
@@ -27,6 +25,7 @@ pub struct Layer {
 impl Material {
     pub const ID: u32 = MdlxMagic::MTLS as u32;
 
+    // [todo] check flags
     pub fn contant_color(&self) -> bool {
         return self.flags & 0x1 != 0;
     }
@@ -40,16 +39,14 @@ impl Material {
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
-        this.priority_plane = cur.read_u32::<LittleEndian>()?;
-        this.flags = cur.read_u32::<LittleEndian>()?;
+        this.priority_plane = cur.readx()?;
+        this.flags = cur.readx()?;
 
-        let layers_len = cur.get_ref().len() as u64 - cur.position();
-        if layers_len > 8 && cur.read_u32::<BigEndian>()? == Layer::ID {
-            let count = cur.read_i32::<LittleEndian>()?;
+        if cur.left() > 8 && cur.read_be::<u32>()? == Layer::ID {
+            let count: i32 = cur.readx()?;
             for _ in 0..count {
-                let sz = cur.read_u32::<LittleEndian>()? - 4;
-                let mut body = vec![0u8; sz as usize];
-                cur.read_exact(&mut body)?;
+                let sz: u32 = cur.readx()?;
+                let body = cur.read_bytes(sz - 4)?;
                 let mut cur2 = Cursor::new(&body);
                 this.layers.push(Layer::parse_mdx(&mut cur2)?);
             }
@@ -64,6 +61,7 @@ impl Layer {
     pub const ID_ALPHA: u32 = MdlxMagic::KMTA as u32;
     pub const ID_TEXID: u32 = MdlxMagic::KMTF as u32;
 
+    // [todo] check flags
     pub fn unshaded(&self) -> bool {
         return self.flags & 0x1 != 0;
     }
@@ -86,31 +84,18 @@ impl Layer {
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
-        this.filter_mode = match cur.read_u32::<LittleEndian>()? {
-            0 => FilterMode::None,
-            1 => FilterMode::Transparent,
-            2 => FilterMode::Blend,
-            3 => FilterMode::Additive,
-            4 => FilterMode::AddAlpha,
-            5 => FilterMode::Modulate,
-            6 => FilterMode::Modulate2X,
-            7 => FilterMode::AlphaKey,
-            x => FilterMode::Error(x),
-        };
-        this.flags = cur.read_u32::<LittleEndian>()?;
-        this.texture_id = cur.read_i32::<LittleEndian>()?;
-        this.texture_anim_id = cur.read_i32::<LittleEndian>()?;
-        this.unknown_1 = cur.read_u32::<LittleEndian>()?;
-        this.alpha = cur.read_f32::<LittleEndian>()?;
+        this.filter_mode = FilterMode::from(cur.readx()?);
+        this.flags = cur.readx()?;
+        this.texture_id = cur.readx()?;
+        this.texture_anim_id = cur.readx()?;
+        this.unknown_1 = cur.readx()?;
+        this.alpha = cur.readx()?;
 
-        while cur.position() + 16 < cur.get_ref().len() as u64 {
-            let id = cur.read_u32::<BigEndian>()?;
-            if id == Self::ID_ALPHA {
-                this.alpha_anim = Some(Animation::parse_mdx(cur, id)?);
-            } else if id == Self::ID_TEXID {
-                this.texid_anim = Some(Animation::parse_mdx(cur, id)?);
-            } else {
-                return Err(MyError::String("Unknown animation type".to_string()));
+        while cur.left() > 16 {
+            match cur.read_be()? {
+                id @ Self::ID_ALPHA => this.alpha_anim = Some(Animation::parse_mdx(cur, id)?),
+                id @ Self::ID_TEXID => this.texid_anim = Some(Animation::parse_mdx(cur, id)?),
+                id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
 
@@ -133,5 +118,20 @@ pub enum FilterMode {
 impl Default for FilterMode {
     fn default() -> Self {
         FilterMode::None
+    }
+}
+impl FilterMode {
+    fn from(v: u32) -> FilterMode {
+        match v {
+            0 => FilterMode::None,
+            1 => FilterMode::Transparent,
+            2 => FilterMode::Blend,
+            3 => FilterMode::Additive,
+            4 => FilterMode::AddAlpha,
+            5 => FilterMode::Modulate,
+            6 => FilterMode::Modulate2X,
+            7 => FilterMode::AlphaKey,
+            x => FilterMode::Error(x),
+        }
     }
 }

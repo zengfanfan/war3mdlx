@@ -2,27 +2,30 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use clap::{ArgAction, Parser};
 use derive_debug::Dbg;
 use glam::{Vec2, Vec3, Vec4};
-use std::io::Result as ioResult;
-use std::io::{Cursor, Read};
-use std::{
-    io,
-    path::{Path, PathBuf},
-};
+use paste::paste;
+use pretty_hex::*;
+use std::fmt::Debug as stdDebug;
+use std::io::{self, Cursor, Read};
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 mod error;
+mod extends;
 mod fields;
 mod logging;
 mod parser;
+mod string;
 mod types;
 mod util;
 
-use fields::animation::*;
+use error::*;
+use extends::*;
+use fields::*;
+use logging::*;
 use parser::*;
+use string::*;
 use types::*;
 use util::*;
-
-use crate::error::MyError;
 
 #[derive(Debug, Parser, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -54,11 +57,11 @@ macro_rules! EXIT {
         return Ok(());
     }};
     ($s:expr) => {{
-        eprintln!("{}", $s);
+        elog!("{}", $s);
         return Ok(());
     }};
     ($($arg:tt)*) => {{
-        eprintln!($($arg)*);
+        elog!($($arg)*);
         return Ok(());
     }};
 }
@@ -68,11 +71,12 @@ fn main() -> io::Result<()> {
     let input = PathBuf::from(&args.input);
 
     if args.quiet {
-        logging::set_level(logging::LogLevel::Error);
+        set_log_level(LogLevel::Warn);
     } else {
         match args.verbose {
-            1 => logging::set_level(logging::LogLevel::Verbose),
-            2.. => logging::set_level(logging::LogLevel::VeryVerbose),
+            1 => set_log_level(LogLevel::Verbose),
+            2 => set_log_level(LogLevel::Verbose2),
+            3.. => set_log_level(LogLevel::Verbose3),
             _ => (),
         }
     }
@@ -144,10 +148,11 @@ fn main() -> io::Result<()> {
             }
 
             if let Err(e) = process_file(p, &ofile) {
-                EXIT!(match e {
+                let s = match e {
                     MyError::String(s) => s,
                     _ => format!("{:?}", e),
-                });
+                };
+                if args.stop_on_error { EXIT!(s) } else { elog!("{}", s) }
             }
         }
     } else {

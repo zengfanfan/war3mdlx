@@ -1,20 +1,9 @@
-use crate::*;
+pub type byte = u8;
 
-pub fn fmt_vec2(v: &Vec2) -> String {
-    format!("({}, {})", v.x, v.y)
-}
-pub fn fmt_vec3(v: &Vec3) -> String {
-    format!("({}, {}, {})", v.x, v.y, v.z)
-}
-pub fn fmt_vec4(v: &Vec4) -> String {
-    format!("({}, {}, {}, {})", v.x, v.y, v.z, v.w)
-}
+pub type int = i32;
+pub type uint = u32;
+pub type long = i64;
+pub type ulong = u64;
 
-pub fn fmt_id4s(v: &u32) -> String {
-    u32_to_ascii(*v)
-}
-
-pub fn u32_to_ascii(n: u32) -> String {
-    let bytes = n.to_be_bytes(); // 大端字节顺序，高位在前
-    String::from_utf8_lossy(&bytes).into_owned()
-}
+pub type float = f32;
+pub type double = f64;

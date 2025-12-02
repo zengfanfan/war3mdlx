@@ -1,0 +1,6 @@
+{
+    "rust-analyzer.diagnostics.disabled": [
+        "non_snake_case",
+        "non_camel_case_types",
+    ]
+}
