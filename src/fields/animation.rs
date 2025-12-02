@@ -1,7 +1,10 @@
 use crate::*;
 
+pub trait TAnimation: ReadFromCursor + std::fmt::Debug + Default + Formatter {}
+impl<T> TAnimation for T where T: ReadFromCursor + std::fmt::Debug + Default + Formatter {}
+
 #[derive(Dbg, Default)]
-pub struct KeyFrame<T: ReadFromCursor + stdDebug + Default> {
+pub struct KeyFrame<T: TAnimation> {
     pub frame: i32,
     pub value: T,
     pub itan: T,
@@ -11,7 +14,7 @@ pub struct KeyFrame<T: ReadFromCursor + stdDebug + Default> {
 }
 
 #[derive(Dbg, Default)]
-pub struct Animation<T: ReadFromCursor + stdDebug + Default> {
+pub struct Animation<T: TAnimation> {
     #[dbg(formatter = "fmt_id4s")]
     pub id: u32,
     pub interp_type: InterpolationType,
@@ -20,7 +23,7 @@ pub struct Animation<T: ReadFromCursor + stdDebug + Default> {
     pub key_frames: Vec<KeyFrame<T>>,
 }
 
-impl<T: ReadFromCursor + stdDebug + Default> Animation<T> {
+impl<T: TAnimation> Animation<T> {
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>, id: u32) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -78,17 +81,17 @@ impl InterpolationType {
 //#endregion
 //#region formatter
 
-fn fmt_key_frames<T: ReadFromCursor + stdDebug + Default>(key_frames: &Vec<KeyFrame<T>>) -> String {
+fn fmt_key_frames<T: TAnimation>(key_frames: &Vec<KeyFrame<T>>) -> String {
     let mut list: Vec<String> = Vec::with_capacity(key_frames.len());
     for kf in key_frames {
         list.push(fmt_key_frame_1(kf));
     }
     format!("[\n    {}\n]", list.join("\n    "))
 }
-fn fmt_key_frame_1<T: ReadFromCursor + stdDebug + Default>(kf: &KeyFrame<T>) -> String {
+fn fmt_key_frame_1<T: TAnimation>(kf: &KeyFrame<T>) -> String {
     match kf.has_tans {
-        true => format!("{}: {:?}, InTan={:?}, OutTan={:?},", kf.frame, kf.value, kf.itan, kf.otan),
-        false => format!("{}: {:?},", kf.frame, kf.value),
+        true => format!("{}: {}, InTan={}, OutTan={},", kf.frame, fmtx(&kf.value), fmtx(&kf.itan), fmtx(&kf.otan)),
+        false => format!("{}: {},", kf.frame, fmtx(&kf.value)),
     }
 }
 

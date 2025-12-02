@@ -1,5 +1,4 @@
-use once_cell::sync::Lazy;
-use std::sync::Mutex;
+use crate::*;
 
 //#region level
 
@@ -15,19 +14,20 @@ pub enum LogLevel {
 
 static G_LOG_LEVEL: Lazy<Mutex<LogLevel>> = Lazy::new(|| Mutex::new(LogLevel::Info));
 
-pub fn set_log_level(level: LogLevel) {
-    let mut mode = G_LOG_LEVEL.lock().unwrap();
-    *mode = level;
-}
-
-pub fn get_log_level() -> LogLevel {
-    let mode = G_LOG_LEVEL.lock().unwrap();
-    return *mode;
+impl Args {
+    pub fn set_log_level(level: LogLevel) {
+        let mut v = G_LOG_LEVEL.lock().unwrap();
+        *v = level;
+    }
+    pub fn get_log_level() -> LogLevel {
+        let v = G_LOG_LEVEL.lock().unwrap();
+        return *v;
+    }
 }
 
 #[macro_export]
 macro_rules! check_log_level {
-    (::$item:ident) => {{ crate::logging::get_log_level() <= crate::logging::LogLevel::$item }};
+    (::$item:ident) => {{ crate::cli::Args::get_log_level() <= crate::logging::LogLevel::$item }};
 }
 
 //#endregion
@@ -81,9 +81,9 @@ macro_rules! vvvlog {
 //#endregion
 //#region dbgx!
 
-pub fn _dbgx<T: std::fmt::Debug>(val: &T, indent: usize) {
+pub fn _dbgx<T: stdDebug>(val: &T, indent: usize) {
     let s = format!("{:#?}", val);
-    eprintln!("{}", s.replace("    ", &" ".repeat(indent)));
+    vvvlog!("{}", s.replace("    ", &" ".repeat(indent)));
 }
 #[macro_export]
 macro_rules! dbgx {

@@ -130,11 +130,27 @@ impl_formatter_array!(Vec2, Vec3, Vec4);
 
 impl Formatter for f32 {
     fn debug(&self) -> String {
-        let s = fmt_float(self, 9, 4);
+        let p = Args::get_precision() as u32;
+        let s = fmt_float(self, p * 2 + 1, p);
         if s.find(".") != None && s.ends_with("0") {
             log!(" *** {} -> {} *** ", self, s);
         }
         return s;
+    }
+}
+
+//#endregion
+//#region float precision
+
+static G_PRECISION: Lazy<Mutex<u8>> = Lazy::new(|| Mutex::new(4));
+impl Args {
+    pub fn set_precision(precision: u8) {
+        let mut v = G_PRECISION.lock().unwrap();
+        *v = precision;
+    }
+    pub fn get_precision() -> u8 {
+        let v = G_PRECISION.lock().unwrap();
+        return *v;
     }
 }
 

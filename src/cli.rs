@@ -45,23 +45,38 @@ pub struct Args {
     pub verbose: u8,
     #[arg(long, short = 'd', default_value_t = 255, value_name = "0..255", help = "Max depth of directory traversal")]
     pub max_depth: u8,
+    #[arg(
+        long,
+        short = 'p',
+        default_value_t = 4,
+        value_name = "0..10",
+        help = "Max precision of floating point numbers when converted to text"
+    )]
+    pub precision: u8,
 }
 
 impl Args {
     pub fn new() -> Self {
         let this = Self::parse();
-        this.set_log_level();
+        this.update_log_level();
+        Self::set_precision(this.precision);
+
+        if this.precision > 10 {
+            elog!("Invalid precision: {}", this.precision);
+            std::process::exit(1);
+        }
+
         return this;
     }
 
-    fn set_log_level(&self) {
+    fn update_log_level(&self) {
         if self.quiet {
-            set_log_level(LogLevel::Warn);
+            Self::set_log_level(LogLevel::Warn);
         } else {
             match self.verbose {
-                1 => set_log_level(LogLevel::Verbose),
-                2 => set_log_level(LogLevel::Verbose2),
-                3.. => set_log_level(LogLevel::Verbose3),
+                1 => Self::set_log_level(LogLevel::Verbose),
+                2 => Self::set_log_level(LogLevel::Verbose2),
+                3.. => Self::set_log_level(LogLevel::Verbose3),
                 _ => (),
             }
         }
