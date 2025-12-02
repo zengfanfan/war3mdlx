@@ -9,23 +9,15 @@ use std::io::{self, Cursor, Read};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-mod error;
 mod extends;
 mod fields;
-mod logging;
 mod parser;
-mod string;
-mod types;
-mod util;
+mod utils;
 
-use error::*;
 use extends::*;
 use fields::*;
-use logging::*;
 use parser::*;
-use string::*;
-use types::*;
-use util::*;
+use utils::*;
 
 #[derive(Debug, Parser, Clone)]
 #[command(author, version, about, long_about = None)]
