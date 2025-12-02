@@ -115,6 +115,7 @@ pub struct MdlxData {
     pivot_points: Vec<Vec3>,
     cameras: Vec<Camera>,
     bones: Vec<Bone>,
+    helpers: Vec<Helper>,
 }
 
 pub struct MdlxChunk {
@@ -236,6 +237,10 @@ impl MdlxData {
         } else if chunk.id == Bone::ID {
             while !cur.eol() {
                 self.bones.push(Bone::parse_mdx(&mut cur)?);
+            }
+        } else if chunk.id == Helper::ID {
+            while !cur.eol() {
+                self.helpers.push(Helper::parse_mdx(&mut cur)?);
             }
         }
         return Ok(());
