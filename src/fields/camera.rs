@@ -17,10 +17,10 @@ pub struct Camera {
 
 impl Camera {
     pub const ID: u32 = MdlxMagic::CAMS as u32;
-    pub const ID_T: u32 = MdlxMagic::KCTR as u32;
-    pub const ID_R: u32 = MdlxMagic::KCRL as u32;
-    pub const ID_TT: u32 = MdlxMagic::KTTR as u32;
-    pub const NAME_SIZE: u32 = 80;
+    const ID_T: u32 = MdlxMagic::KCTR as u32;
+    const ID_R: u32 = MdlxMagic::KCRL as u32;
+    const ID_TT: u32 = MdlxMagic::KTTR as u32;
+    const NAME_SIZE: u32 = 80;
 
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();

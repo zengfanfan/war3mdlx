@@ -58,8 +58,8 @@ impl Material {
 
 impl Layer {
     pub const ID: u32 = MdlxMagic::LAYS as u32;
-    pub const ID_ALPHA: u32 = MdlxMagic::KMTA as u32;
-    pub const ID_TEXID: u32 = MdlxMagic::KMTF as u32;
+    const ID_ALPHA: u32 = MdlxMagic::KMTA as u32;
+    const ID_TEXID: u32 = MdlxMagic::KMTF as u32;
 
     // [todo] check flags
     pub fn unshaded(&self) -> bool {

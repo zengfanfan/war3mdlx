@@ -114,6 +114,7 @@ pub struct MdlxData {
     #[dbg(formatter = "fmtx")]
     pivot_points: Vec<Vec3>,
     cameras: Vec<Camera>,
+    bones: Vec<Bone>,
 }
 
 pub struct MdlxChunk {
@@ -231,6 +232,10 @@ impl MdlxData {
                 let body = cur.read_bytes(sz)?;
                 let mut cur2 = Cursor::new(&body);
                 self.cameras.push(Camera::parse_mdx(&mut cur2)?);
+            }
+        } else if chunk.id == Bone::ID {
+            while !cur.eol() {
+                self.bones.push(Bone::parse_mdx(&mut cur)?);
             }
         }
         return Ok(());

@@ -108,8 +108,8 @@ pub struct GeosetAnim {
 
 impl GeosetAnim {
     pub const ID: u32 = MdlxMagic::GEOA as u32;
-    pub const ID_ALPHA: u32 = MdlxMagic::KGAO as u32;
-    pub const ID_COLOR: u32 = MdlxMagic::KGAC as u32;
+    const ID_ALPHA: u32 = MdlxMagic::KGAO as u32;
+    const ID_COLOR: u32 = MdlxMagic::KGAC as u32;
 
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();

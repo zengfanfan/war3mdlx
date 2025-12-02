@@ -1,19 +1,23 @@
 pub mod animation;
+pub mod bone;
 pub mod camera;
 pub mod geoset;
 pub mod globalseq;
 pub mod material;
 pub mod model;
+pub mod node;
 pub mod pivot;
 pub mod sequence;
 pub mod texture;
 
 pub use animation::*;
+pub use bone::*;
 pub use camera::*;
 pub use geoset::*;
 pub use globalseq::*;
 pub use material::*;
 pub use model::*;
+pub use node::*;
 pub use pivot::*;
 pub use sequence::*;
 pub use texture::*;

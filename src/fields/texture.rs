@@ -40,9 +40,9 @@ pub struct TextureAnim {
 
 impl TextureAnim {
     pub const ID: u32 = MdlxMagic::TXAN as u32;
-    pub const ID_T: u32 = MdlxMagic::KTAT as u32;
-    pub const ID_R: u32 = MdlxMagic::KTAR as u32;
-    pub const ID_S: u32 = MdlxMagic::KTAS as u32;
+    const ID_T: u32 = MdlxMagic::KTAT as u32;
+    const ID_R: u32 = MdlxMagic::KTAR as u32;
+    const ID_S: u32 = MdlxMagic::KTAS as u32;
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
         while cur.left() >= 16 {
