@@ -45,7 +45,7 @@ impl Geoset {
         let mut this = Self::default();
 
         while cur.left() > 16 {
-            let (id, n) = (cur.read_be::<u32>()?, cur.readx()?);
+            let (id, n) = (cur.read_be::<u32>()?, cur.readx::<u32>()?);
             if id == MdlxMagic::VRTX as u32 {
                 this.vertices = cur.read_array(n)?;
             } else if id == MdlxMagic::NRMS as u32 {

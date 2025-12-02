@@ -111,6 +111,8 @@ pub struct MdlxData {
     texanims: Vec<TextureAnim>,
     geosets: Vec<Geoset>,
     geoanims: Vec<GeosetAnim>,
+    #[dbg(formatter = "fmtx")]
+    pivot_points: Vec<Vec3>,
 }
 
 pub struct MdlxChunk {
@@ -217,6 +219,10 @@ impl MdlxData {
                 let body = cur.read_bytes(sz)?;
                 let mut cur2 = Cursor::new(&body);
                 self.geoanims.push(GeosetAnim::parse_mdx(&mut cur2)?);
+            }
+        } else if chunk.id == PivotPoint::ID {
+            while !cur.eol() {
+                self.pivot_points.push(PivotPoint::parse_mdx(&mut cur)?.position);
             }
         }
         return Ok(());
