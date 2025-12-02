@@ -20,7 +20,7 @@ pub struct Geoset {
     pub mtx_indices: Vec<u32>,
     pub material_id: u32,
     pub sel_group: u32,
-    pub sel_type: u32,
+    pub sel_type: u32, // 0=None, 4=Unselectable
     #[dbg(formatter = "fmtx")]
     pub bound_radius: f32,
     #[dbg(formatter = "fmtx")]
@@ -44,27 +44,22 @@ impl Geoset {
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
-        //[test] check if some chunk canbe more than 1 (python check all MDLs and MDXs)
-
         while cur.left() > 16 {
-            let id = cur.read_be()?;
-            let n = cur.readx()?;
+            let (id, n) = (cur.read_be::<u32>()?, cur.readx()?);
             if id == MdlxMagic::VRTX as u32 {
                 this.vertices = cur.read_array(n)?;
             } else if id == MdlxMagic::NRMS as u32 {
                 this.normals = cur.read_array(n)?;
             } else if id == MdlxMagic::PTYP as u32 {
-                // face types: [test] check if this can be more than 1
-                // face types: [test] check if there are value other than 4
+                yes!(n > 1, return ERR!("OMG! [face type count] {n} > 1 ?"));
                 let face_types: Vec<u32> = cur.read_array(n)?;
                 if face_types.iter().any(|&x| x != 4) {
                     return ERR!("Only triangle(4) is supported: {:?}", face_types);
                 }
             } else if id == MdlxMagic::PCNT as u32 {
-                // face type count: [test] check if this can be more than 1
-                let v: Vec<u32> = cur.read_array(n)?;
+                yes!(n > 1, return ERR!("OMG! [vertex count for each face type] {n} > 1 ?"));
+                let _: Vec<u32> = cur.read_array(n)?;
             } else if id == MdlxMagic::PVTX as u32 {
-                // face type count: [test] check if this can be more than 1
                 this.triangles = cur.read_array(n)?;
             } else if id == MdlxMagic::GNDX as u32 {
                 this.vtxgrps = cur.read_array(n)?;
@@ -76,7 +71,7 @@ impl Geoset {
             } else if id == MdlxMagic::UVBS as u32 {
                 this.uvs = cur.read_array(n)?;
             } else {
-                this.material_id = id;
+                this.material_id = id.swap_bytes();
                 this.sel_group = n;
                 this.sel_type = cur.readx()?;
                 this.bound_radius = cur.readx()?;
@@ -98,18 +93,13 @@ impl Geoset {
 }
 
 //#endregion
-//#region
-//#endregion
-//#region
-//#endregion
-//#region
-//#endregion
 //#region GeosetAnim
 
 #[derive(Dbg, Default)]
 pub struct GeosetAnim {
     pub alpha: f32,
-    pub flags: u32,
+    pub flags: u32, //#1=DropShadow, #2=Color
+    #[dbg(formatter = "fmtx")]
     pub color: Vec3,
     pub geoset_id: i32,
     pub alpha_anim: Option<Animation<f32>>,

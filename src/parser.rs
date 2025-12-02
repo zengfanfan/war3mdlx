@@ -211,13 +211,13 @@ impl MdlxData {
                 let mut cur2 = Cursor::new(&body);
                 self.geosets.push(Geoset::parse_mdx(&mut cur2)?);
             }
-            // } else if chunk.id == GeosetAnim::ID {
-            //     while !cur.eol() {
-            //         let sz = cur.readx::<u32>()? - 4;
-            //         let body = cur.read_bytes(sz)?;
-            //         let mut cur2 = Cursor::new(&body);
-            //         self.geoanims.push(GeosetAnim::parse_mdx(&mut cur2)?);
-            //     }
+        } else if chunk.id == GeosetAnim::ID {
+            while !cur.eol() {
+                let sz = cur.readx::<u32>()? - 4;
+                let body = cur.read_bytes(sz)?;
+                let mut cur2 = Cursor::new(&body);
+                self.geoanims.push(GeosetAnim::parse_mdx(&mut cur2)?);
+            }
         }
         return Ok(());
     }
