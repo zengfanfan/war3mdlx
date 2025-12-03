@@ -1,0 +1,67 @@
+use crate::*;
+
+#[derive(Dbg, Default)]
+pub struct RibbonEmitter {
+    pub base: Node,
+
+    pub height_above: f32,
+    pub height_below: f32,
+    pub alpha: f32,
+    #[dbg(formatter = "fmtx")]
+    pub color: Vec3,
+    pub lifespan: f32,
+    #[dbg(skip)]
+    pub _unknown: i32,
+    pub emit_rate: i32,
+    pub rows: i32,
+    pub columns: i32,
+    pub material_id: i32,
+    pub gravity: f32,
+
+    pub visibility: Option<Animation<f32>>,
+    pub height_above_anim: Option<Animation<f32>>,
+    pub height_below_anim: Option<Animation<f32>>,
+    pub alpha_anim: Option<Animation<f32>>,
+    pub color_anim: Option<Animation<Vec3>>,
+    pub texslot_anim: Option<Animation<i32>>,
+}
+
+impl RibbonEmitter {
+    pub const ID: u32 = MdlxMagic::RIBB as u32;
+    const ID_V: u32 = MdlxMagic::KRVS as u32; /* Visibility */
+    const ID_HA: u32 = MdlxMagic::KRHA as u32; /* Height Above */
+    const ID_HB: u32 = MdlxMagic::KRHB as u32; /* Height Below */
+    const ID_A: u32 = MdlxMagic::KRAL as u32; /* Alpha */
+    const ID_C: u32 = MdlxMagic::KRCO as u32; /* Color */
+    const ID_TS: u32 = MdlxMagic::KRTX as u32; /* TextureSlot */
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+        let mut this = Self::default();
+
+        this.base = Node::read_mdx(cur)?;
+        this.height_above = cur.readx()?;
+        this.height_below = cur.readx()?;
+        this.alpha = cur.readx()?;
+        this.color = cur.readx()?;
+        this.lifespan = cur.readx()?;
+        this._unknown = cur.readx()?;
+        this.emit_rate = cur.readx()?;
+        this.rows = cur.readx()?;
+        this.columns = cur.readx()?;
+        this.material_id = cur.readx()?;
+        this.gravity = cur.readx()?;
+
+        while cur.left() >= 16 {
+            match cur.read_be()? {
+                id @ Self::ID_V => this.visibility = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_HA => this.height_above_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_HB => this.height_below_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_A => this.alpha_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_TS => this.texslot_anim = Some(Animation::read_mdx(cur, id)?),
+                id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
+            }
+        }
+
+        return Ok(this);
+    }
+}

@@ -3,6 +3,7 @@ use crate::*;
 #[derive(Dbg, Default)]
 pub struct ParticleEmitter {
     pub base: Node,
+
     pub emit_rate: f32,
     pub gravity: f32,
     pub longitude: f32,
@@ -12,6 +13,7 @@ pub struct ParticleEmitter {
     pub _unknown: i32,
     pub lifespan: f32,
     pub speed: f32,
+
     pub visibility: Option<Animation<f32>>,
     pub emit_rate_anim: Option<Animation<f32>>,
     pub gravity_anim: Option<Animation<f32>>,
