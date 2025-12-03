@@ -5,7 +5,7 @@ pub struct Texture {
     pub replaceable_id: u32,
     pub filename: String,
     #[dbg(skip)]
-    pub unknown_1: u32,
+    pub _unknown: u32,
     #[dbg(fmt = "0x{:08X}")]
     pub flags: u32,
 }
@@ -13,19 +13,11 @@ pub struct Texture {
 impl Texture {
     pub const ID: u32 = MdlxMagic::TEXS as u32;
     pub const NAME_SIZE: u32 = 256;
-
-    pub fn wrap_width(&self) -> bool {
-        self.flags & 0x1 == 0x1
-    }
-    pub fn wrap_height(&self) -> bool {
-        self.flags & 0x2 == 0x2
-    }
-
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Self {
             replaceable_id: cur.readx()?,
             filename: cur.read_string(Self::NAME_SIZE)?,
-            unknown_1: cur.readx()?,
+            _unknown: cur.readx()?,
             flags: cur.readx()?,
         })
     }

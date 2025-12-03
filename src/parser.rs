@@ -116,6 +116,7 @@ pub struct MdlxData {
     cameras: Vec<Camera>,
     bones: Vec<Bone>,
     helpers: Vec<Helper>,
+    attachments: Vec<Attachment>,
 }
 
 pub struct MdlxChunk {
@@ -241,6 +242,13 @@ impl MdlxData {
         } else if chunk.id == Helper::ID {
             while !cur.eol() {
                 self.helpers.push(Helper::parse_mdx(&mut cur)?);
+            }
+        } else if chunk.id == Attachment::ID {
+            while !cur.eol() {
+                let sz = cur.readx::<u32>()? - 4;
+                let body = cur.read_bytes(sz)?;
+                let mut cur2 = Cursor::new(&body);
+                self.attachments.push(Attachment::parse_mdx(&mut cur2)?);
             }
         }
         return Ok(());

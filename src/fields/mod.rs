@@ -1,4 +1,5 @@
 pub mod animation;
+pub mod attachment;
 pub mod bone;
 pub mod camera;
 pub mod geoset;
@@ -12,6 +13,7 @@ pub mod sequence;
 pub mod texture;
 
 pub use animation::*;
+pub use attachment::*;
 pub use bone::*;
 pub use camera::*;
 pub use geoset::*;

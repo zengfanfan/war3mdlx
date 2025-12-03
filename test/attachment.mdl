@@ -1,0 +1,28 @@
+Version {
+    FormatVersion 800,
+}
+Model "Name" {
+    NumBones 3,
+    BlendTime 150,
+}
+Attachment "values" {
+    ObjectId 1,
+    Parent 0,
+    AttachmentID 12345,
+    Path "hello/baby!",
+}
+Attachment "anims" {
+    ObjectId 2,
+    Parent 1,
+    Visibility 3 {
+        Linear,
+        1: 0,
+        2: 0.5,
+        3: 1,
+    }
+}
+PivotPoints 3 {
+    { 0, 0, 0 },
+    { 1, 2.2, 33.3 },
+    { 0, 0, 0 },
+}

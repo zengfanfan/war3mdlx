@@ -4,7 +4,7 @@ use crate::*;
 pub struct Model {
     pub name: String,
     #[dbg(skip)]
-    pub unknown_1: u32,
+    pub _unknown: u32,
     pub bounds_radius: f32,
     #[dbg(formatter = "fmtx")]
     pub minimum_extent: Vec3,
@@ -20,7 +20,7 @@ impl Model {
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Self {
             name: cur.read_string(Self::NAME_SIZE)?,
-            unknown_1: cur.readx()?,
+            _unknown: cur.readx()?,
             bounds_radius: cur.readx()?,
             minimum_extent: cur.readx()?,
             maximum_extent: cur.readx()?,

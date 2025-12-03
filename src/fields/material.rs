@@ -16,7 +16,7 @@ pub struct Layer {
     pub texture_id: i32,
     pub texture_anim_id: i32,
     #[dbg(skip)]
-    pub unknown_1: u32,
+    pub _unknown: u32,
     pub alpha: f32,
     pub alpha_anim: Option<Animation<f32>>,
     pub texid_anim: Option<Animation<i32>>,
@@ -24,18 +24,6 @@ pub struct Layer {
 
 impl Material {
     pub const ID: u32 = MdlxMagic::MTLS as u32;
-
-    // [todo] check flags
-    pub fn contant_color(&self) -> bool {
-        return self.flags & 0x1 != 0;
-    }
-    pub fn sort_primitives_far_z(&self) -> bool {
-        return self.flags & 0x10 != 0;
-    }
-    pub fn full_resolution(&self) -> bool {
-        return self.flags & 0x20 != 0;
-    }
-
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -60,27 +48,6 @@ impl Layer {
     pub const ID: u32 = MdlxMagic::LAYS as u32;
     const ID_ALPHA: u32 = MdlxMagic::KMTA as u32;
     const ID_TEXID: u32 = MdlxMagic::KMTF as u32;
-
-    // [todo] check flags
-    pub fn unshaded(&self) -> bool {
-        return self.flags & 0x1 != 0;
-    }
-    pub fn sphere_env_map(&self) -> bool {
-        return self.flags & 0x2 != 0;
-    }
-    pub fn two_sided(&self) -> bool {
-        return self.flags & 0x10 != 0;
-    }
-    pub fn unfogged(&self) -> bool {
-        return self.flags & 0x20 != 0;
-    }
-    pub fn no_depth_test(&self) -> bool {
-        return self.flags & 0x40 != 0;
-    }
-    pub fn no_depth_set(&self) -> bool {
-        return self.flags & 0x80 != 0;
-    }
-
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -88,7 +55,7 @@ impl Layer {
         this.flags = cur.readx()?;
         this.texture_id = cur.readx()?;
         this.texture_anim_id = cur.readx()?;
-        this.unknown_1 = cur.readx()?;
+        this._unknown = cur.readx()?;
         this.alpha = cur.readx()?;
 
         while cur.left() >= 16 {

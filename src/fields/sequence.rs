@@ -9,7 +9,7 @@ pub struct Sequence {
     pub looping: bool,
     pub rarity: f32,
     #[dbg(skip)]
-    pub unknown_1: u32,
+    pub _unknown: u32,
     pub bounds_radius: f32,
     #[dbg(formatter = "fmtx")]
     pub minimum_extent: Vec3,
@@ -28,7 +28,7 @@ impl Sequence {
             move_speed: cur.readx()?,
             looping: cur.readx::<u32>()? == 0,
             rarity: cur.readx()?,
-            unknown_1: cur.readx()?,
+            _unknown: cur.readx()?,
             bounds_radius: cur.readx()?,
             minimum_extent: cur.readx()?,
             maximum_extent: cur.readx()?,
