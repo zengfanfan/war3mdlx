@@ -117,6 +117,7 @@ pub struct MdlxData {
     bones: Vec<Bone>,
     helpers: Vec<Helper>,
     attachments: Vec<Attachment>,
+    collisions: Vec<CollisionShape>,
 }
 
 pub struct MdlxChunk {
@@ -155,8 +156,7 @@ impl MdlxData {
     }
 
     pub fn parse_mdl(_: &str) -> Result<Self, MyError> /* [todo] */ {
-        let mut ret = MdlxData::default();
-        return Ok(ret);
+        todo!();
     }
 
     pub fn parse_mdx(input: &Vec<u8>) -> Result<Self, MyError> {
@@ -249,6 +249,10 @@ impl MdlxData {
                 let body = cur.read_bytes(sz)?;
                 let mut cur2 = Cursor::new(&body);
                 self.attachments.push(Attachment::parse_mdx(&mut cur2)?);
+            }
+        } else if chunk.id == CollisionShape::ID {
+            while !cur.eol() {
+                self.collisions.push(CollisionShape::parse_mdx(&mut cur)?);
             }
         }
         return Ok(());

@@ -32,6 +32,10 @@ impl<T: TAnimation> Animation<T> {
         this.interp_type = InterpolationType::from(cur.readx()?);
         this.global_seq_id = cur.readx()?;
 
+        if let InterpolationType::Error(v) = this.interp_type {
+            return ERR!("Unknown interpolation type: {}", v);
+        }
+
         this.key_frames = Vec::with_capacity(kfn as usize);
         for _ in 0..kfn {
             let has_tans = this.interp_type.has_tans();

@@ -1,6 +1,6 @@
 use crate::*;
 
-pub trait Extend_Cursor {
+pub trait ExtendCursor {
     fn readx<T: ReadFromCursor>(&mut self) -> Result<T, MyError>;
     fn read_le<T: ReadFromCursor>(&mut self) -> Result<T, MyError>;
     fn read_be<T: ReadFromCursor>(&mut self) -> Result<T, MyError>;
@@ -8,19 +8,18 @@ pub trait Extend_Cursor {
     fn read_bytes(&mut self, n: u32) -> Result<Vec<u8>, MyError>;
     fn read_array<T: ReadFromCursor>(&mut self, n: u32) -> Result<Vec<T>, MyError>;
     fn read_array_be<T: ReadFromCursor>(&mut self, n: u32) -> Result<Vec<T>, MyError>;
-    fn read_array_to<T: ReadFromCursor>(&mut self, a: &mut Vec<T>, n: u32) -> Result<(), MyError>;
     fn read_string(&mut self, n: u32) -> Result<String, MyError>;
 
-    fn pos(&mut self) -> uint;
-    fn len(&mut self) -> uint;
-    fn left(&mut self) -> uint;
+    fn pos(&mut self) -> u32;
+    fn len(&mut self) -> u32;
+    fn left(&mut self) -> u32;
     fn eol(&mut self) -> bool;
 }
 
 // 2. 为 Cursor<Vec<u8>> 实现这个 trait
-impl Extend_Cursor for Cursor<&Vec<u8>> {
+impl ExtendCursor for Cursor<&Vec<u8>> {
     fn readx<T: ReadFromCursor>(&mut self) -> Result<T, MyError> {
-        Ok(T::read_from(self)?)
+        self.read_le()
     }
     fn read_le<T: ReadFromCursor>(&mut self) -> Result<T, MyError> {
         Ok(T::read_from(self)?)
@@ -50,13 +49,6 @@ impl Extend_Cursor for Cursor<&Vec<u8>> {
         return Ok(v);
     }
 
-    fn read_array_to<T: ReadFromCursor>(&mut self, v: &mut Vec<T>, n: u32) -> Result<(), MyError> {
-        for _ in 0..n {
-            v.push(T::read_from(self)?);
-        }
-        return Ok(());
-    }
-
     fn read_string(&mut self, n: u32) -> Result<String, MyError> {
         let buf = self.read_bytes(n)?;
         let end = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
@@ -68,13 +60,13 @@ impl Extend_Cursor for Cursor<&Vec<u8>> {
         if cond { Ok(T::read_from(self)?) } else { Ok(def) }
     }
 
-    fn pos(&mut self) -> uint {
-        self.position() as uint
+    fn pos(&mut self) -> u32 {
+        self.position() as u32
     }
-    fn len(&mut self) -> uint {
-        self.get_ref().len() as uint
+    fn len(&mut self) -> u32 {
+        self.get_ref().len() as u32
     }
-    fn left(&mut self) -> uint {
+    fn left(&mut self) -> u32 {
         self.len() - self.pos()
     }
     fn eol(&mut self) -> bool {

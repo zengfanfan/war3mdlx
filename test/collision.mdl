@@ -1,0 +1,26 @@
+Version {
+    FormatVersion 800,
+}
+Model "Name" {
+    BlendTime 150,
+}
+PivotPoints 2 {
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+}
+CollisionShape "box" {
+    ObjectId 0,
+    Box,
+    Vertices 2 {
+        { 1.1, 2.22, 33.3 },
+        { 21, 22, 23 },
+    }
+}
+CollisionShape "sphere" {
+    ObjectId 1,
+    Sphere,
+    Vertices 1 {
+        { 6, 0.66, 6.66 },
+    }
+    BoundsRadius 666,
+}

@@ -52,6 +52,10 @@ impl Layer {
         let mut this = Self::default();
 
         this.filter_mode = FilterMode::from(cur.readx()?);
+        if let FilterMode::Error(v) = this.filter_mode {
+            return ERR!("Unknown filter mode: {}", v);
+        }
+
         this.flags = cur.readx()?;
         this.texture_id = cur.readx()?;
         this.texture_anim_id = cur.readx()?;

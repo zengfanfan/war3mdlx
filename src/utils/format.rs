@@ -29,7 +29,7 @@ pub fn fmt_float(v: &f32, len: u32, precision: u32) -> String {
     let (i, e) = s.split_once('e').unwrap();
     let i = trim_float_str(&i);
     let s = format!("{}e{}", i, e);
-    let ev: int = e.parse().unwrap();
+    let ev: i32 = e.parse().unwrap();
     match ev.abs() as usize > (len + precision) / 2 {
         true => s,
         false => {
