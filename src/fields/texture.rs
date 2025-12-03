@@ -2,10 +2,10 @@ use crate::*;
 
 #[derive(Dbg, Default)]
 pub struct Texture {
-    pub replaceable_id: u32,
+    pub replaceable_id: i32,
     pub filename: String,
     #[dbg(skip)]
-    pub _unknown: u32,
+    pub _unknown: i32,
     #[dbg(fmt = "0x{:08X}")]
     pub flags: u32,
 }
@@ -32,9 +32,9 @@ pub struct TextureAnim {
 
 impl TextureAnim {
     pub const ID: u32 = MdlxMagic::TXAN as u32;
-    const ID_T: u32 = MdlxMagic::KTAT as u32;
-    const ID_R: u32 = MdlxMagic::KTAR as u32;
-    const ID_S: u32 = MdlxMagic::KTAS as u32;
+    const ID_T: u32 = MdlxMagic::KTAT as u32; /* Translation */
+    const ID_R: u32 = MdlxMagic::KTAR as u32; /* Rotation */
+    const ID_S: u32 = MdlxMagic::KTAS as u32; /* Scaling */
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
         while cur.left() >= 16 {

@@ -5,20 +5,20 @@ pub struct Attachment {
     pub base: Node,
     pub path: String,
     #[dbg(skip)]
-    pub _unknown: u32,
-    pub attachment_id: u32,
+    pub _unknown: i32,
+    pub attachment_id: i32,
     pub visibility: Option<Animation<f32>>,
 }
 
 impl Attachment {
     pub const ID: u32 = MdlxMagic::ATCH as u32;
-    const ID_V: u32 = MdlxMagic::KATV as u32;
-    const NAME_SIZE: u32 = 256;
+    const ID_V: u32 = MdlxMagic::KATV as u32; /* Visibility */
+    const PATH_SIZE: u32 = 256;
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
         this.base = Node::parse_mdx(cur)?;
-        this.path = cur.read_string(Self::NAME_SIZE)?;
+        this.path = cur.read_string(Self::PATH_SIZE)?;
         this._unknown = cur.readx()?;
         this.attachment_id = cur.readx()?;
 

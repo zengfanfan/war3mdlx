@@ -120,6 +120,7 @@ pub struct MdlxData {
     collisions: Vec<CollisionShape>,
     lights: Vec<Light>,
     eventobjs: Vec<EventObject>,
+    particle_emitters: Vec<ParticleEmitter>,
 }
 
 pub struct MdlxChunk {
@@ -266,6 +267,13 @@ impl MdlxData {
         } else if chunk.id == EventObject::ID {
             while !cur.eol() {
                 self.eventobjs.push(EventObject::parse_mdx(&mut cur)?);
+            }
+        } else if chunk.id == ParticleEmitter::ID {
+            while !cur.eol() {
+                let sz = cur.readx::<u32>()? - 4;
+                let body = cur.read_bytes(sz)?;
+                let mut cur2 = Cursor::new(&body);
+                self.particle_emitters.push(ParticleEmitter::parse_mdx(&mut cur2)?);
             }
         }
         return Ok(());

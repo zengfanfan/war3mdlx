@@ -3,13 +3,13 @@ use crate::*;
 #[derive(Dbg, Default)]
 pub struct Sequence {
     pub name: String,
-    pub start_frame: u32,
-    pub end_frame: u32,
+    pub start_frame: i32,
+    pub end_frame: i32,
     pub move_speed: f32,
     pub looping: bool,
     pub rarity: f32,
     #[dbg(skip)]
-    pub _unknown: u32,
+    pub _unknown: i32,
     pub bounds_radius: f32,
     #[dbg(formatter = "fmtx")]
     pub minimum_extent: Vec3,

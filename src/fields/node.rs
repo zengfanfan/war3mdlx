@@ -5,6 +5,7 @@ pub struct Node {
     pub name: String,
     pub object_id: i32,
     pub parent_id: i32,
+    #[dbg(fmt = "0x{:08X}")]
     pub flags: u32, // see NodeFlags
     pub translation: Option<Animation<Vec3>>,
     pub rotation: Option<Animation<Vec4>>,
@@ -13,9 +14,9 @@ pub struct Node {
 
 impl Node {
     const NAME_SIZE: u32 = 80;
-    const ID_T: u32 = MdlxMagic::KGTR as u32;
-    const ID_R: u32 = MdlxMagic::KGRT as u32;
-    const ID_S: u32 = MdlxMagic::KGSC as u32;
+    const ID_T: u32 = MdlxMagic::KGTR as u32; /* Translation */
+    const ID_R: u32 = MdlxMagic::KGRT as u32; /* Rotation */
+    const ID_S: u32 = MdlxMagic::KGSC as u32; /* Scaling */
 
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();

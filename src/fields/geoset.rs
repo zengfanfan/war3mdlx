@@ -18,7 +18,7 @@ pub struct Geoset {
     pub mtxgrpcnts: Vec<u32>,
     #[dbg(formatter = "fmtx")]
     pub mtx_indices: Vec<u32>,
-    pub material_id: u32,
+    pub material_id: i32,
     pub sel_group: u32,
     pub sel_type: u32, // 0=None, 4=Unselectable
     #[dbg(formatter = "fmtx")]
@@ -68,10 +68,11 @@ impl Geoset {
             } else if id == MdlxMagic::MATS as u32 {
                 this.mtx_indices = cur.read_array(n)?;
             } else if id == MdlxMagic::UVAS as u32 {
+                yes!(n > 1, return ERR!("OMG! [number for UV group] {n} > 1 ?"));
             } else if id == MdlxMagic::UVBS as u32 {
                 this.uvs = cur.read_array(n)?;
             } else {
-                this.material_id = id.swap_bytes();
+                this.material_id = id.swap_bytes() as i32;
                 this.sel_group = n;
                 this.sel_type = cur.readx()?;
                 this.bound_radius = cur.readx()?;

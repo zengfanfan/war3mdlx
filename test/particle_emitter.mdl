@@ -1,0 +1,138 @@
+Version {
+    FormatVersion 800,
+}
+Model "Name" {
+    NumParticleEmitters 3,
+    BlendTime 150,
+}
+PivotPoints 3 {
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+}
+ParticleEmitter "default" {
+    ObjectId 0,
+    static EmissionRate 0,
+    static Gravity 0,
+    static Longitude 0,
+    static Latitude 0,
+    Particle {
+        static LifeSpan 0,
+        static InitVelocity 0,
+        Path "",
+    }
+}
+ParticleEmitter "values" {
+    ObjectId 1,
+    EmitterUsesMDL,
+    EmitterUsesTGA,
+    static EmissionRate 11.11,
+    static Gravity 22.22,
+    static Longitude 33.33,
+    static Latitude 44.44,
+    Particle {
+        static LifeSpan 55.55,
+        static InitVelocity 66.66,
+        Path "77.77",
+    }
+}
+ParticleEmitter "anims" {
+    ObjectId 2,
+    EmitterUsesMDL,
+    EmissionRate 2 {
+        Hermite,
+        0: 0,
+            InTan 0,
+            OutTan 0,
+        1: 1.1,
+            InTan 1,
+            OutTan 1.1,
+    }
+    Gravity 2 {
+        Hermite,
+        2: 2.22,
+            InTan 2,
+            OutTan 2.22,
+        3: 3.333,
+            InTan 3,
+            OutTan 3.333,
+    }
+    Longitude 3 {
+        Bezier,
+        0: 3,
+            InTan 0,
+            OutTan 0,
+        2: 2.22,
+            InTan 2,
+            OutTan 2.22,
+        3: 3.333,
+            InTan 3,
+            OutTan 3.333,
+    }
+    Latitude 4 {
+        Bezier,
+        0: 4.4,
+            InTan 0,
+            OutTan 0,
+        1: 1.1,
+            InTan 1,
+            OutTan 1.1,
+        2: 2.22,
+            InTan 2,
+            OutTan 2.22,
+        3: 3.333,
+            InTan 3,
+            OutTan 3.333,
+    }
+    Visibility 5 {
+        Hermite,
+        0: 0,
+            InTan 0,
+            OutTan 0,
+        1: 1.1,
+            InTan 1,
+            OutTan 1.1,
+        2: 2.22,
+            InTan 2,
+            OutTan 2.22,
+        3: 3.333,
+            InTan 3,
+            OutTan 3.333,
+        5: 5.55555,
+            InTan 5,
+            OutTan 5.55555,
+    }
+    Particle {
+        LifeSpan 4 {
+            Hermite,
+            0: 6.66,
+                InTan 0,
+                OutTan 0,
+            1: 1.1,
+                InTan 1,
+                OutTan 1.1,
+            2: 2.22,
+                InTan 2,
+                OutTan 2.22,
+            3: 3.333,
+                InTan 3,
+                OutTan 3.333,
+        }
+        InitVelocity 4 {
+            Bezier,
+            0: 7.77,
+                InTan 0,
+                OutTan 0,
+            1: 1.1,
+                InTan 1,
+                OutTan 1.1,
+            2: 2.22,
+                InTan 2,
+                OutTan 2.22,
+            3: 3.333,
+                InTan 3,
+                OutTan 3.333,
+        }
+        Path "ok\hey.mdl",
+    }
+}

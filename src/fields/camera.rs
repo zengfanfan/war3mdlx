@@ -17,9 +17,9 @@ pub struct Camera {
 
 impl Camera {
     pub const ID: u32 = MdlxMagic::CAMS as u32;
-    const ID_T: u32 = MdlxMagic::KCTR as u32;
-    const ID_R: u32 = MdlxMagic::KCRL as u32;
-    const ID_TT: u32 = MdlxMagic::KTTR as u32;
+    const ID_T: u32 = MdlxMagic::KCTR as u32; /* Translation */
+    const ID_R: u32 = MdlxMagic::KCRL as u32; /* Rotation (radians) */
+    const ID_TT: u32 = MdlxMagic::KTTR as u32; /* Target translation */
     const NAME_SIZE: u32 = 80;
 
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {

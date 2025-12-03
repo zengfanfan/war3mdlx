@@ -23,20 +23,20 @@ pub struct Light {
 
 impl Light {
     pub const ID: u32 = MdlxMagic::LITE as u32;
-    const ID_V: u32 = MdlxMagic::KLAV as u32;
-    const ID_AS: u32 = MdlxMagic::KLAS as u32;
-    const ID_AE: u32 = MdlxMagic::KLAE as u32;
-    const ID_C: u32 = MdlxMagic::KLAC as u32;
-    const ID_I: u32 = MdlxMagic::KLAI as u32;
-    const ID_AC: u32 = MdlxMagic::KLBC as u32;
-    const ID_AI: u32 = MdlxMagic::KLBI as u32;
+    const ID_V: u32 = MdlxMagic::KLAV as u32; /* Visibility */
+    const ID_AS: u32 = MdlxMagic::KLAS as u32; /* Attenuate start */
+    const ID_AE: u32 = MdlxMagic::KLAE as u32; /* Attenuate end */
+    const ID_C: u32 = MdlxMagic::KLAC as u32; /* Color */
+    const ID_I: u32 = MdlxMagic::KLAI as u32; /* Intensity */
+    const ID_AC: u32 = MdlxMagic::KLBC as u32; /* Ambient color */
+    const ID_AI: u32 = MdlxMagic::KLBI as u32; /* Ambient intensity */
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
         this.base = Node::parse_mdx(cur)?;
         this.typ = LightType::from(cur.readx()?);
         if let LightType::Error(v) = this.typ {
-            return ERR!("Unknown light type: {}", v)
+            return ERR!("Unknown light type: {}", v);
         }
 
         this.attenuate_start = cur.readx()?;

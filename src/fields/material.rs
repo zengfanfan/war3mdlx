@@ -16,7 +16,7 @@ pub struct Layer {
     pub texture_id: i32,
     pub texture_anim_id: i32,
     #[dbg(skip)]
-    pub _unknown: u32,
+    pub _unknown: i32,
     pub alpha: f32,
     pub alpha_anim: Option<Animation<f32>>,
     pub texid_anim: Option<Animation<i32>>,

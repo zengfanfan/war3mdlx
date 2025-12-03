@@ -4,7 +4,7 @@ use crate::*;
 pub struct Model {
     pub name: String,
     #[dbg(skip)]
-    pub _unknown: u32,
+    pub _unknown: i32,
     pub bounds_radius: f32,
     #[dbg(formatter = "fmtx")]
     pub minimum_extent: Vec3,
