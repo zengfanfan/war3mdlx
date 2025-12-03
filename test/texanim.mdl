@@ -1,52 +1,52 @@
 Version {
-	FormatVersion 800,
+    FormatVersion 800,
 }
 Model "Name" {
-	BlendTime 150,
+    BlendTime 150,
 }
 GlobalSequences 2 {
-	Duration 123,
-	Duration 666,
+    Duration 123,
+    Duration 666,
 }
 Materials 1 {
-	Material {
-		Layer {
-			FilterMode None,
-			static TextureID 0,
-		}
-	}
+    Material {
+        Layer {
+            FilterMode None,
+            static TextureID 0,
+        }
+    }
 }
 TextureAnims 1 {
-	TVertexAnim {
-		Translation 3 {
-			DontInterp,
-			0: { 0, 0, 0 },
-			111: { 1, 1, 1 },
-			2222: { 2.2, 22, 2.2 },
-		}
-		Rotation 3 {
-			Hermite,
-			1234: { 1, 2, 3, 4 },
-				InTan { 11, 22, 33, 44 },
-				OutTan { 4.4, 3.3, 2.2, 1.1 },
-			5678: { 0.5, 0.6, 0.7, 0.8 },
-				InTan { 5, 0.6, 7, 8 },
-				OutTan { 8, 7, 6, 5 },
-			9123: { 0.9, 1, 0.2, 0.3 },
-				InTan { 9, 1, 2, 3 },
-				OutTan { 1, 2, 3, 9 },
-		}
-		Scaling 3 {
-			Bezier,
-			0: { 0, 0, 0 },
-				InTan { 0, 0, 0 },
-				OutTan { 0, 0, 0 },
-			1: { 1, 1, 1 },
-				InTan { 0, 0, 0 },
-				OutTan { 0, 0, 0 },
-			2: { 2, 2, 2 },
-				InTan { 0, 0, 0 },
-				OutTan { 0, 0, 0 },
-		}
-	}
+    TVertexAnim {
+        Translation 3 {
+            DontInterp,
+            0: { 0, 0, 0 },
+            111: { 1, 1, 1 },
+            2222: { 2.2, 22, 2.2 },
+        }
+        Rotation 3 {
+            Hermite,
+            1234: { 1, 2, 3, 4 },
+                InTan { 11, 22, 33, 44 },
+                OutTan { 4.4, 3.3, 2.2, 1.1 },
+            5678: { 0.5, 0.6, 0.7, 0.8 },
+                InTan { 5, 0.6, 7, 8 },
+                OutTan { 8, 7, 6, 5 },
+            9123: { 0.9, 1, 0.2, 0.3 },
+                InTan { 9, 1, 2, 3 },
+                OutTan { 1, 2, 3, 9 },
+        }
+        Scaling 3 {
+            Bezier,
+            0: { 0, 0, 0 },
+                InTan { 0, 0, 0 },
+                OutTan { 0, 0, 0 },
+            1: { 1, 1, 1 },
+                InTan { 0, 0, 0 },
+                OutTan { 0, 0, 0 },
+            2: { 2, 2, 2 },
+                InTan { 0, 0, 0 },
+                OutTan { 0, 0, 0 },
+        }
+    }
 }

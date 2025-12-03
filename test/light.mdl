@@ -1,0 +1,73 @@
+Version {
+    FormatVersion 800,
+}
+Model "Name" {
+    NumLights 3,
+    BlendTime 150,
+}
+Light "L.0" {
+    ObjectId 0,
+    Omnidirectional,
+    static AttenuationStart 0,
+    static AttenuationEnd 0,
+    static Color { 1, 1, 1 },
+    static Intensity 0,
+    static AmbColor { 1, 1, 1 },
+    static AmbIntensity 0,
+}
+Light "L.1" {
+    ObjectId 1,
+    Ambient,
+    static AttenuationStart 123.4,
+    static AttenuationEnd 567.89,
+    static Color { 0, 0, 1 },
+    static Intensity 0.618,
+    static AmbColor { 1, 0, 0 },
+    static AmbIntensity 0.382,
+}
+Light "L.2" {
+    ObjectId 2,
+    Directional,
+    AttenuationStart 1 {
+        Linear,
+        0: 0,
+    }
+    AttenuationEnd 1 {
+        Linear,
+        0: 0,
+    }
+    Color 1 {
+        Hermite,
+        0: { 1, 1, 1 },
+            InTan { 0, 0, 0 },
+            OutTan { 0, 0, 0 },
+    }
+    Intensity 1 {
+        Hermite,
+        0: 0,
+            InTan 0,
+            OutTan 0,
+    }
+    AmbColor 1 {
+        Bezier,
+        0: { 1, 1, 1 },
+            InTan { 0, 0, 0 },
+            OutTan { 0, 0, 0 },
+    }
+    AmbIntensity 1 {
+        Bezier,
+        0: 0,
+            InTan 0,
+            OutTan 0,
+    }
+    Visibility 2 {
+        DontInterp,
+        0: 1,
+        1: 0,
+    }
+}
+PivotPoints 3 {
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+}

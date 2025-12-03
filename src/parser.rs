@@ -118,6 +118,7 @@ pub struct MdlxData {
     helpers: Vec<Helper>,
     attachments: Vec<Attachment>,
     collisions: Vec<CollisionShape>,
+    lights: Vec<Light>,
 }
 
 pub struct MdlxChunk {
@@ -253,6 +254,13 @@ impl MdlxData {
         } else if chunk.id == CollisionShape::ID {
             while !cur.eol() {
                 self.collisions.push(CollisionShape::parse_mdx(&mut cur)?);
+            }
+        } else if chunk.id == Light::ID {
+            while !cur.eol() {
+                let sz = cur.readx::<u32>()? - 4;
+                let body = cur.read_bytes(sz)?;
+                let mut cur2 = Cursor::new(&body);
+                self.lights.push(Light::parse_mdx(&mut cur2)?);
             }
         }
         return Ok(());

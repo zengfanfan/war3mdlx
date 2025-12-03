@@ -12,7 +12,7 @@ pub struct Texture {
 
 impl Texture {
     pub const ID: u32 = MdlxMagic::TEXS as u32;
-    pub const NAME_SIZE: u32 = 256;
+    const NAME_SIZE: u32 = 256;
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Self {
             replaceable_id: cur.readx()?,

@@ -12,8 +12,8 @@ pub struct Attachment {
 
 impl Attachment {
     pub const ID: u32 = MdlxMagic::ATCH as u32;
-    pub const ID_V: u32 = MdlxMagic::KATV as u32;
-    pub const NAME_SIZE: u32 = 256;
+    const ID_V: u32 = MdlxMagic::KATV as u32;
+    const NAME_SIZE: u32 = 256;
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
