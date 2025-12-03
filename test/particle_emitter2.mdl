@@ -1,0 +1,90 @@
+Version {
+    FormatVersion 800,
+}
+Model "Name" {
+    NumParticleEmitters2 3,
+    BlendTime 150,
+}
+PivotPoints 3 {
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+    { 0, 0, 0 },
+}
+ParticleEmitter2 "" {
+    ObjectId 0,
+}
+ParticleEmitter2 "values" {
+    ObjectId 1,
+    AlphaKey,
+    static Speed 2.2,
+    static Variation 3.33,
+    static Latitude 44.44, //![bug]
+    static Gravity 7777.78,
+    static EmissionRate 0.1,
+    static Width 555.55,
+    static Length 666.666,
+    static Visibility 0.55,
+    SegmentColor {
+        Color { 0, 0, 1 },
+        Color { 0, 1, 0 },
+        Color { 1, 0, 0 },
+    },
+    Alpha { 1, 222, 33 },
+    ParticleScaling { 1.1, 2.2, 3.3 },
+    LifeSpanUVAnim { 11, 22, 111 },
+    DecayUVAnim { 33, 44, 222 },
+    TailUVAnim { 55, 66, 333 },
+    TailDecayUVAnim { 77, 88, 444 },
+    Rows 12,
+    Columns 34,
+    Time 11.23,
+    LifeSpan 5.6,
+    TailLength 7.8,
+    SortPrimsFarZ,
+    LineEmitter,
+    ModelSpace,
+    AlphaKey,
+    Unshaded,
+    Unfogged,
+    XYQuad,
+    Squirt,
+    Both,
+    TextureID -99,
+    ReplaceableId 10,
+    PriorityPlane 9,
+}
+ParticleEmitter2 "anims" {
+    ObjectId 2,
+    Speed 1 {
+        Linear,
+        1: 0,
+    }
+    Variation 1 {
+        Linear,
+        2: 0,
+    }
+    Latitude 1 {
+        Linear,
+        3: 0,
+    }
+    Gravity 1 {
+        Linear,
+        4: 0,
+    }
+    EmissionRate 1 {
+        Linear,
+        5: 0,
+    }
+    Width 1 {
+        Linear,
+        6: 0,
+    }
+    Length 1 {
+        Linear,
+        7: 0,
+    }
+    Visibility 1 {
+        Linear,
+        8: 1,
+    }
+}

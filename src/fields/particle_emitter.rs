@@ -3,21 +3,21 @@ use crate::*;
 #[derive(Dbg, Default)]
 pub struct ParticleEmitter {
     pub base: Node,
-    pub emission_rate: f32,
+    pub emit_rate: f32,
     pub gravity: f32,
     pub longitude: f32,
     pub latitude: f32,
     pub path: String,
     #[dbg(skip)]
     pub _unknown: i32,
-    pub life_span: f32,
+    pub lifespan: f32,
     pub speed: f32,
     pub visibility: Option<Animation<f32>>,
-    pub emission_rate_anim: Option<Animation<f32>>,
+    pub emit_rate_anim: Option<Animation<f32>>,
     pub gravity_anim: Option<Animation<f32>>,
     pub longitude_anim: Option<Animation<f32>>,
     pub latitude_anim: Option<Animation<f32>>,
-    pub life_span_anim: Option<Animation<f32>>,
+    pub lifespan_anim: Option<Animation<f32>>,
     pub speed_anim: Option<Animation<f32>>,
 }
 
@@ -35,23 +35,23 @@ impl ParticleEmitter {
         let mut this = Self::default();
 
         this.base = Node::read_mdx(cur)?;
-        this.emission_rate = cur.readx()?;
+        this.emit_rate = cur.readx()?;
         this.gravity = cur.readx()?;
         this.longitude = cur.readx()?;
         this.latitude = cur.readx()?;
         this.path = cur.read_string(Self::PATH_SIZE)?;
         this._unknown = cur.readx()?;
-        this.life_span = cur.readx()?;
+        this.lifespan = cur.readx()?;
         this.speed = cur.readx()?;
 
         while cur.left() >= 16 {
             match cur.read_be()? {
                 id @ Self::ID_V => this.visibility = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_ER => this.emission_rate_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_ER => this.emit_rate_anim = Some(Animation::read_mdx(cur, id)?),
                 id @ Self::ID_G => this.gravity_anim = Some(Animation::read_mdx(cur, id)?),
                 id @ Self::ID_LO => this.longitude_anim = Some(Animation::read_mdx(cur, id)?),
                 id @ Self::ID_LA => this.latitude_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_LS => this.life_span_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_LS => this.lifespan_anim = Some(Animation::read_mdx(cur, id)?),
                 id @ Self::ID_SPD => this.speed_anim = Some(Animation::read_mdx(cur, id)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }

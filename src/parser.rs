@@ -121,6 +121,7 @@ pub struct MdlxData {
     lights: Vec<Light>,
     eventobjs: Vec<EventObject>,
     particle_emitters: Vec<ParticleEmitter>,
+    particle_emitters2: Vec<ParticleEmitter2>,
 }
 
 macro_rules! ParseType1 {
@@ -228,7 +229,7 @@ impl MdlxData {
             Attachment      => self.attachments,
             Light           => self.lights,
             ParticleEmitter => self.particle_emitters,
-            // ParticleEmitter2=> self.particle_emitters2,
+            ParticleEmitter2=> self.particle_emitters2,
             // RibbonEmitter   => self.ribbon_emitters,
             Camera          => self.cameras,
         );

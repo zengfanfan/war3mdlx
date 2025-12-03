@@ -7,6 +7,8 @@ use paste::paste;
 use pretty_hex::*;
 use std::fmt::Debug as stdDebug;
 use std::fmt::Display;
+use std::fmt::Formatter as stdFormatter;
+use std::fmt::Result as stdResult;
 use std::io::{Cursor, Error as ioError, Read};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;

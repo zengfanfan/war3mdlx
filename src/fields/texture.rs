@@ -2,7 +2,7 @@ use crate::*;
 
 #[derive(Dbg, Default)]
 pub struct Texture {
-    pub replaceable_id: i32,
+    pub replace_id: i32,
     pub path: String,
     #[dbg(skip)]
     pub _unknown: i32,
@@ -15,7 +15,7 @@ impl Texture {
     const PATH_SIZE: u32 = 256;
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Self {
-            replaceable_id: cur.readx()?,
+            replace_id: cur.readx()?,
             path: cur.read_string(Self::PATH_SIZE)?,
             _unknown: cur.readx()?,
             flags: cur.readx()?,
