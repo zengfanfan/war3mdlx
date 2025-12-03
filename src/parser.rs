@@ -119,6 +119,7 @@ pub struct MdlxData {
     attachments: Vec<Attachment>,
     collisions: Vec<CollisionShape>,
     lights: Vec<Light>,
+    eventobjs: Vec<EventObject>,
 }
 
 pub struct MdlxChunk {
@@ -261,6 +262,10 @@ impl MdlxData {
                 let body = cur.read_bytes(sz)?;
                 let mut cur2 = Cursor::new(&body);
                 self.lights.push(Light::parse_mdx(&mut cur2)?);
+            }
+        } else if chunk.id == EventObject::ID {
+            while !cur.eol() {
+                self.eventobjs.push(EventObject::parse_mdx(&mut cur)?);
             }
         }
         return Ok(());

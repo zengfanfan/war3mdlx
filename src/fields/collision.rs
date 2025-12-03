@@ -13,6 +13,7 @@ impl CollisionShape {
     pub const ID: u32 = MdlxMagic::CLID as u32;
     pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
+
         this.base = Node::parse_mdx(cur)?;
         this.shape = CollisionType::from(cur.readx()?);
 
