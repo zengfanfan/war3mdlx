@@ -22,7 +22,7 @@ impl Camera {
     const ID_TT: u32 = MdlxMagic::KTTR as u32; /* Target translation */
     const NAME_SIZE: u32 = 80;
 
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
         this.name = cur.read_string(Self::NAME_SIZE)?;
@@ -34,9 +34,9 @@ impl Camera {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_T => this.translation = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_R => this.rotation = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_TT => this.target_translation = Some(Animation::parse_mdx(cur, id)?),
+                id @ Self::ID_T => this.translation = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_R => this.rotation = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_TT => this.target_translation = Some(Animation::read_mdx(cur, id)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }

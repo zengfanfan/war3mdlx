@@ -1,9 +1,5 @@
-Version {
-    FormatVersion 800,
-}
 Model "Name" {
     NumParticleEmitters 3,
-    BlendTime 150,
 }
 PivotPoints 3 {
     { 0, 0, 0 },
@@ -12,15 +8,6 @@ PivotPoints 3 {
 }
 ParticleEmitter "default" {
     ObjectId 0,
-    static EmissionRate 0,
-    static Gravity 0,
-    static Longitude 0,
-    static Latitude 0,
-    Particle {
-        static LifeSpan 0,
-        static InitVelocity 0,
-        Path "",
-    }
 }
 ParticleEmitter "values" {
     ObjectId 1,

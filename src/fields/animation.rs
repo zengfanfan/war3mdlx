@@ -24,7 +24,7 @@ pub struct Animation<T: TAnimation> {
 }
 
 impl<T: TAnimation> Animation<T> {
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>, id: u32) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>, id: u32) -> Result<Self, MyError> {
         let mut this = Self::default();
 
         this.id = id;

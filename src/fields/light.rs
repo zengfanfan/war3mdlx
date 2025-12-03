@@ -30,10 +30,10 @@ impl Light {
     const ID_I: u32 = MdlxMagic::KLAI as u32; /* Intensity */
     const ID_AC: u32 = MdlxMagic::KLBC as u32; /* Ambient color */
     const ID_AI: u32 = MdlxMagic::KLBI as u32; /* Ambient intensity */
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
-        this.base = Node::parse_mdx(cur)?;
+        this.base = Node::read_mdx(cur)?;
         this.typ = LightType::from(cur.readx()?);
         if let LightType::Error(v) = this.typ {
             return ERR!("Unknown light type: {}", v);
@@ -48,13 +48,13 @@ impl Light {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_V => this.visibility = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_AS => this.attenuate_start_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_AE => this.attenuate_end_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_C => this.color_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_I => this.intensity_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_AC => this.ambient_color_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_AI => this.ambient_intensity_anim = Some(Animation::parse_mdx(cur, id)?),
+                id @ Self::ID_V => this.visibility = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_AS => this.attenuate_start_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_AE => this.attenuate_end_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_I => this.intensity_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_AC => this.ambient_color_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_AI => this.ambient_intensity_anim = Some(Animation::read_mdx(cur, id)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }

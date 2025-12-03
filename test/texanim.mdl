@@ -4,18 +4,6 @@ Version {
 Model "Name" {
     BlendTime 150,
 }
-GlobalSequences 2 {
-    Duration 123,
-    Duration 666,
-}
-Materials 1 {
-    Material {
-        Layer {
-            FilterMode None,
-            static TextureID 0,
-        }
-    }
-}
 TextureAnims 1 {
     TVertexAnim {
         Translation 3 {
@@ -26,6 +14,7 @@ TextureAnims 1 {
         }
         Rotation 3 {
             Hermite,
+            GlobalSeqId 999,
             1234: { 1, 2, 3, 4 },
                 InTan { 11, 22, 33, 44 },
                 OutTan { 4.4, 3.3, 2.2, 1.1 },

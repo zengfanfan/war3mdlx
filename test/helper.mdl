@@ -5,12 +5,14 @@ Model "Name" {
     NumBones 3,
     BlendTime 150,
 }
-Helper "default" {
+Bone "default" {
     ObjectId 0,
 }
-Helper "values" {
-    ObjectId 1,
-    Parent 0,
+Bone "values" {
+    ObjectId -321,
+    Parent 123,
+    GeosetId 456,
+    GeosetAnimId 789,
     DontInherit { Translation },
     DontInherit { Rotation },
     DontInherit { Scaling },
@@ -20,9 +22,8 @@ Helper "values" {
     BillboardedLockZ,
     CameraAnchored,
 }
-Helper "anims" {
-    ObjectId 2,
-    Parent 1,
+Bone "anims" {
+    ObjectId 666,
     Translation 3 {
         Linear,
         1: { 1, 1.1, 11.11 },
@@ -31,6 +32,7 @@ Helper "anims" {
     }
     Rotation 2 {
         Hermite,
+        GlobalSeqId -999,
         11: { 0,0,0,1 },
             InTan  { 0,0,0,0 },
             OutTan { 0,0,0,0 },
@@ -40,6 +42,7 @@ Helper "anims" {
     }
     Scaling 3 {
         Bezier,
+        GlobalSeqId 999,
         111: { 1,1,1 },
             InTan  { 2,2,2 },
             OutTan { 3,3,3 },
@@ -52,7 +55,7 @@ Helper "anims" {
     }
 }
 PivotPoints 3 {
-    { 0, 0, 0 },
-    { 1, 2.2, 33.3 },
-    { 0, 0, 0 },
+    { 0,0,0 },
+    { 0,0,0 },
+    { 0,0,0 },
 }

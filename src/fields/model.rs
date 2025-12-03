@@ -17,7 +17,7 @@ impl Model {
     pub const ID: u32 = MdlxMagic::MODL as u32;
     const NAME_SIZE: u32 = 336;
 
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Self {
             name: cur.read_string(Self::NAME_SIZE)?,
             _unknown: cur.readx()?,

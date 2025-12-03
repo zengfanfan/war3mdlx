@@ -4,15 +4,12 @@ Version {
 Model "Name" {
     BlendTime 150,
 }
-GlobalSequences 2 {
-    Duration 123,
-    Duration 666,
-}
 Materials 2 {
     Material {
         Layer {
             FilterMode None,
             static TextureID 0,
+            TVertexAnimId 999,
         }
     }
     Material {
@@ -31,7 +28,7 @@ Materials 2 {
             FilterMode Blend,
             Alpha 2 {
                 Hermite,
-                GlobalSeqId 1,
+                GlobalSeqId 999,
                 0: 0.1,
                     InTan 0.11,
                     OutTan 0.12,

@@ -1,0 +1,29 @@
+Version {
+    FormatVersion 800,
+}
+Model "test" {
+    BlendTime 150,
+}
+GeosetAnim {
+}
+GeosetAnim {
+    GeosetId 0,
+    static Alpha 0.1,
+    static Color { 0, 0, 1 },
+    DropShadow,
+}
+GeosetAnim {
+    GeosetId 999,
+    Alpha 1 {
+        Bezier,
+        111: 0.11,
+            InTan 1.10,
+            OutTan 10.1,
+    }
+    Color 1 {
+        Hermite,
+        222: { 2, 2.1, 2.2 },
+            InTan { 21, 22, 23 },
+            OutTan { 2.3, 2.1, 2.2 },
+    }
+}

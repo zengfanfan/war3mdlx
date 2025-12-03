@@ -1,0 +1,22 @@
+Version {
+    FormatVersion 800,
+}
+Model "test" {
+    BlendTime 150,
+}
+Textures 4 {
+    Bitmap {
+        ReplaceableId 1,
+    }
+    Bitmap {
+        ReplaceableId 2,
+    }
+    Bitmap {
+        ReplaceableId 37,
+    }
+    Bitmap {
+        Image "units\Human\Phoenix\RibbonNE1_Red.blp",
+        WrapWidth,
+        WrapHeight,
+    }
+}

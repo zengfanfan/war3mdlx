@@ -18,7 +18,7 @@ impl Node {
     const ID_R: u32 = MdlxMagic::KGRT as u32; /* Rotation */
     const ID_S: u32 = MdlxMagic::KGSC as u32; /* Scaling */
 
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
         let sz = cur.readx::<u32>()?;
@@ -32,9 +32,9 @@ impl Node {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_T => this.translation = Some(Animation::parse_mdx(&mut cur, id)?),
-                id @ Self::ID_R => this.rotation = Some(Animation::parse_mdx(&mut cur, id)?),
-                id @ Self::ID_S => this.scaling = Some(Animation::parse_mdx(&mut cur, id)?),
+                id @ Self::ID_T => this.translation = Some(Animation::read_mdx(&mut cur, id)?),
+                id @ Self::ID_R => this.rotation = Some(Animation::read_mdx(&mut cur, id)?),
+                id @ Self::ID_S => this.scaling = Some(Animation::read_mdx(&mut cur, id)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }

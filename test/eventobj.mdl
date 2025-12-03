@@ -27,31 +27,3 @@ EventObject "SND-AIVS" {
         999999999,
     }
 }
-EventObject "UNNAMED" {
-    ObjectId 1,
-}
-EventObject "FPTxDBS2" {
-    ObjectId 2,
-    EventTrack 2 {
-        22,
-        2222,
-    }
-}
-EventObject "SPLxWES0" {
-    ObjectId 3,
-    EventTrack 1 {
-        333,
-    }
-}
-EventObject "UBRxDNMB" {
-    ObjectId 4,
-    EventTrack 1 {
-        4444,
-    }
-}
-EventObject "SPNxUEGG" {
-    ObjectId 5,
-    EventTrack 1 {
-        55555,
-    }
-}

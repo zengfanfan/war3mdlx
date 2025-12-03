@@ -1,6 +1,10 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    BlendTime 150,
+Model "Minimal" {
+    BlendTime 1500,
+    MinimumExtent { 1, 2.2, 3.33 },
+    MaximumExtent { 44.44, 5, 666 },
+    BoundsRadius 123.456,
+    // AnimationFile "WTF is Animation File? only used by MagosX",
 }

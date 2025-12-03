@@ -101,18 +101,18 @@ pub enum MdlxMagic {
 
 #[derive(Dbg, Default)]
 pub struct MdlxData {
-    version: u32,
+    version: Version,
     model: Model,
     sequences: Vec<Sequence>,
-    #[dbg(fmt = "{:?}")] // compact
-    globalseqs: Vec<u32>,
+    #[dbg(formatter = "fmtx")]
+    globalseqs: Vec<GlobalSequence>,
     textures: Vec<Texture>,
     materials: Vec<Material>,
     texanims: Vec<TextureAnim>,
     geosets: Vec<Geoset>,
     geoanims: Vec<GeosetAnim>,
     #[dbg(formatter = "fmtx")]
-    pivot_points: Vec<Vec3>,
+    pivot_points: Vec<PivotPoint>,
     cameras: Vec<Camera>,
     bones: Vec<Bone>,
     helpers: Vec<Helper>,
@@ -123,19 +123,42 @@ pub struct MdlxData {
     particle_emitters: Vec<ParticleEmitter>,
 }
 
-pub struct MdlxChunk {
-    pub id: u32,
-    pub body: Vec<u8>,
+macro_rules! ParseType1 {
+    ($chunk:expr, $cur:expr, $( $ty:ty => $vec:expr ),+ $(,)?) => {
+        $(
+            if $chunk.id == <$ty>::ID {
+                $vec = <$ty>::read_mdx(&mut $cur)?;
+                return Ok(());
+            }
+        )+
+    };
 }
-impl MdlxChunk {
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let id = cur.read_be()?;
-        let sz = cur.readx()?;
-        vvlog!("chunk = 0x{:08X} ({}) [{}]", id, u32_to_ascii(id), sz);
-        let body = cur.read_bytes(sz)?;
-        vvvlog!("{}", pretty_hex(&body).replace("\n", "\n\t"));
-        return Ok(MdlxChunk { id, body });
-    }
+macro_rules! ParseType2 {
+    ($chunk:expr, $cur:expr, $( $ty:ty => $vec:expr ),+ $(,)?) => {
+        $(
+            if $chunk.id == <$ty>::ID {
+                while !$cur.eol() {
+                    $vec.push(<$ty>::read_mdx(&mut $cur)?);
+                }
+                return Ok(());
+            }
+        )+
+    };
+}
+macro_rules! ParseType3 {
+    ($chunk:expr, $cur:expr, $( $ty:ty => $vec:expr ),+ $(,)?) => {
+        $(
+            if $chunk.id == <$ty>::ID {
+                while !$cur.eol() {
+                    let sz = $cur.readx::<u32>()? - 4;
+                    let body = $cur.read_bytes(sz)?;
+                    let mut cur2 = Cursor::new(&body);
+                    $vec.push(<$ty>::read_mdx(&mut cur2)?);
+                }
+                return Ok(());
+            }
+        )+
+    };
 }
 
 impl MdlxData {
@@ -144,11 +167,11 @@ impl MdlxData {
         match ext {
             "mdl" => match std::fs::read_to_string(path) {
                 Err(e) => ERR!("Failed to read file: {:?}, {}", path, e),
-                Ok(s) => Self::parse_mdl(&s),
+                Ok(s) => Self::read_mdl(&s),
             },
             "mdx" => match std::fs::read(path) {
                 Err(e) => ERR!("Failed to read file: {:?}, {}", path, e),
-                Ok(s) => Self::parse_mdx(&s),
+                Ok(s) => Self::read_mdx(&s),
             },
             _ => ERR!("Invalid input path: {:?}, expected *.mdl or *.mdx", path),
         }
@@ -158,11 +181,11 @@ impl MdlxData {
         return Ok(());
     }
 
-    pub fn parse_mdl(_: &str) -> Result<Self, MyError> /* [todo] */ {
+    pub fn read_mdl(_: &str) -> Result<Self, MyError> /* [todo] */ {
         todo!();
     }
 
-    pub fn parse_mdx(input: &Vec<u8>) -> Result<Self, MyError> {
+    pub fn read_mdx(input: &Vec<u8>) -> Result<Self, MyError> {
         let mut ret = MdlxData::default();
         let mut cur = Cursor::new(input);
 
@@ -172,7 +195,7 @@ impl MdlxData {
         }
 
         while !cur.eol() {
-            let chunk = MdlxChunk::parse_mdx(&mut cur)?;
+            let chunk = MdxChunk::read_mdx(&mut cur)?;
             ret.parse_chunk(&chunk)?;
         }
 
@@ -180,102 +203,35 @@ impl MdlxData {
         return Ok(ret);
     }
 
-    fn parse_chunk(&mut self, chunk: &MdlxChunk) -> Result<(), MyError> /* [todo] */ {
+    fn parse_chunk(&mut self, chunk: &MdxChunk) -> Result<(), MyError> /* [todo] */ {
         let mut cur = Cursor::new(&chunk.body);
-        if chunk.id == MdlxMagic::VERS as u32 {
-            self.version = cur.readx()?;
-        } else if chunk.id == Model::ID {
-            self.model = Model::parse_mdx(&mut cur)?;
-        } else if chunk.id == Sequence::ID {
-            while !cur.eol() {
-                self.sequences.push(Sequence::parse_mdx(&mut cur)?);
-            }
-        } else if chunk.id == GlobalSequence::ID {
-            while !cur.eol() {
-                self.globalseqs.push(GlobalSequence::parse_mdx(&mut cur)?.duration);
-            }
-        } else if chunk.id == Texture::ID {
-            while !cur.eol() {
-                self.textures.push(Texture::parse_mdx(&mut cur)?);
-            }
-        } else if chunk.id == Material::ID {
-            while !cur.eol() {
-                let sz = cur.readx::<u32>()? - 4;
-                let body = cur.read_bytes(sz)?;
-                let mut cur2 = Cursor::new(&body);
-                self.materials.push(Material::parse_mdx(&mut cur2)?);
-            }
-        } else if chunk.id == TextureAnim::ID {
-            while !cur.eol() {
-                let sz = cur.readx::<u32>()? - 4;
-                let body = cur.read_bytes(sz)?;
-                let mut cur2 = Cursor::new(&body);
-                self.texanims.push(TextureAnim::parse_mdx(&mut cur2)?);
-            }
-        } else if chunk.id == Geoset::ID {
-            while !cur.eol() {
-                let sz = cur.readx::<u32>()? - 4;
-                let body = cur.read_bytes(sz)?;
-                vvvlog!("{}", pretty_hex(&body).replace("\n", "\n\t"));
-                let mut cur2 = Cursor::new(&body);
-                self.geosets.push(Geoset::parse_mdx(&mut cur2)?);
-            }
-        } else if chunk.id == GeosetAnim::ID {
-            while !cur.eol() {
-                let sz = cur.readx::<u32>()? - 4;
-                let body = cur.read_bytes(sz)?;
-                let mut cur2 = Cursor::new(&body);
-                self.geoanims.push(GeosetAnim::parse_mdx(&mut cur2)?);
-            }
-        } else if chunk.id == PivotPoint::ID {
-            while !cur.eol() {
-                self.pivot_points.push(PivotPoint::parse_mdx(&mut cur)?.position);
-            }
-        } else if chunk.id == Camera::ID {
-            while !cur.eol() {
-                let sz = cur.readx::<u32>()? - 4;
-                let body = cur.read_bytes(sz)?;
-                let mut cur2 = Cursor::new(&body);
-                self.cameras.push(Camera::parse_mdx(&mut cur2)?);
-            }
-        } else if chunk.id == Bone::ID {
-            while !cur.eol() {
-                self.bones.push(Bone::parse_mdx(&mut cur)?);
-            }
-        } else if chunk.id == Helper::ID {
-            while !cur.eol() {
-                self.helpers.push(Helper::parse_mdx(&mut cur)?);
-            }
-        } else if chunk.id == Attachment::ID {
-            while !cur.eol() {
-                let sz = cur.readx::<u32>()? - 4;
-                let body = cur.read_bytes(sz)?;
-                let mut cur2 = Cursor::new(&body);
-                self.attachments.push(Attachment::parse_mdx(&mut cur2)?);
-            }
-        } else if chunk.id == CollisionShape::ID {
-            while !cur.eol() {
-                self.collisions.push(CollisionShape::parse_mdx(&mut cur)?);
-            }
-        } else if chunk.id == Light::ID {
-            while !cur.eol() {
-                let sz = cur.readx::<u32>()? - 4;
-                let body = cur.read_bytes(sz)?;
-                let mut cur2 = Cursor::new(&body);
-                self.lights.push(Light::parse_mdx(&mut cur2)?);
-            }
-        } else if chunk.id == EventObject::ID {
-            while !cur.eol() {
-                self.eventobjs.push(EventObject::parse_mdx(&mut cur)?);
-            }
-        } else if chunk.id == ParticleEmitter::ID {
-            while !cur.eol() {
-                let sz = cur.readx::<u32>()? - 4;
-                let body = cur.read_bytes(sz)?;
-                let mut cur2 = Cursor::new(&body);
-                self.particle_emitters.push(ParticleEmitter::parse_mdx(&mut cur2)?);
-            }
-        }
+        ParseType1!(chunk, cur,
+            Version => self.version,
+            Model   => self.model,
+        );
+        ParseType2!(chunk, cur,
+            Sequence        => self.sequences,
+            GlobalSequence  => self.globalseqs,
+            Texture         => self.textures,
+            Bone            => self.bones,
+            Helper          => self.helpers,
+            EventObject     => self.eventobjs,
+            CollisionShape  => self.collisions,
+
+            PivotPoint      => self.pivot_points,
+        );
+        ParseType3!(chunk, cur,
+            TextureAnim     => self.texanims,
+            Material        => self.materials,
+            Geoset          => self.geosets,
+            GeosetAnim      => self.geoanims,
+            Attachment      => self.attachments,
+            Light           => self.lights,
+            ParticleEmitter => self.particle_emitters,
+            // ParticleEmitter2=> self.particle_emitters2,
+            // RibbonEmitter   => self.ribbon_emitters,
+            Camera          => self.cameras,
+        );
         return Ok(());
     }
 }

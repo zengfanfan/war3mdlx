@@ -7,12 +7,15 @@ Model "Name" {
 }
 Bone "default" {
     ObjectId 0,
-    GeosetId 123,
-    GeosetAnimId 456,
 }
-Bone "values" {
-    ObjectId 1,
-    Parent 0,
+Bone "+" {
+    ObjectId 666,
+}
+Bone "- values" {
+    ObjectId -321,
+    Parent 123,
+    GeosetId 456,
+    GeosetAnimId 789,
     DontInherit { Translation },
     DontInherit { Rotation },
     DontInherit { Scaling },
@@ -22,39 +25,8 @@ Bone "values" {
     BillboardedLockZ,
     CameraAnchored,
 }
-Bone "anims" {
-    ObjectId 2,
-    Parent 1,
-    Translation 3 {
-        Linear,
-        1: { 1, 1.1, 11.11 },
-        2: { 2, 2, 0.2 },
-        3: { 0.3, 3.0, 30.3 },
-    }
-    Rotation 2 {
-        Hermite,
-        11: { 0,0,0,1 },
-            InTan  { 0,0,0,0 },
-            OutTan { 0,0,0,0 },
-        22: { 1,2,3,4 },
-            InTan  { 0.1, 0.2, 0.3, 0.4 },
-            OutTan { 1.2, 2.3, 3.4, 4.5 },
-    }
-    Scaling 3 {
-        Bezier,
-        111: { 1,1,1 },
-            InTan  { 2,2,2 },
-            OutTan { 3,3,3 },
-        222: { 1,1,1 },
-            InTan  { 1,2,3 },
-            OutTan { 4,5,6 },
-        333: { 1,1,1 },
-            InTan  { 0,0,0 },
-            OutTan { 0,0,0 },
-    }
-}
 PivotPoints 3 {
-    { 0.1, 0.2, 0.3 },
-    { 1, 2.2, 33.3 },
-    { 10, 20, 30 },
+    { 0,0,0 },
+    { 0,0,0 },
+    { 0,0,0 },
 }

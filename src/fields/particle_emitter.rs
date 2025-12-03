@@ -30,29 +30,29 @@ impl ParticleEmitter {
     const ID_LA: u32 = MdlxMagic::KPLT as u32; /* Latitude */
     const ID_LS: u32 = MdlxMagic::KPEL as u32; /* Life span */
     const ID_SPD: u32 = MdlxMagic::KPES as u32; /* Speed */
-    const NAME_SIZE: u32 = 256;
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    const PATH_SIZE: u32 = 256;
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
-        this.base = Node::parse_mdx(cur)?;
+        this.base = Node::read_mdx(cur)?;
         this.emission_rate = cur.readx()?;
         this.gravity = cur.readx()?;
         this.longitude = cur.readx()?;
         this.latitude = cur.readx()?;
-        this.path = cur.read_string(Self::NAME_SIZE)?;
+        this.path = cur.read_string(Self::PATH_SIZE)?;
         this._unknown = cur.readx()?;
         this.life_span = cur.readx()?;
         this.speed = cur.readx()?;
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_V => this.visibility = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_ER => this.emission_rate_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_G => this.gravity_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_LO => this.longitude_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_LA => this.latitude_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_LS => this.life_span_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_SPD => this.speed_anim = Some(Animation::parse_mdx(cur, id)?),
+                id @ Self::ID_V => this.visibility = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_ER => this.emission_rate_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_G => this.gravity_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_LO => this.longitude_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_LA => this.latitude_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_LS => this.life_span_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_SPD => this.speed_anim = Some(Animation::read_mdx(cur, id)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }

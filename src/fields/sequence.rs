@@ -20,7 +20,7 @@ pub struct Sequence {
 impl Sequence {
     pub const ID: u32 = MdlxMagic::SEQS as u32;
     const NAME_SIZE: u32 = 80;
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Self {
             name: cur.read_string(Self::NAME_SIZE)?,
             start_frame: cur.readx()?,

@@ -1,0 +1,19 @@
+Version {
+    FormatVersion 800,
+}
+Model "Name" {
+    BlendTime 150,
+}
+Sequences 2 {
+    Anim "" {
+    }
+    Anim "Stand - 1" {
+        Interval { 0, 1000 },
+        Rarity 2,
+        MoveSpeed 230.66,
+        NonLooping,
+        MinimumExtent { 1.1, 2.2, 3 },
+        MaximumExtent { 44, 55, 66.66 },
+        BoundsRadius 333.333,
+    }
+}

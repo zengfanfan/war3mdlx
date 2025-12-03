@@ -1,0 +1,17 @@
+Version {
+    FormatVersion 800,
+}
+Model "Name" {
+    BlendTime 150,
+}
+GlobalSequences 9 {
+    Duration 1,
+    Duration 22,
+    Duration 33,
+    Duration 4444,
+    Duration 55555,
+    Duration 666666,
+    Duration 7777777,
+    Duration 88888888,
+    Duration 999999999,
+}

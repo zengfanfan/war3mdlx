@@ -8,13 +8,13 @@ pub struct EventObject {
 
 impl EventObject {
     pub const ID: u32 = MdlxMagic::EVTS as u32;
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
-        this.base = Node::parse_mdx(cur)?;
+        this.base = Node::read_mdx(cur)?;
         if cur.left() >= 8 {
             match cur.read_be()? {
-                EventTrack::ID => this.track = EventTrack::parse_mdx(cur)?,
+                EventTrack::ID => this.track = EventTrack::read_mdx(cur)?,
                 id => return ERR!("Unknown chunk in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
@@ -31,7 +31,7 @@ pub struct EventTrack {
 
 impl EventTrack {
     pub const ID: u32 = MdlxMagic::KEVT as u32;
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
         let n = cur.readx::<u32>()?;

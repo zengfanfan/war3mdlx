@@ -4,30 +4,6 @@ Version {
 Model "test" {
     BlendTime 150,
 }
-Textures 2 {
-    Bitmap {
-        Image "ReplaceableTextures\TeamColor\TeamColor01.blp",
-    }
-    Bitmap {
-        Image "units\Human\Phoenix\RibbonNE1_Red.blp",
-        WrapWidth,
-        WrapHeight,
-    }
-}
-Materials 2 {
-    Material {
-        Layer {
-            FilterMode None,
-            static TextureID 0,
-        }
-    }
-    Material {
-        Layer {
-            FilterMode None,
-            static TextureID 1,
-        }
-    }
-}
 Geoset {
     Vertices 4 {
         { -50, 0, -50 },
@@ -58,34 +34,19 @@ Geoset {
             { 0, 1, 2, 3, 2, 1 },
         }
     }
-    Groups 0 0 {
+    Groups 2 4 {
+        Matrices { 9 },
+        Matrices { 1, 2, 3 },
     }
-    MinimumExtent { 0, 0, 0 },
-    MaximumExtent { 0, 0, 0 },
-    MaterialID 1,
-    SelectionGroup 9,
+    MinimumExtent { 10, 20, 30 },
+    MaximumExtent { 10.1, 20.2, 30.3 },
+    BoundsRadius 66.66,
+    Anim {
+        MinimumExtent { -1.894270, -41.042801, 58.943699 },
+        MaximumExtent { 101.208000, 44.168301, 143.406998 },
+        BoundsRadius 64.071404,
+    }
+    MaterialID 111,
+    SelectionGroup 99,
     Unselectable,
-}
-GeosetAnim {
-}
-GeosetAnim {
-    GeosetId 0,
-    static Alpha 0.1,
-    static Color { 0, 0, 1 },
-    DropShadow,
-}
-GeosetAnim {
-    GeosetId 0,
-    Alpha 1 {
-        Bezier,
-        0: 1,
-            InTan 0,
-            OutTan 0,
-    }
-    Color 1 {
-        Hermite,
-        0: { 1, 1, 1 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-    }
 }

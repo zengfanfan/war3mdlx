@@ -24,7 +24,7 @@ pub struct Layer {
 
 impl Material {
     pub const ID: u32 = MdlxMagic::MTLS as u32;
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
         this.priority_plane = cur.readx()?;
@@ -36,7 +36,7 @@ impl Material {
                 let sz: u32 = cur.readx()?;
                 let body = cur.read_bytes(sz - 4)?;
                 let mut cur2 = Cursor::new(&body);
-                this.layers.push(Layer::parse_mdx(&mut cur2)?);
+                this.layers.push(Layer::read_mdx(&mut cur2)?);
             }
         }
 
@@ -48,7 +48,7 @@ impl Layer {
     pub const ID: u32 = MdlxMagic::LAYS as u32;
     const ID_ALPHA: u32 = MdlxMagic::KMTA as u32;
     const ID_TEXID: u32 = MdlxMagic::KMTF as u32;
-    pub fn parse_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
         this.filter_mode = FilterMode::from(cur.readx()?);
@@ -64,8 +64,8 @@ impl Layer {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_ALPHA => this.alpha_anim = Some(Animation::parse_mdx(cur, id)?),
-                id @ Self::ID_TEXID => this.texid_anim = Some(Animation::parse_mdx(cur, id)?),
+                id @ Self::ID_ALPHA => this.alpha_anim = Some(Animation::read_mdx(cur, id)?),
+                id @ Self::ID_TEXID => this.texid_anim = Some(Animation::read_mdx(cur, id)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
