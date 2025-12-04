@@ -125,7 +125,7 @@ pub struct MdlxData {
     ribbon_emitters: Vec<RibbonEmitter>,
 }
 
-macro_rules! ParseType1 {
+macro_rules! MdxParseType1 {
     ($chunk:expr, $cur:expr, $( $ty:ty => $vec:expr ),+ $(,)?) => {
         $(
             if $chunk.id == <$ty>::ID {
@@ -135,7 +135,7 @@ macro_rules! ParseType1 {
         )+
     };
 }
-macro_rules! ParseType2 {
+macro_rules! MdxParseType2 {
     ($chunk:expr, $cur:expr, $( $ty:ty => $vec:expr ),+ $(,)?) => {
         $(
             if $chunk.id == <$ty>::ID {
@@ -147,7 +147,7 @@ macro_rules! ParseType2 {
         )+
     };
 }
-macro_rules! ParseType3 {
+macro_rules! MdxParseType3 {
     ($chunk:expr, $cur:expr, $( $ty:ty => $vec:expr ),+ $(,)?) => {
         $(
             if $chunk.id == <$ty>::ID {
@@ -163,10 +163,31 @@ macro_rules! ParseType3 {
     };
 }
 
+macro_rules! MdlWriteType1 {
+    ($lines:ident, $indent:ident, $( $var:expr ),+ $(,)?) => {
+        $(
+            $lines.append(&mut $var.write_mdl(&$indent)?);
+        )+
+    };
+}
+macro_rules! MdlWriteType2 {
+    ($lines:ident, $indent:ident, $( $name:expr => $var:expr ),+ $(,)?) => {
+        $(
+            if !$var.is_empty() {
+                $lines.push(format!("{} {} {{", $name, $var.len()));
+                for a in &$var {
+                    MdlWriteType1!($lines, $indent, a);
+                }
+                $lines.push(format!("}}"));
+            }
+        )+
+    };
+}
+
 impl MdlxData {
     pub fn read(path: &Path) -> Result<Self, MyError> {
-        let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
-        match ext {
+        let ext = path.ext_lower();
+        match ext.as_str() {
             "mdl" => match std::fs::read_to_string(path) {
                 Err(e) => ERR!("Failed to read file: {:?}, {}", path, e),
                 Ok(s) => Self::read_mdl(&s),
@@ -179,8 +200,50 @@ impl MdlxData {
         }
     }
 
-    pub fn write(&self, _: &Path) -> Result<(), MyError> /* [todo] */ {
+    pub fn write(&self, path: &Path) -> Result<(), MyError> {
+        let ext = path.ext_lower();
+        match ext.as_str() {
+            "mdl" => self.write_mdl(path),
+            "mdx" => self.write_mdx(path),
+            _ => ERR!("Invalid input path: {:?}, expected *.mdl or *.mdx", path),
+        }
+    }
+
+    pub fn write_mdl(&self, _: &Path) -> Result<(), MyError> /* [todo] */ {
+        let mut lines: Vec<String> = vec![];
+        let indent = indent!();
+
+        MdlWriteType1!(lines, indent, self.version, self.model);
+
+        MdlWriteType2!(lines, indent,
+            "Sequences" => self.sequences,
+            "GlobalSequences" => self.globalseqs,
+            "Textures" => self.textures,
+            "TextureAnims" => self.texanims,
+            // "Materials" => self.materials,
+            // "Geosets" => self.geosets,
+            // "GeosetAnims" => self.geoanims,
+            // "PivotPoints" => self.pivot_points,
+            // "Cameras" => self.cameras,
+            // "Bones" => self.bones,
+            // "Helpers" => self.helpers,
+            // "Attachments" => self.attachments,
+            // "CollisionShapes" => self.collisions,
+            // "Lights" => self.lights,
+            // "EventObjects" => self.eventobjs,
+            // "ParticleEmitters" => self.particle_emitters,
+            // "ParticleEmitters2" => self.particle_emitters2,
+            // "RibbonEmitters" => self.ribbon_emitters
+        );
+
+        let text = lines.join("\n");
+        log!("\n *** ===> MDL *** \n\n{}", text); //[test]
         return Ok(());
+        // return Ok(std::fs::write(path, text)?);
+    }
+
+    pub fn write_mdx(&self, _: &Path) -> Result<(), MyError> /* [todo] */ {
+        todo!();
     }
 
     pub fn read_mdl(_: &str) -> Result<Self, MyError> /* [todo] */ {
@@ -205,13 +268,13 @@ impl MdlxData {
         return Ok(ret);
     }
 
-    fn parse_chunk(&mut self, chunk: &MdxChunk) -> Result<(), MyError> /* [todo] */ {
+    fn parse_chunk(&mut self, chunk: &MdxChunk) -> Result<(), MyError> {
         let mut cur = Cursor::new(&chunk.body);
-        ParseType1!(chunk, cur,
+        MdxParseType1!(chunk, cur,
             Version => self.version,
             Model   => self.model,
         );
-        ParseType2!(chunk, cur,
+        MdxParseType2!(chunk, cur,
             Sequence        => self.sequences,
             GlobalSequence  => self.globalseqs,
             Texture         => self.textures,
@@ -219,10 +282,9 @@ impl MdlxData {
             Helper          => self.helpers,
             EventObject     => self.eventobjs,
             CollisionShape  => self.collisions,
-
             PivotPoint      => self.pivot_points,
         );
-        ParseType3!(chunk, cur,
+        MdxParseType3!(chunk, cur,
             TextureAnim     => self.texanims,
             Material        => self.materials,
             Geoset          => self.geosets,

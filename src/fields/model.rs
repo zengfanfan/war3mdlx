@@ -7,9 +7,9 @@ pub struct Model {
     pub _unknown: i32,
     pub bounds_radius: f32,
     #[dbg(formatter = "fmtx")]
-    pub minimum_extent: Vec3,
+    pub min_extent: Vec3,
     #[dbg(formatter = "fmtx")]
-    pub maximum_extent: Vec3,
+    pub max_extent: Vec3,
     pub blend_time: u32,
 }
 
@@ -22,9 +22,20 @@ impl Model {
             name: cur.read_string(Self::NAME_SIZE)?,
             _unknown: cur.readx()?,
             bounds_radius: cur.readx()?,
-            minimum_extent: cur.readx()?,
-            maximum_extent: cur.readx()?,
+            min_extent: cur.readx()?,
+            max_extent: cur.readx()?,
             blend_time: cur.readx()?,
         })
+    }
+
+    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
+        let mut lines: Vec<String> = vec![];
+        lines.push(F!("Model: \"{}\" {{", self.name));
+        lines.pushx_if_n0(&F!("{indent}BoundsRadius"), &self.bounds_radius);
+        lines.pushx_if_n0(&F!("{indent}MinimumExtent"), &self.min_extent);
+        lines.pushx_if_n0(&F!("{indent}MaximumExtent"), &self.max_extent);
+        lines.push(F!("{indent}BlendTime: {},", self.blend_time));
+        lines.push(F!("}}"));
+        return Ok(lines);
     }
 }

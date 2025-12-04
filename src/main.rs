@@ -1,17 +1,18 @@
+use bitflags::bitflags;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use clap::{ArgAction, Parser};
 use derive_debug::Dbg;
 use glam::{Vec2, Vec3, Vec4};
-use once_cell::sync::Lazy;
 use paste::paste;
 use pretty_hex::*;
+use regex::Regex;
+use std::collections::HashMap;
 use std::fmt::Debug as stdDebug;
 use std::fmt::Display;
 use std::fmt::Formatter as stdFormatter;
 use std::fmt::Result as stdResult;
 use std::io::{Cursor, Error as ioError, Read};
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use walkdir::WalkDir;
 
 mod cli;
@@ -27,7 +28,7 @@ use parser::*;
 use utils::*;
 
 fn main() {
-    if let Err(e) = Args::new().execute() {
+    if let Err(e) = Args::init().execute() {
         elog!("{}", e);
         std::process::exit(1);
     }

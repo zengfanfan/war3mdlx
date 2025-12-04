@@ -133,7 +133,7 @@ impl stdDebug for PE2UVAnim {
 }
 
 //#endregion
-//#region PE2FilterMode
+//#region HeadOrTail
 
 #[repr(u32)]
 #[derive(Debug)]

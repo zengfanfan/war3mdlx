@@ -48,6 +48,7 @@ impl Layer {
     pub const ID: u32 = MdlxMagic::LAYS as u32;
     const ID_ALPHA: u32 = MdlxMagic::KMTA as u32;
     const ID_TEXID: u32 = MdlxMagic::KMTF as u32;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 

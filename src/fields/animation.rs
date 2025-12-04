@@ -50,6 +50,34 @@ impl<T: TAnimation> Animation<T> {
 
         return Ok(this);
     }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
+        let mut lines: Vec<String> = vec![];
+        lines.push(F!("{indent}{:?},", self.interp_type));
+        for kf in &self.key_frames {
+            lines.push(F!("{indent}{}: {},", kf.frame, fmtx(&kf.value)));
+            if kf.has_tans {
+                lines.push(F!("{indent2}InTan {},", fmtx(&kf.itan)));
+                lines.push(F!("{indent2}OutTan {},", fmtx(&kf.otan)));
+            }
+        }
+        return Ok(lines);
+    }
+}
+
+#[macro_export]
+macro_rules! MdlWriteAnim {
+    ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
+        $(
+            if let Some(a) = &$var {
+                let indent = indent!(&$depth);
+                $lines.push(F!("{}{} {} {{", indent, $name, a.key_frames.len()));
+                $lines.append(a.write_mdl($depth + 1)?.as_mut());
+                $lines.push(F!("{}}}", indent));
+            }
+        )+
+    };
 }
 
 //#region InterpolationType

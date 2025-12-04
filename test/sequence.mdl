@@ -9,11 +9,11 @@ Sequences 2 {
     }
     Anim "Stand - 1" {
         Interval { 0, 1000 },
-        Rarity 2,
         MoveSpeed 230.66,
         NonLooping,
+        Rarity 2,
+        BoundsRadius 333.333,
         MinimumExtent { 1.1, 2.2, 3 },
         MaximumExtent { 44, 55, 66.66 },
-        BoundsRadius 333.333,
     }
 }

@@ -1,6 +1,6 @@
 use crate::*;
 
-pub trait ExtendCursor {
+pub trait _ExtendCursor {
     fn readx<T: ReadFromCursor>(&mut self) -> Result<T, MyError>;
     fn read_le<T: ReadFromCursor>(&mut self) -> Result<T, MyError>;
     fn read_be<T: ReadFromCursor>(&mut self) -> Result<T, MyError>;
@@ -17,7 +17,7 @@ pub trait ExtendCursor {
 }
 
 // 2. 为 Cursor<Vec<u8>> 实现这个 trait
-impl ExtendCursor for Cursor<&Vec<u8>> {
+impl _ExtendCursor for Cursor<&Vec<u8>> {
     fn readx<T: ReadFromCursor>(&mut self) -> Result<T, MyError> {
         self.read_le()
     }

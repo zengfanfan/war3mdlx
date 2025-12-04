@@ -29,64 +29,76 @@ pub struct Args {
     pub input: String,
     #[arg(hide = true)]
     pub output: Option<String>,
-    #[arg(long, help = "Convert *.mdl to *.mdx")]
+
+    #[arg(long, short = '1', help = "Convert *.mdl to *.mdx")]
     pub mdl2x: bool,
-    #[arg(long, help = "Convert *.mdx to *.mdl")]
+    #[arg(long, short = '2', help = "Convert *.mdx to *.mdl")]
     pub mdx2l: bool,
+
     #[arg(long, short = 'F', help = "Put output files in one directory and ignore hierarchy")]
     pub flat: bool,
-    #[arg(long, short = 'f', help = "Overwrite existing output files (default: skip)")]
+    #[arg(long, short = 'f', help = "Overwrite existing output files [default: skip]")]
     pub overwrite: bool,
-    #[arg(long, short = 'E', help = "Stop walking the directory hierarchy when an error occurs")]
+    #[arg(long, short = 'e', help = "Stop walking the directory hierarchy when an error occurs")]
     pub stop_on_error: bool,
-    #[arg(long, short, help = "Do not print log messages")]
-    pub quiet: bool,
-    #[arg(long, short, action = ArgAction::Count, help = "Print verbose log messages (-vv very verbose)")]
-    pub verbose: u8,
     #[arg(long, short = 'd', default_value_t = 255, value_name = "0..255", help = "Max depth of directory traversal")]
     pub max_depth: u8,
+
     #[arg(
         long,
         short = 'p',
         default_value_t = 4,
+        value_parser = clap::value_parser!(i8).range(0..=10),
         value_name = "0..10",
-        help = "Max precision of floating point numbers when converted to text"
+        help = "Max precision of decimal numbers when converted to text",
     )]
-    pub precision: u8,
+    pub precision: i8,
+    #[arg(
+        long,
+        short = 'n',
+        value_name = "CR|LF|CRLF",
+        value_parser = ["CR", "LF", "CRLF"],
+        default_value = "CRLF",
+        help = "Used when writing text files",
+    )]
+    pub line_ending: String,
+    #[arg(
+        long,
+        short = 'i',
+        value_name = "Ns|Nt",
+        value_parser = validate_indent,
+        default_value = "1t",
+        help = "Used when writing text files (e.g. 1t: one tab, 4s: four spaces)",
+    )]
+    pub indent: String,
+    #[arg(skip)]
+    pub indents: HashMap<u8, String>,
+
+    #[arg(long, short, help = "Do not print log messages")]
+    pub quiet: bool,
+    #[arg(long, short, action = ArgAction::Count, help = "Print verbose log messages (-vv very verbose)")]
+    pub verbose: u8,
+    #[arg(skip)]
+    pub log_level: LogLevel,
+}
+
+fn validate_indent(s: &str) -> Result<String, String> {
+    let re = Regex::new(r"^[0-9]+[st]$").unwrap();
+    if re.is_match(s) { Ok(s.to_string()) } else { Err("must be digits followed by 's' or 't'".into()) }
 }
 
 impl Args {
-    pub fn new() -> Self {
-        let this = Self::parse();
-        this.update_log_level();
-        Self::set_precision(this.precision);
-
-        if this.precision > 10 {
-            elog!("Invalid precision: {}", this.precision);
-            std::process::exit(1);
-        }
-
-        return this;
-    }
-
-    fn update_log_level(&self) {
-        if self.quiet {
-            Self::set_log_level(LogLevel::Warn);
-        } else {
-            match self.verbose {
-                1 => Self::set_log_level(LogLevel::Verbose),
-                2 => Self::set_log_level(LogLevel::Verbose2),
-                3.. => Self::set_log_level(LogLevel::Verbose3),
-                _ => (),
-            }
-        }
+    pub fn init() -> &'static Self {
+        Self::set_instance(Self::parse())
     }
 
     pub fn execute(&self) -> Result<(), MyError> {
         let input = PathBuf::from(&self.input);
         match self.check_input(&input) {
             CheckResult::ExpectFileDir => ERR!("Not a file or directory: {}", self.input),
-            CheckResult::ExpectMDLX => ERR!("Invalid input path: {}, expect *.mdl or *.mdx", self.input),
+            CheckResult::ExpectMDLX => {
+                ERR!("Invalid input path: {}, expect *.mdl or *.mdx", self.input)
+            },
             CheckResult::ExpectMDL => ERR!("Invalid input path: {}, expect *.mdl", self.input),
             CheckResult::ExpectMDX => ERR!("Invalid input path: {}, expect *.mdx", self.input),
             CheckResult::Ok => match input.ext_lower().as_str() {
@@ -214,3 +226,91 @@ impl Args {
         return MdlxData::read(input)?.write(output);
     }
 }
+
+//#region [global] args
+
+macro_rules! getter {
+    ($($field:ident),+) => {
+        $(
+            #[macro_export]
+            macro_rules! $field {
+                () => {
+                    &crate::cli::Args::instance().$field
+                };
+            }
+        )+
+    };
+}
+#[macro_export]
+macro_rules! indent {
+    () => {
+        &crate::cli::Args::instance().indent
+    };
+    ($depth:expr) => {
+        crate::cli::Args::instance().indent(&$depth)
+    };
+}
+
+getter!(log_level, line_ending, precision);
+
+static mut G_ARGS: Option<&'static Args> = None;
+
+impl Args {
+    pub fn instance() -> &'static Self {
+        unsafe { G_ARGS.expect("Args not initialized! [impossible]") }
+    }
+    fn set_instance(mut args: Self) -> &'static Self {
+        args.set_log_level();
+        args.set_line_ending();
+        args.set_indent();
+        /* this function is not thread-safe, make sure it will be called only once (in main thread) */
+        let boxed: Box<Self> = Box::new(args);
+        let static_ref: &'static Self = Box::leak(boxed);
+        unsafe {
+            G_ARGS = Some(static_ref);
+            return static_ref;
+        }
+    }
+
+    fn set_log_level(&mut self) {
+        self.log_level = yesno!(
+            self.quiet,
+            LogLevel::Warn,
+            match self.verbose {
+                1 => LogLevel::Verbose,
+                2 => LogLevel::Verbose2,
+                3.. => LogLevel::Verbose3,
+                _ => LogLevel::default(),
+            }
+        );
+    }
+
+    fn set_indent(&mut self) {
+        let len = self.indent.len();
+        let n = &self.indent[..len - 1];
+        let t = self.indent.as_bytes()[len - 1] as char;
+        self.indent = yesno!(t == 't', '\t', ' ').to_string().repeat(n.parse().unwrap());
+        for i in 0..10 {
+            self.indents.insert(i, self.indent.repeat(i as usize));
+        }
+    }
+    pub fn indent(&self, depth: &u8) -> &str {
+        match depth {
+            0 => "",
+            1 => &self.indent,
+            _ => self.indents.get(depth).expect(&F!("Invalid indent depth: {depth}")),
+        }
+    }
+
+    fn set_line_ending(&mut self) {
+        self.line_ending = match self.line_ending.as_str() {
+            "CR" => "\r",
+            "LF" => "\n",
+            "CRLF" => "\r\n",
+            _ => "",
+        }
+        .to_string();
+    }
+}
+
+//#endregion

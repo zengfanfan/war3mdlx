@@ -2,32 +2,20 @@ use crate::*;
 
 //#region level
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum LogLevel {
     Verbose3,
     Verbose2,
     Verbose,
+    #[default]
     Info,
     Warn,
     Error,
 }
 
-static G_LOG_LEVEL: Lazy<Mutex<LogLevel>> = Lazy::new(|| Mutex::new(LogLevel::Info));
-
-impl Args {
-    pub fn set_log_level(level: LogLevel) {
-        let mut v = G_LOG_LEVEL.lock().unwrap();
-        *v = level;
-    }
-    pub fn get_log_level() -> LogLevel {
-        let v = G_LOG_LEVEL.lock().unwrap();
-        return *v;
-    }
-}
-
 #[macro_export]
 macro_rules! check_log_level {
-    (::$item:ident) => {{ crate::cli::Args::get_log_level() <= crate::logging::LogLevel::$item }};
+    (::$item:ident) => {{ *log_level!() <= crate::logging::LogLevel::$item }};
 }
 
 //#endregion

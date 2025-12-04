@@ -12,14 +12,15 @@ pub struct Sequence {
     pub _unknown: i32,
     pub bounds_radius: f32,
     #[dbg(formatter = "fmtx")]
-    pub minimum_extent: Vec3,
+    pub min_extent: Vec3,
     #[dbg(formatter = "fmtx")]
-    pub maximum_extent: Vec3,
+    pub max_extent: Vec3,
 }
 
 impl Sequence {
     pub const ID: u32 = MdlxMagic::SEQS as u32;
     const NAME_SIZE: u32 = 80;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Self {
             name: cur.read_string(Self::NAME_SIZE)?,
@@ -30,8 +31,23 @@ impl Sequence {
             rarity: cur.readx()?,
             _unknown: cur.readx()?,
             bounds_radius: cur.readx()?,
-            minimum_extent: cur.readx()?,
-            maximum_extent: cur.readx()?,
+            min_extent: cur.readx()?,
+            max_extent: cur.readx()?,
         })
+    }
+
+    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
+        let indent2 = indent!(2);
+        let mut lines: Vec<String> = vec![];
+        lines.push(F!("{indent}Anim: \"{}\" {{", self.name));
+        lines.push(F!("{indent2}Interval: {{ {}, {} }},", self.start_frame, self.end_frame));
+        lines.pushx_if_n0(&F!("{indent2}MoveSpeed"), &self.move_speed);
+        yes!(!self.looping, lines.push(F!("{indent2}NonLooping,")));
+        lines.pushx_if_n0(&F!("{indent2}Rarity"), &self.rarity);
+        lines.pushx_if_n0(&F!("{indent2}BoundsRadius"), &self.bounds_radius);
+        lines.pushx_if_n0(&F!("{indent2}MinimumExtent"), &self.min_extent);
+        lines.pushx_if_n0(&F!("{indent2}MaximumExtent"), &self.max_extent);
+        lines.push(F!("{indent}}}"));
+        return Ok(lines);
     }
 }

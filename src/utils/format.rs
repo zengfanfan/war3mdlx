@@ -1,7 +1,20 @@
 use crate::*;
 
+#[macro_export]
+macro_rules! F {
+    () => {{
+        String::new()
+    }};
+    ($($arg:tt)+) => {{
+        format!($($arg)*)
+    }};
+    ($var:expr) => {{
+        $var.to_string()
+    }};
+}
+
 pub fn fmtx<T: Formatter>(v: &T) -> String {
-    T::debug(v)
+    v.fmt()
 }
 
 fn trim_float_str(s: &str) -> String {
@@ -79,78 +92,53 @@ pub fn tname_last_seg_trim<T>(n: u32) -> String {
 
 //#region trait: Formatter
 
-pub trait Formatter: Sized {
-    fn debug(&self) -> String;
+pub trait Formatter {
+    fn fmt(&self) -> String;
 }
 
-macro_rules! impl_formatter {
+macro_rules! impl_Formatter {
     ($($t:ty),*) => {
-        $(
-            impl Formatter for $t {
-                fn debug(&self) -> String {
-                    format!("{}", self)
-                }
-            }
-        )*
+        $(impl Formatter for $t {
+            fn fmt(&self) -> String { self.to_string() }
+        })*
     };
 }
-macro_rules! impl_formatter_array {
+macro_rules! impl_Formatter_array {
     ($($t:ty),*) => {
         $(
             impl Formatter for Vec<$t> {
-                fn debug(&self) -> String {
-                    format!("[{}]", self.iter().map(|x| Formatter::debug(x)).collect::<Vec<_>>().join(", "))
+                fn fmt(&self) -> String {
+                    format!("[{}]", self.iter().map(|x| Formatter::fmt(x)).collect::<Vec<_>>().join(", "))
                 }
             }
             impl Formatter for &[$t] {
-                fn debug(&self) -> String {
-                    Formatter::debug(&self.to_vec())
-                }
+                fn fmt(&self) -> String { Formatter::fmt(&self.to_vec()) }
             }
         )*
     };
 }
-macro_rules! impl_formatter_vec234 {
+macro_rules! impl_Formatter_vec234 {
     ($($t:ty),*) => {
         $(
             impl Formatter for $t {
-                fn debug(&self) -> String {
-                    let s=Formatter::debug(&self.to_array().to_vec());
-                    format!("({})", s[1..s.len()-1].to_string())
+                fn fmt(&self) -> String {
+                    let s=Formatter::fmt(&self.to_array().to_vec());
+                    format!("{{ {} }}", s[1..s.len()-1].to_string())
                 }
             }
         )*
     };
 }
 
-impl_formatter!(i8, u8, i16, u16, i32, u32);
-impl_formatter_array!(i8, u8, i16, u16, i32, u32, f32);
-impl_formatter_vec234!(Vec2, Vec3, Vec4);
-impl_formatter_array!(Vec2, Vec3, Vec4);
+impl_Formatter!(i8, u8, i16, u16, i32, u32);
+impl_Formatter_array!(i8, u8, i16, u16, i32, u32, f32);
+impl_Formatter_vec234!(Vec2, Vec3, Vec4);
+impl_Formatter_array!(Vec2, Vec3, Vec4);
 
 impl Formatter for f32 {
-    fn debug(&self) -> String {
-        let p = Args::get_precision() as u32;
-        let s = fmt_float(self, p * 2 + 1, p);
-        if s.find(".") != None && s.ends_with("0") {
-            log!(" *** {} -> {} *** ", self, s);
-        }
-        return s;
-    }
-}
-
-//#endregion
-//#region float precision
-
-static G_PRECISION: Lazy<Mutex<u8>> = Lazy::new(|| Mutex::new(4));
-impl Args {
-    pub fn set_precision(precision: u8) {
-        let mut v = G_PRECISION.lock().unwrap();
-        *v = precision;
-    }
-    pub fn get_precision() -> u8 {
-        let v = G_PRECISION.lock().unwrap();
-        return *v;
+    fn fmt(&self) -> String {
+        let p = *precision!() as u32;
+        return fmt_float(self, p * 2 + 1, p);
     }
 }
 
