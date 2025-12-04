@@ -223,7 +223,7 @@ impl MdlxData {
             "Materials" => self.materials,
             // "Geosets" => self.geosets,
             // "GeosetAnims" => self.geoanims,
-            // "PivotPoints" => self.pivot_points,
+            "PivotPoints" => self.pivot_points,
             // "Cameras" => self.cameras,
             // "Bones" => self.bones,
             // "Helpers" => self.helpers,

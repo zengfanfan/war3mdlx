@@ -7,10 +7,15 @@ pub struct PivotPoint {
 
 impl PivotPoint {
     pub const ID: u32 = MdlxMagic::PIVT as u32;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.position = cur.readx()?;
         return Ok(this);
+    }
+
+    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
+        Ok(vec![F!("{indent}{},", fmtx(&self.position))])
     }
 }
 
