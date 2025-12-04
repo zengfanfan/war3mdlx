@@ -34,7 +34,7 @@ impl Model {
         lines.pushx_if_n0(&F!("{indent}BoundsRadius"), &self.bounds_radius);
         lines.pushx_if_n0(&F!("{indent}MinimumExtent"), &self.min_extent);
         lines.pushx_if_n0(&F!("{indent}MaximumExtent"), &self.max_extent);
-        lines.push(F!("{indent}BlendTime: {},", self.blend_time));
+        lines.push(F!("{indent}BlendTime {},", self.blend_time));
         lines.push(F!("}}"));
         return Ok(lines);
     }

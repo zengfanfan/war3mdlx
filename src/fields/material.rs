@@ -2,17 +2,25 @@ use crate::*;
 
 #[derive(Dbg, Default)]
 pub struct Material {
-    pub priority_plane: u32,
-    #[dbg(fmt = "0x{:08X}")]
-    pub flags: u32,
+    pub priority_plane: i32,
+    #[dbg(fmt = "{:?}")]
+    pub flags: MaterialFlags,
     pub layers: Vec<Layer>,
+}
+bitflags! {
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct MaterialFlags : u32 {
+        const ConstantColor = 1 << 0;
+        const SortPrimsFarZ = 1 << 4;
+        const FullResolution = 1 << 5;
+    }
 }
 
 #[derive(Dbg, Default)]
 pub struct Layer {
     pub filter_mode: FilterMode,
-    #[dbg(fmt = "0x{:08X}")]
-    pub flags: u32,
+    #[dbg(fmt = "{:?}")]
+    pub flags: LayerFlags,
     pub texture_id: i32,
     pub texture_anim_id: i32,
     #[dbg(skip)]
@@ -21,6 +29,17 @@ pub struct Layer {
     pub alpha_anim: Option<Animation<f32>>,
     pub texid_anim: Option<Animation<i32>>,
 }
+bitflags! {
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct LayerFlags : u32 {
+        const Unshaded = 1 << 0;
+        const SphereEnvMap = 1 << 1;
+        const TwoSided = 1 << 4;
+        const Unfogged = 1 << 5;
+        const NoDepthTest = 1 << 6;
+        const NoDepthSet = 1 << 7;
+    }
+}
 
 impl Material {
     pub const ID: u32 = MdlxMagic::MTLS as u32;
@@ -28,7 +47,7 @@ impl Material {
         let mut this = Self::default();
 
         this.priority_plane = cur.readx()?;
-        this.flags = cur.readx()?;
+        this.flags = MaterialFlags::from_bits_retain(cur.readx()?);
 
         if cur.left() > 8 && cur.read_be::<u32>()? == Layer::ID {
             let count: i32 = cur.readx()?;
@@ -41,6 +60,23 @@ impl Material {
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
+        let indent2 = indent!(2);
+        let mut lines: Vec<String> = vec![];
+        lines.push(F!("{indent}Material {{"));
+        lines.pushx_if_n0(&F!("{indent2}PriorityPlane"), &self.priority_plane);
+        yes!(self.flags.contains(MaterialFlags::ConstantColor), lines.push(F!("{indent2}ConstantColor,")));
+        yes!(self.flags.contains(MaterialFlags::SortPrimsFarZ), lines.push(F!("{indent2}SortPrimsFarZ,")));
+        yes!(self.flags.contains(MaterialFlags::FullResolution), lines.push(F!("{indent2}FullResolution,")));
+
+        for layer in &self.layers {
+            lines.append(&mut layer.write_mdl(2)?);
+        }
+
+        lines.push(F!("{indent}}}"));
+        return Ok(lines);
     }
 }
 
@@ -57,7 +93,7 @@ impl Layer {
             return ERR!("Unknown filter mode: {}", v);
         }
 
-        this.flags = cur.readx()?;
+        this.flags = LayerFlags::from_bits_retain(cur.readx()?);
         this.texture_id = cur.readx()?;
         this.texture_anim_id = cur.readx()?;
         this._unknown = cur.readx()?;
@@ -72,6 +108,32 @@ impl Layer {
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
+        let mut lines: Vec<String> = vec![];
+        lines.push(F!("{indent}Layer {{"));
+        lines.push(F!("{indent2}FilterMode {:?},", self.filter_mode));
+        yes!(self.flags.contains(LayerFlags::Unshaded), lines.push(F!("{indent2}Unshaded,")));
+        yes!(self.flags.contains(LayerFlags::SphereEnvMap), lines.push(F!("{indent2}SphereEnvMap,")));
+        yes!(self.flags.contains(LayerFlags::TwoSided), lines.push(F!("{indent2}TwoSided,")));
+        yes!(self.flags.contains(LayerFlags::Unfogged), lines.push(F!("{indent2}Unfogged,")));
+        yes!(self.flags.contains(LayerFlags::NoDepthTest), lines.push(F!("{indent2}NoDepthTest,")));
+        yes!(self.flags.contains(LayerFlags::NoDepthSet), lines.push(F!("{indent2}NoDepthSet,")));
+        lines.push_if_nneg1(&F!("{indent2}TVertexAnimId"), &self.texture_anim_id);
+
+        MdlWriteAnimStatic!(lines, depth + 1,
+            "Alpha" => self.alpha_anim => 1.0 => self.alpha,
+            "TextureID" => self.texid_anim => -1 => self.texture_id,
+        );
+        MdlWriteAnim!(lines, depth + 1,
+            "Alpha" => self.alpha_anim,
+            "TextureID" => self.texid_anim,
+        );
+
+        lines.push(F!("{indent}}}"));
+        return Ok(lines);
     }
 }
 

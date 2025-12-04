@@ -220,7 +220,7 @@ impl MdlxData {
             "GlobalSequences" => self.globalseqs,
             "Textures" => self.textures,
             "TextureAnims" => self.texanims,
-            // "Materials" => self.materials,
+            "Materials" => self.materials,
             // "Geosets" => self.geosets,
             // "GeosetAnims" => self.geoanims,
             // "PivotPoints" => self.pivot_points,

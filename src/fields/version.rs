@@ -13,6 +13,6 @@ impl Version {
     }
 
     pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
-        Ok(vec![F!("Version {{\n{indent}FormatVersion: {},\n}}", self.format_version)])
+        Ok(vec![F!("Version {{\n{indent}FormatVersion {},\n}}", self.format_version)])
     }
 }

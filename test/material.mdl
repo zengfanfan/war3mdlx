@@ -6,23 +6,28 @@ Model "Name" {
 }
 Materials 2 {
     Material {
+        PriorityPlane 66,
+        ConstantColor,
+        SortPrimsFarZ,
+        FullResolution,
         Layer {
             FilterMode None,
-            static TextureID 0,
             TVertexAnimId 999,
+            static TextureID 0,
         }
     }
     Material {
+        PriorityPlane -66,
         Layer {
             FilterMode Transparent,
-            static Alpha 0.5,
-            static TextureID 0,
-            TwoSided,
             Unshaded,
-            Unfogged,
             SphereEnvMap,
+            TwoSided,
+            Unfogged,
             NoDepthTest,
             NoDepthSet,
+            static Alpha 0.5,
+            static TextureID 0,
         }
         Layer {
             FilterMode Blend,

@@ -34,7 +34,7 @@ impl Texture {
         let indent2 = indent!(2);
         let mut lines: Vec<String> = vec![];
         lines.push(F!("{indent}Bitmap {{"));
-        lines.pushx_if_n0(&F!("{indent2}ReplaceableId"), &self.replace_id);
+        lines.push_if_n0(&F!("{indent2}ReplaceableId"), &self.replace_id);
         yes!(self.replace_id.is0(), lines.push(F!("{indent2}Image \"{}\",", self.path)));
         yes!(self.flags.contains(TextureFlags::WrapWidth), lines.push(F!("{indent2}WrapWidth,")));
         yes!(self.flags.contains(TextureFlags::WrapHeight), lines.push(F!("{indent2}WrapHeight,")));
@@ -75,7 +75,7 @@ impl TextureAnim {
         MdlWriteAnim!(lines, 2,
             "Translation" => self.translation,
             "Rotation" => self.rotation,
-            "Scaling" => self.scaling
+            "Scaling" => self.scaling,
         );
         lines.push(F!("{indent}}}"));
         return Ok(lines);

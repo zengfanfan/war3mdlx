@@ -55,6 +55,7 @@ impl<T: TAnimation> Animation<T> {
         let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
         lines.push(F!("{indent}{:?},", self.interp_type));
+        lines.push_if_nneg1(&F!("{indent}GlobalSeqId"), &self.global_seq_id);
         for kf in &self.key_frames {
             lines.push(F!("{indent}{}: {},", kf.frame, fmtx(&kf.value)));
             if kf.has_tans {
@@ -69,12 +70,21 @@ impl<T: TAnimation> Animation<T> {
 #[macro_export]
 macro_rules! MdlWriteAnim {
     ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
+        $(if let Some(a) = &$var {
+            let indent = indent!(&$depth);
+            $lines.push(F!("{}{} {} {{", indent, $name, a.key_frames.len()));
+            $lines.append(a.write_mdl($depth + 1)?.as_mut());
+            $lines.push(F!("{}}}", indent));
+        })+
+    };
+}
+#[macro_export]
+macro_rules! MdlWriteAnimStatic {
+    ($lines:ident, $depth:expr, $( $name:expr => $avar:expr => $def:expr => $svar:expr ),+ $(,)?) => {
         $(
-            if let Some(a) = &$var {
+            if let None = &$avar && $svar != $def {
                 let indent = indent!(&$depth);
-                $lines.push(F!("{}{} {} {{", indent, $name, a.key_frames.len()));
-                $lines.append(a.write_mdl($depth + 1)?.as_mut());
-                $lines.push(F!("{}}}", indent));
+                $lines.push(F!("{}static {} {},", indent, $name, $svar));
             }
         )+
     };
