@@ -250,7 +250,7 @@ impl MdlxData {
         );
         MdlWriteType4!(lines, 0, base.name,
             "Bone" => self.bones,
-            // "Lights" => self.lights,
+            "Lights" => self.lights,
             "Helper" => self.helpers,
             "Attachment" => self.attachments,
             // "ParticleEmitter" => self.particle_emitters,

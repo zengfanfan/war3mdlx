@@ -30,6 +30,7 @@ impl Light {
     const ID_I: u32 = MdlxMagic::KLAI as u32; /* Intensity */
     const ID_AC: u32 = MdlxMagic::KLBC as u32; /* Ambient color */
     const ID_AI: u32 = MdlxMagic::KLBI as u32; /* Ambient intensity */
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -60,6 +61,38 @@ impl Light {
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let indent = indent!(depth);
+        let mut lines: Vec<String> = vec![];
+
+        lines.append(&mut self.base.write_mdl(depth)?);
+        lines.push(F!("{indent}{:?},", self.typ));
+
+        let (bgr, bgr2) = (self.color.reverse(), self.ambient_color.reverse());
+        let bgr_anim = self.color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
+        let bgr2_anim = self.ambient_color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
+
+        MdlWriteAnimStatic!(lines, depth,
+            "AttenuationStart" => self.attenuate_start_anim => 0.0 => self.attenuate_start,
+            "AttenuationEnd" => self.attenuate_end_anim => 0.0 => self.attenuate_end,
+            "Color" => bgr_anim => Vec3::NEG_ONE => bgr,
+            "Intensity" => self.intensity_anim => 0.0 => self.intensity,
+            "AmbColor" => bgr2_anim => Vec3::NEG_ONE => bgr2,
+            "AmbIntensity" => self.ambient_intensity_anim => 0.0 => self.ambient_intensity,
+        );
+        MdlWriteAnim!(lines, depth,
+            "Visibility" => self.visibility,
+            "AttenuationStart" => self.attenuate_start_anim,
+            "AttenuationEnd" => self.attenuate_end_anim,
+            "Color" => bgr_anim,
+            "Intensity" => self.intensity_anim,
+            "AmbColor" => bgr2_anim,
+            "AmbIntensity" => self.ambient_intensity_anim,
+        );
+
+        return Ok(lines);
     }
 }
 

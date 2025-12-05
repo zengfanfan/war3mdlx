@@ -10,7 +10,7 @@ Light "L.0" {
     Omnidirectional,
     static AttenuationStart 0,
     static AttenuationEnd 0,
-    static Color { 1, 1, 1 },
+    static Color { 0, 0, 0 },
     static Intensity 0,
     static AmbColor { 1, 1, 1 },
     static AmbIntensity 0,

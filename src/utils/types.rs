@@ -152,3 +152,13 @@ impl CheckValue for String {
 }
 
 //#endregion
+//#region trait: compare
+
+pub fn eq<T: Into<f64>, U: Into<f64>>(a: T, b: U) -> bool {
+    a.into() == b.into()
+}
+pub fn neq<T: Into<f64>, U: Into<f64>>(a: T, b: U) -> bool {
+    a.into() != b.into()
+}
+
+//#endregion
