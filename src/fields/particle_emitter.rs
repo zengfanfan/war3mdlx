@@ -33,6 +33,7 @@ impl ParticleEmitter {
     const ID_LS: u32 = MdlxMagic::KPEL as u32; /* Life span */
     const ID_SPD: u32 = MdlxMagic::KPES as u32; /* Speed */
     const PATH_SIZE: u32 = 256;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -60,5 +61,47 @@ impl ParticleEmitter {
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
+        let mut lines: Vec<String> = vec![];
+
+        lines.append(&mut self.base.write_mdl(depth)?);
+        let flags = self.base.flags;
+        if flags.contains(NodeFlags::ParticleEmitter) {
+            yes!(flags.contains(NodeFlags::PE1UsesMdl), lines.push(F!("{indent}EmitterUsesMDL,")));
+            yes!(flags.contains(NodeFlags::PE1UsesTga), lines.push(F!("{indent}EmitterUsesTGA,")));
+        }
+
+        MdlWriteAnimStatic!(lines, depth,
+            "EmissionRate" => self.emit_rate_anim => 0.0 => self.emit_rate,
+            "Gravity" => self.gravity_anim => 0.0 => self.gravity,
+            "Longitude" => self.longitude_anim => 0.0 => self.longitude,
+            "Latitude" => self.latitude_anim => 0.0 => self.latitude,
+        );
+        MdlWriteAnim!(lines, depth,
+            "EmissionRate" => self.emit_rate_anim,
+            "Gravity" => self.gravity_anim,
+            "Longitude" => self.longitude_anim,
+            "Latitude" => self.latitude_anim,
+            "Visibility" => self.visibility,
+        );
+
+        {
+            let mut tines: Vec<String> = vec![];
+            MdlWriteAnimBoth!(tines, depth + 1,
+                "LifeSpan" => self.lifespan_anim => 0.0 => self.lifespan,
+                "InitVelocity" => self.speed_anim => 0.0 => self.speed,
+            );
+            tines.pushx_if_n0(&F!("{indent2}Path"), &self.path);
+            if !tines.is_empty() {
+                lines.push(F!("{indent}Particle {{"));
+                lines.append(&mut tines);
+                lines.push(F!("{indent}}}"));
+            }
+        }
+
+        return Ok(lines);
     }
 }

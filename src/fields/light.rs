@@ -83,13 +83,13 @@ impl Light {
             "AmbIntensity" => self.ambient_intensity_anim => 0.0 => self.ambient_intensity,
         );
         MdlWriteAnim!(lines, depth,
-            "Visibility" => self.visibility,
             "AttenuationStart" => self.attenuate_start_anim,
             "AttenuationEnd" => self.attenuate_end_anim,
             "Color" => bgr_anim,
             "Intensity" => self.intensity_anim,
             "AmbColor" => bgr2_anim,
             "AmbIntensity" => self.ambient_intensity_anim,
+            "Visibility" => self.visibility,
         );
 
         return Ok(lines);

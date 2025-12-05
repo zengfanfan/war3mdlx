@@ -5,7 +5,7 @@ pub struct Node {
     pub name: String,
     pub object_id: i32,
     pub parent_id: i32,
-    #[dbg(fmt = "0x{:08X}")]
+    #[dbg(fmt = "{:?}")]
     pub flags: NodeFlags, // see NodeFlags
     pub translation: Option<Animation<Vec3>>,
     pub rotation: Option<Animation<Vec4>>,
@@ -78,7 +78,7 @@ impl Node {
 //#region HeadOrTail
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct NodeFlags: u32 {
         const All = !0;
         const Helper = 0;

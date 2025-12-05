@@ -253,7 +253,7 @@ impl MdlxData {
             "Lights" => self.lights,
             "Helper" => self.helpers,
             "Attachment" => self.attachments,
-            // "ParticleEmitter" => self.particle_emitters,
+            "ParticleEmitter" => self.particle_emitters,
             // "ParticleEmitters" => self.particle_emitters2,
             // "RibbonEmitter" => self.ribbon_emitters
             "EventObject" => self.eventobjs,
