@@ -14,6 +14,7 @@ impl Attachment {
     pub const ID: u32 = MdlxMagic::ATCH as u32;
     const ID_V: u32 = MdlxMagic::KATV as u32; /* Visibility */
     const PATH_SIZE: u32 = 256;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -30,5 +31,14 @@ impl Attachment {
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let indent = indent!(depth);
+        let mut lines: Vec<String> = vec![];
+        lines.append(&mut self.base.write_mdl(depth)?);
+        lines.push_if_nneg1(&F!("{indent}AttachmentID"), &self.attachment_id);
+        lines.pushx_if_n0(&F!("{indent}Path"), &self.path);
+        return Ok(lines);
     }
 }

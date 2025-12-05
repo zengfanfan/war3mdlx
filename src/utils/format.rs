@@ -141,6 +141,11 @@ impl Formatter for f32 {
         return fmt_float(self, p * 2 + 1, p);
     }
 }
+impl Formatter for String {
+    fn fmt(&self) -> String {
+        F!("\"{self}\"")
+    }
+}
 
 pub trait _ExtendFormatter {
     fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError>;

@@ -242,35 +242,25 @@ impl MdlxData {
             "Textures" => self.textures,
             "Materials" => self.materials,
             "TextureAnims" => self.texanims,
-            // "Geosets" => self.geosets,
-            // "Bones" => self.bones,
-            // "Lights" => self.lights,
-            "Helpers" => self.helpers,
-            // "Attachments" => self.attachments,
             "PivotPoints" => self.pivot_points,
-            // "ParticleEmitters" => self.particle_emitters,
-            // "ParticleEmitters2" => self.particle_emitters2,
-            // "RibbonEmitters" => self.ribbon_emitters
-            // "EventObjects" => self.eventobjs,
-            // "Cameras" => self.cameras,
-            // "CollisionShapes" => self.collisions,
+            // "Camera" => self.cameras,
         );
         MdlWriteType3!(lines, 0,
-            "Geosets" => self.geosets,
-            "GeosetAnims" => self.geoanims,
-            // "Cameras" => self.cameras,
+            "Geoset" => self.geosets,
+            "GeosetAnim" => self.geoanims,
+            // "Camera" => self.cameras,
         );
         MdlWriteType4!(lines, 0,
-            "Bones" => self.bones,
+            "Bone" => self.bones,
             // "Lights" => self.lights,
-            // "Helpers" => self.helpers,
-            // "Attachments" => self.attachments,
-            // "ParticleEmitters" => self.particle_emitters,
-            // "ParticleEmitters2" => self.particle_emitters2,
-            // "RibbonEmitters" => self.ribbon_emitters
-            // "EventObjects" => self.eventobjs,
-            // "Cameras" => self.cameras,
-            // "CollisionShapes" => self.collisions,
+            "Helper" => self.helpers,
+            "Attachment" => self.attachments,
+            // "ParticleEmitter" => self.particle_emitters,
+            // "ParticleEmitters" => self.particle_emitters2,
+            // "RibbonEmitter" => self.ribbon_emitters
+            // "EventObject" => self.eventobjs,
+            // "Camera" => self.cameras,
+            // "CollisionShape" => self.collisions,
         );
 
         let text = lines.join("\n");

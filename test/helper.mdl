@@ -5,14 +5,12 @@ Model "Name" {
     NumBones 3,
     BlendTime 150,
 }
-Bone "default" {
+Helper "default" {
     ObjectId 0,
 }
-Bone "values" {
+Helper "values" {
     ObjectId -321,
     Parent 123,
-    GeosetId 456,
-    GeosetAnimId 789,
     DontInherit { Translation },
     DontInherit { Rotation },
     DontInherit { Scaling },
@@ -22,7 +20,7 @@ Bone "values" {
     BillboardedLockZ,
     CameraAnchored,
 }
-Bone "anims" {
+Helper "anims" {
     ObjectId 666,
     Translation 3 {
         Linear,
