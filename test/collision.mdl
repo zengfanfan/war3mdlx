@@ -8,8 +8,23 @@ PivotPoints 2 {
     { 0, 0, 0 },
     { 0, 0, 0 },
 }
-CollisionShape "box" {
+CollisionShape "box-def" {
     ObjectId 0,
+    Box,
+    Vertices 2 {
+        { 0, 0, 0 },
+        { 0, 0, 0 },
+    }
+}
+CollisionShape "sphere-def" {
+    ObjectId 1,
+    Sphere,
+    Vertices 1 {
+        { 0, 0, 0 },
+    }
+}
+CollisionShape "box" {
+    ObjectId 2,
     Box,
     Vertices 2 {
         { 1.1, 2.22, 33.3 },
@@ -17,7 +32,7 @@ CollisionShape "box" {
     }
 }
 CollisionShape "sphere" {
-    ObjectId 1,
+    ObjectId 3,
     Sphere,
     Vertices 1 {
         { 6, 0.66, 6.66 },

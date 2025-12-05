@@ -33,6 +33,16 @@ impl CollisionShape {
 
         return Ok(this);
     }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let indent = indent!(depth);
+        let mut lines: Vec<String> = vec![];
+        lines.append(&mut self.base.write_mdl(depth)?);
+        lines.push(F!("{indent}{:?},", self.shape));
+        MdlWriteType2!(lines, depth, "Vertices" => self.vertices);
+        lines.pushx_if_n0(&F!("{indent}BoundsRadius"), &self.bounds_radius);
+        return Ok(lines);
+    }
 }
 
 #[repr(u32)]
