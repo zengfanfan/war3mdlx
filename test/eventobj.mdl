@@ -2,19 +2,18 @@ Version {
     FormatVersion 800,
 }
 Model "Name" {
-    NumEvents 6,
+    NumEvents 2,
     BlendTime 150,
 }
-PivotPoints 6 {
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
+PivotPoints 2 {
     { 0, 0, 0 },
     { 0, 0, 0 },
 }
-EventObject "SND-AIVS" {
+EventObject "UNNAMED" {
     ObjectId 0,
+}
+EventObject "SND-AIVS" {
+    ObjectId 1,
     EventTrack 9 {
         1,
         22,

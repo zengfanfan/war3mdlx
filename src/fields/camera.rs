@@ -59,7 +59,7 @@ impl Camera {
 
         {
             let mut tines: Vec<String> = vec![];
-            tines.pushx_if_n0(&F!("{indent2}Position"), &self.position);
+            tines.pushx_if_n0(&F!("{indent2}Position"), &self.target);
             MdlWriteAnim!(tines, depth + 1, "Translation" => self.target_translation);
             if !tines.is_empty() {
                 lines.push(F!("{indent}Target {{"));

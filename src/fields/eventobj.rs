@@ -8,6 +8,7 @@ pub struct EventObject {
 
 impl EventObject {
     pub const ID: u32 = MdlxMagic::EVTS as u32;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -21,6 +22,13 @@ impl EventObject {
 
         return Ok(this);
     }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let mut lines: Vec<String> = vec![];
+        lines.append(&mut self.base.write_mdl(depth)?);
+        lines.append(&mut self.track.write_mdl(depth)?);
+        return Ok(lines);
+    }
 }
 
 #[derive(Dbg, Default)]
@@ -31,6 +39,7 @@ pub struct EventTrack {
 
 impl EventTrack {
     pub const ID: u32 = MdlxMagic::KEVT as u32;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -41,5 +50,19 @@ impl EventTrack {
         }
 
         yesno!(this.global_seq_id == -1, Ok(this), ERR!("OMG! [EventObject.GlobalSequenceId] != -1 ?"))
+    }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
+        let mut lines: Vec<String> = vec![];
+        lines.push_if_nneg1(&F!("{indent}GlobalSeqId"), &self.global_seq_id);
+        if !self.frames.is_empty() {
+            lines.push(F!("{indent}EventTrack {} {{", self.frames.len()));
+            for f in &self.frames {
+                lines.push(F!("{indent2}{},", f));
+            }
+            lines.push(F!("{indent}}}"));
+        }
+        return Ok(lines);
     }
 }

@@ -256,7 +256,7 @@ impl MdlxData {
             // "ParticleEmitter" => self.particle_emitters,
             // "ParticleEmitters" => self.particle_emitters2,
             // "RibbonEmitter" => self.ribbon_emitters
-            // "EventObject" => self.eventobjs,
+            "EventObject" => self.eventobjs,
             // "CollisionShape" => self.collisions,
         );
         MdlWriteType4!(lines, 0, name, "Camera" => self.cameras );
