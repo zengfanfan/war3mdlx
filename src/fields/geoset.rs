@@ -10,8 +10,11 @@ pub struct Geoset {
     pub normals: Vec<Vec3>,
     #[dbg(formatter = "fmtx")]
     pub uvs: Vec<Vec2>,
+    pub face_types: Vec<FaceType>,
     #[dbg(formatter = "fmtx")]
-    pub triangles: Vec<i16>,
+    pub face_vtxcnts: Vec<i32>,
+    #[dbg(formatter = "fmtx")]
+    pub face_vertices: Vec<i16>,
     #[dbg(formatter = "fmtx")]
     pub vtxgrps: Vec<u8>,
     #[dbg(formatter = "fmtx")]
@@ -21,26 +24,69 @@ pub struct Geoset {
     pub material_id: i32,
     pub sel_group: u32,
     pub sel_type: u32, // 0=None, 4=Unselectable
-    #[dbg(formatter = "fmtx")]
-    pub bound_radius: f32,
-    #[dbg(formatter = "fmtx")]
-    pub min_extent: Vec3,
-    #[dbg(formatter = "fmtx")]
-    pub max_extent: Vec3,
-    pub anim_extents: Vec<AnimExtent>,
+    pub extent: BoundExtent,
+    pub anim_extents: Vec<BoundExtent>,
 }
+
 #[derive(Dbg, Default)]
-pub struct AnimExtent {
+pub struct BoundExtent {
     #[dbg(formatter = "fmtx")]
     pub bound_radius: f32,
     #[dbg(formatter = "fmtx")]
     pub min_extent: Vec3,
     #[dbg(formatter = "fmtx")]
     pub max_extent: Vec3,
+}
+impl BoundExtent {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+        Ok(BoundExtent { bound_radius: cur.readx()?, min_extent: cur.readx()?, max_extent: cur.readx()? })
+    }
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        Ok(vec![
+            format!("{}BoundsRadius {},", indent!(depth), self.bound_radius),
+            format!("{}MinimumExtent {},", indent!(depth), self.min_extent),
+            format!("{}MaximumExtent {},", indent!(depth), self.max_extent),
+        ])
+    }
+}
+
+#[repr(u32)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+pub enum FaceType {
+    Points = 0,
+    Lines = 1,
+    LineLoop = 2,
+    LineStrip = 3,
+    #[default]
+    Triangles = 4,
+    TriangleStrip = 5,
+    TriangleFan = 6,
+    Quads = 7,
+    QuadStrip = 8,
+    Polygons = 9,
+    Error(u32),
+}
+impl FaceType {
+    fn from(v: u32) -> FaceType {
+        match v {
+            0 => FaceType::Points,
+            1 => FaceType::Lines,
+            2 => FaceType::LineLoop,
+            3 => FaceType::LineStrip,
+            4 => FaceType::Triangles,
+            5 => FaceType::TriangleStrip,
+            6 => FaceType::TriangleFan,
+            7 => FaceType::Quads,
+            8 => FaceType::QuadStrip,
+            9 => FaceType::Polygons,
+            x => FaceType::Error(x),
+        }
+    }
 }
 
 impl Geoset {
     pub const ID: u32 = MdlxMagic::GEOS as u32;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -51,16 +97,16 @@ impl Geoset {
             } else if id == MdlxMagic::NRMS as u32 {
                 this.normals = cur.read_array(n)?;
             } else if id == MdlxMagic::PTYP as u32 {
-                yes!(n > 1, return ERR!("OMG! [face type count] {n} > 1 ?"));
-                let face_types: Vec<u32> = cur.read_array(n)?;
-                if face_types.iter().any(|&x| x != 4) {
-                    return ERR!("Only triangle(4) is supported: {:?}", face_types);
+                yes!(n > 1, elog!("OMG! [face type count] {n} > 1 ?"));
+                this.face_types = cur.read_array::<u32>(n)?.iter().map(|a| FaceType::from(*a)).collect();
+                if this.face_types.iter().any(|&x| x != FaceType::Triangles) {
+                    elog!("Only triangle(4) is supported: {:?}", this.face_types);
                 }
             } else if id == MdlxMagic::PCNT as u32 {
-                yes!(n > 1, return ERR!("OMG! [vertex count for each face type] {n} > 1 ?"));
-                let _: Vec<u32> = cur.read_array(n)?;
+                yes!(n > 1, elog!("OMG! [vertex count for each face type] {n} > 1 ?"));
+                this.face_vtxcnts = cur.read_array(n)?;
             } else if id == MdlxMagic::PVTX as u32 {
-                this.triangles = cur.read_array(n)?;
+                this.face_vertices = cur.read_array(n)?;
             } else if id == MdlxMagic::GNDX as u32 {
                 this.vtxgrps = cur.read_array(n)?;
             } else if id == MdlxMagic::MTGC as u32 {
@@ -75,21 +121,74 @@ impl Geoset {
                 this.material_id = id.swap_bytes() as i32;
                 this.sel_group = n;
                 this.sel_type = cur.readx()?;
-                this.bound_radius = cur.readx()?;
-                this.min_extent = cur.readx()?;
-                this.max_extent = cur.readx()?;
+                this.extent = BoundExtent::read_mdx(cur)?;
                 let en = cur.readx()?;
                 for _ in 0..en {
-                    this.anim_extents.push(AnimExtent {
-                        bound_radius: cur.readx()?,
-                        min_extent: cur.readx()?,
-                        max_extent: cur.readx()?,
-                    });
+                    this.anim_extents.push(BoundExtent::read_mdx(cur)?);
                 }
             }
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2, indent3) = (indent!(depth), indent!(depth + 1), indent!(depth + 2));
+        let mut lines: Vec<String> = vec![];
+
+        MdlWriteType2!(lines, depth, "Vertices" => self.vertices);
+        MdlWriteType2!(lines, depth, "Normals" => self.normals);
+        MdlWriteType2!(lines, depth, "TVertices" => self.uvs);
+        {
+            lines.push(F!("{indent}VertexGroup {{"));
+            lines.append(&mut self.vtxgrps.iter().map(|x| F!("{indent2}{},", fmtx(x))).collect::<Vec<String>>());
+            lines.push(F!("{indent}}}"));
+        }
+        {
+            lines.push(F!("{indent}Faces {} {} {{", self.face_types.len(), self.face_vertices.len()));
+            let mut i = 0_usize;
+            for (t, n) in self.face_types.iter().zip(self.face_vtxcnts.iter()) {
+                let n = *n as usize;
+                lines.push(F!("{indent2}{:?} {{", t));
+                if let Some(slice) = &self.face_vertices.get(i..i + n) {
+                    let s = slice.iter().map(|x| fmtx(x)).collect::<Vec<String>>().join(", ");
+                    lines.push(F!("{indent3}{{ {} }},", s));
+                }
+                lines.push(F!("{indent2}}}"));
+                i += n;
+            }
+            lines.push(F!("{indent}}}"));
+        }
+        {
+            lines.push(F!("{indent}Groups {} {} {{", self.mtxgrpcnts.len(), self.mtx_indices.len()));
+            let mut i = 0_usize;
+            for n in &self.mtxgrpcnts {
+                let n = *n as usize;
+                let mut slist: Vec<String> = vec![];
+                slist.push(F!("Matrices {{"));
+                if let Some(slice) = &self.mtx_indices.get(i..i + n) {
+                    let s = slice.iter().map(|x| fmtx(x)).collect::<Vec<String>>().join(", ");
+                    slist.push(F!("{},", s));
+                }
+                slist.push(F!("}},"));
+                lines.push(F!("{indent2}{}", slist.join(" ")));
+                i += n;
+            }
+            lines.push(F!("{indent}}}"));
+        }
+
+        lines.append(&mut self.extent.write_mdl(depth)?);
+        for en in &self.anim_extents {
+            lines.push(F!("{indent}Anim {{"));
+            lines.append(&mut en.write_mdl(depth + 1)?);
+            lines.push(F!("{indent}}}"));
+        }
+
+        lines.push_if_nneg1(&F!("{indent}MaterialID"), &self.material_id);
+        lines.push_if_n0(&F!("{indent}SelectionGroup"), &self.sel_group);
+        yes!(self.sel_type != 0, lines.push(F!("{indent}Unselectable,")));
+
+        return Ok(lines);
     }
 }
 

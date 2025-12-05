@@ -142,4 +142,16 @@ impl Formatter for f32 {
     }
 }
 
+pub trait _ExtendFormatter {
+    fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError>;
+}
+impl<T> _ExtendFormatter for T
+where
+    T: Formatter,
+{
+    fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        Ok(vec![F!("{}{},", indent!(depth), fmtx(self))])
+    }
+}
+
 //#endregion

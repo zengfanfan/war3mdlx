@@ -163,22 +163,26 @@ macro_rules! MdxParseType3 {
     };
 }
 
+#[macro_export]
 macro_rules! MdlWriteType1 {
     ($lines:ident, $depth:expr, $( $var:expr ),+ $(,)?) => {
         $( $lines.append(&mut $var.write_mdl($depth)?); )+
     };
 }
+#[macro_export]
 macro_rules! MdlWriteType2 {
     ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
         $(if !$var.is_empty() {
-            $lines.push(format!("{} {} {{", $name, $var.len()));
+            let indent = indent!($depth);
+            $lines.push(F!("{indent}{} {} {{", $name, $var.len()));
             for a in &$var {
                 MdlWriteType1!($lines, $depth+1, a);
             }
-            $lines.push(format!("}}"));
+            $lines.push(F!("{indent}}}"));
         })+
     };
 }
+#[macro_export]
 macro_rules! MdlWriteType3 {
     ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
         $(if !$var.is_empty() {
@@ -240,7 +244,7 @@ impl MdlxData {
             // "CollisionShapes" => self.collisions,
         );
         MdlWriteType3!(lines, 0,
-            // "Geosets" => self.geosets,
+            "Geosets" => self.geosets,
             "GeosetAnims" => self.geoanims,
             // "Bones" => self.bones,
             // "Lights" => self.lights,
