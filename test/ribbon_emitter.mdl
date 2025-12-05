@@ -11,9 +11,10 @@ PivotPoints 3 {
     { 0, 0, 0 },
 }
 RibbonEmitter "" {
+    ObjectId 0,
 }
 RibbonEmitter "v" {
-    ObjectId 0,
+    ObjectId 1,
     static HeightAbove 3.3,
     static HeightBelow 4.4,
     static Alpha 1.1,
@@ -28,7 +29,7 @@ RibbonEmitter "v" {
     MaterialID 89,
 }
 RibbonEmitter "a" {
-    ObjectId 1,
+    ObjectId 2,
     HeightAbove 2 {
         Linear,
         10: 10,

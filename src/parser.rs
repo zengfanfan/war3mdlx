@@ -156,7 +156,7 @@ impl MdlxData {
             "Attachment" => self.attachments,
             "ParticleEmitter" => self.particle_emitters,
             "ParticleEmitter2" => self.particle_emitters2,
-            // "RibbonEmitter" => self.ribbon_emitters
+            "RibbonEmitter" => self.ribbon_emitters,
             "EventObject" => self.eventobjs,
             "CollisionShape" => self.collisions,
         );

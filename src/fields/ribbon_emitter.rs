@@ -34,6 +34,7 @@ impl RibbonEmitter {
     const ID_A: u32 = MdlxMagic::KRAL as u32; /* Alpha */
     const ID_C: u32 = MdlxMagic::KRCO as u32; /* Color */
     const ID_TS: u32 = MdlxMagic::KRTX as u32; /* TextureSlot */
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -63,5 +64,40 @@ impl RibbonEmitter {
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let indent = indent!(depth);
+        let mut lines: Vec<String> = vec![];
+
+        lines.append(&mut self.base.write_mdl(depth)?);
+
+        let bgr = self.color.reverse();
+        let bgr_anim = self.color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
+
+        MdlWriteAnimStatic!(lines, depth,
+            "HeightAbove" => self.height_above_anim => 0.0 => self.height_above,
+            "HeightBelow" => self.height_below_anim => 0.0 => self.height_below,
+            "Alpha" => self.alpha_anim => 0.0 => self.alpha,
+            "Color" => bgr_anim => Vec3::ZERO => bgr,
+        );
+
+        lines.pushx_if_n0(&F!("{indent}EmissionRate"), &self.emit_rate);
+        lines.pushx_if_n0(&F!("{indent}LifeSpan"), &self.lifespan);
+        lines.push_if_n0(&F!("{indent}Gravity"), &self.gravity);
+        lines.push_if_n0(&F!("{indent}Rows"), &self.rows);
+        lines.push_if_n0(&F!("{indent}Columns"), &self.columns);
+        lines.push_if_n0(&F!("{indent}MaterialID"), &self.material_id);
+
+        MdlWriteAnim!(lines, depth,
+            "HeightAbove" => self.height_above_anim,
+            "HeightBelow" => self.height_below_anim,
+            "Alpha" => self.alpha_anim,
+            "Color" => bgr_anim,
+            "TextureSlot" => self.texslot_anim,
+            "Visibility" => self.visibility,
+        );
+
+        return Ok(lines);
     }
 }
