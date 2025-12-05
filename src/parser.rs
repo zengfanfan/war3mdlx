@@ -194,6 +194,18 @@ macro_rules! MdlWriteType3 {
         })+
     };
 }
+#[macro_export] // Nodes
+macro_rules! MdlWriteType4 {
+    ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
+        $(if !$var.is_empty() {
+            for a in &$var {
+                $lines.push(format!("{} \"{}\" {{", $name, a.base.name));
+                MdlWriteType1!($lines, $depth+1, a);
+                $lines.push(format!("}}"));
+            }
+        })+
+    };
+}
 
 impl MdlxData {
     pub fn read(path: &Path) -> Result<Self, MyError> {
@@ -233,7 +245,7 @@ impl MdlxData {
             // "Geosets" => self.geosets,
             // "Bones" => self.bones,
             // "Lights" => self.lights,
-            // "Helpers" => self.helpers,
+            "Helpers" => self.helpers,
             // "Attachments" => self.attachments,
             "PivotPoints" => self.pivot_points,
             // "ParticleEmitters" => self.particle_emitters,
@@ -246,7 +258,10 @@ impl MdlxData {
         MdlWriteType3!(lines, 0,
             "Geosets" => self.geosets,
             "GeosetAnims" => self.geoanims,
-            // "Bones" => self.bones,
+            // "Cameras" => self.cameras,
+        );
+        MdlWriteType4!(lines, 0,
+            "Bones" => self.bones,
             // "Lights" => self.lights,
             // "Helpers" => self.helpers,
             // "Attachments" => self.attachments,
