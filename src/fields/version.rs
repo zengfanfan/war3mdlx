@@ -12,7 +12,7 @@ impl Version {
         Ok(Self { format_version: cur.readx()? })
     }
 
-    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
-        Ok(vec![F!("Version {{\n{indent}FormatVersion {},\n}}", self.format_version)])
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        Ok(vec![F!("Version {{\n{}FormatVersion {},\n}}", indent!(depth + 1), self.format_version)])
     }
 }

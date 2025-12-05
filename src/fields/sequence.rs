@@ -36,8 +36,8 @@ impl Sequence {
         })
     }
 
-    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
-        let indent2 = indent!(2);
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
         lines.push(F!("{indent}Anim: \"{}\" {{", self.name));
         lines.push(F!("{indent2}Interval: {{ {}, {} }},", self.start_frame, self.end_frame));

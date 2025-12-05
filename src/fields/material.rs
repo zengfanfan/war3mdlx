@@ -43,6 +43,7 @@ bitflags! {
 
 impl Material {
     pub const ID: u32 = MdlxMagic::MTLS as u32;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -62,8 +63,8 @@ impl Material {
         return Ok(this);
     }
 
-    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
-        let indent2 = indent!(2);
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
         lines.push(F!("{indent}Material {{"));
         lines.pushx_if_n0(&F!("{indent2}PriorityPlane"), &self.priority_plane);
@@ -115,21 +116,18 @@ impl Layer {
         let mut lines: Vec<String> = vec![];
         lines.push(F!("{indent}Layer {{"));
         lines.push(F!("{indent2}FilterMode {:?},", self.filter_mode));
-        yes!(self.flags.contains(LayerFlags::Unshaded), lines.push(F!("{indent2}Unshaded,")));
-        yes!(self.flags.contains(LayerFlags::SphereEnvMap), lines.push(F!("{indent2}SphereEnvMap,")));
+
         yes!(self.flags.contains(LayerFlags::TwoSided), lines.push(F!("{indent2}TwoSided,")));
+        yes!(self.flags.contains(LayerFlags::Unshaded), lines.push(F!("{indent2}Unshaded,")));
         yes!(self.flags.contains(LayerFlags::Unfogged), lines.push(F!("{indent2}Unfogged,")));
+        yes!(self.flags.contains(LayerFlags::SphereEnvMap), lines.push(F!("{indent2}SphereEnvMap,")));
         yes!(self.flags.contains(LayerFlags::NoDepthTest), lines.push(F!("{indent2}NoDepthTest,")));
         yes!(self.flags.contains(LayerFlags::NoDepthSet), lines.push(F!("{indent2}NoDepthSet,")));
         lines.push_if_nneg1(&F!("{indent2}TVertexAnimId"), &self.texture_anim_id);
 
-        MdlWriteAnimStatic!(lines, depth + 1,
+        MdlWriteAnimBoth!(lines, depth + 1,
             "Alpha" => self.alpha_anim => 1.0 => self.alpha,
             "TextureID" => self.texid_anim => -1 => self.texture_id,
-        );
-        MdlWriteAnim!(lines, depth + 1,
-            "Alpha" => self.alpha_anim,
-            "TextureID" => self.texid_anim,
         );
 
         lines.push(F!("{indent}}}"));

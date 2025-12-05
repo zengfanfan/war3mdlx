@@ -99,12 +99,19 @@ impl Geoset {
 #[derive(Dbg, Default)]
 pub struct GeosetAnim {
     pub alpha: f32,
-    pub flags: u32, //#1=DropShadow, #2=Color
+    pub flags: GeosetAnimFlags,
     #[dbg(formatter = "fmtx")]
     pub color: Vec3,
     pub geoset_id: i32,
     pub alpha_anim: Option<Animation<f32>>,
     pub color_anim: Option<Animation<Vec3>>,
+}
+bitflags! {
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct GeosetAnimFlags : u32 {
+        const DropShadow = 1 << 0;
+        const UseColor = 1 << 1;
+    }
 }
 
 impl GeosetAnim {
@@ -116,7 +123,7 @@ impl GeosetAnim {
         let mut this = Self::default();
 
         this.alpha = cur.readx()?;
-        this.flags = cur.readx()?;
+        this.flags = GeosetAnimFlags::from_bits_retain(cur.readx()?);
         this.color = cur.readx()?;
         this.geoset_id = cur.readx()?;
 
@@ -129,6 +136,26 @@ impl GeosetAnim {
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let indent = indent!(depth);
+        let mut lines: Vec<String> = vec![];
+        lines.push_if_nneg1(&F!("{indent}GeosetId"), &self.geoset_id);
+        yes!(self.flags.contains(GeosetAnimFlags::DropShadow), lines.push(F!("{indent}DropShadow,")));
+
+        MdlWriteAnimBoth!(lines, depth, "Alpha" => self.alpha_anim => 1.0 => self.alpha);
+        if self.flags.contains(GeosetAnimFlags::UseColor) {
+            if let Some(anim) = &self.color_anim {
+                let bgr = anim.convert(|v| v.reverse());
+                _MdlWriteAnim!(lines, depth, "Color" => bgr);
+            } else if self.color != Vec3::ONE {
+                let bgr = self.color.reverse();
+                _MdlWriteAnimStatic!(lines, depth, "Color" => bgr);
+            }
+        }
+
+        return Ok(lines);
     }
 }
 

@@ -65,34 +65,76 @@ impl<T: TAnimation> Animation<T> {
         }
         return Ok(lines);
     }
+
+    pub fn convert<F: Fn(&T) -> T>(&self, f: F) -> Self {
+        let mut this = Self::default();
+        this.id = self.id;
+        this.interp_type = self.interp_type;
+        this.global_seq_id = self.global_seq_id;
+        for kf in &self.key_frames {
+            this.key_frames.push(KeyFrame {
+                frame: kf.frame,
+                value: f(&kf.value),
+                itan: f(&kf.itan),
+                otan: f(&kf.otan),
+                has_tans: kf.has_tans,
+            });
+        }
+        return this;
+    }
 }
 
 #[macro_export]
-macro_rules! MdlWriteAnim {
-    ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
-        $(if let Some(a) = &$var {
+macro_rules! _MdlWriteAnim {
+    ($lines:ident, $depth:expr, $( $name:expr => $avar:expr ),+ $(,)?) => {
+        $(
             let indent = indent!(&$depth);
-            $lines.push(F!("{}{} {} {{", indent, $name, a.key_frames.len()));
-            $lines.append(a.write_mdl($depth + 1)?.as_mut());
+            $lines.push(F!("{}{} {} {{", indent, $name, $avar.key_frames.len()));
+            $lines.append($avar.write_mdl($depth + 1)?.as_mut());
             $lines.push(F!("{}}}", indent));
+        )+
+    };
+}
+#[macro_export]
+macro_rules! MdlWriteAnim {
+    ($lines:ident, $depth:expr, $( $name:expr => $avar:expr ),+ $(,)?) => {
+        $(if let Some(item) = &$avar {
+            _MdlWriteAnim!($lines, $depth, $name => item);
         })+
+    };
+}
+
+#[macro_export]
+macro_rules! _MdlWriteAnimStatic {
+    ($lines:ident, $depth:expr, $( $name:expr => $svar:expr ),+ $(,)?) => {
+        $(
+            let indent = indent!($depth);
+            $lines.push(F!("{}static {} {},", indent, $name, fmtx(&$svar)));
+        )+
     };
 }
 #[macro_export]
 macro_rules! MdlWriteAnimStatic {
     ($lines:ident, $depth:expr, $( $name:expr => $avar:expr => $def:expr => $svar:expr ),+ $(,)?) => {
-        $(
-            if let None = &$avar && $svar != $def {
-                let indent = indent!(&$depth);
-                $lines.push(F!("{}static {} {},", indent, $name, $svar));
-            }
-        )+
+        $(if let None = &$avar && $svar != $def {
+            _MdlWriteAnimStatic!($lines, $depth, $name => $svar);
+        })+
+    };
+}
+#[macro_export]
+macro_rules! MdlWriteAnimBoth {
+    ($lines:ident, $depth:expr, $( $name:expr => $avar:expr => $def:expr => $svar:expr ),+ $(,)?) => {
+        $(if let Some(item) = &$avar {
+            _MdlWriteAnim!($lines, $depth, $name => item);
+        } else if $svar != $def {
+            _MdlWriteAnimStatic!($lines, $depth, $name => $svar);
+        })+
     };
 }
 
 //#region InterpolationType
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum InterpolationType {
     DontInterp,
     Linear,

@@ -164,23 +164,30 @@ macro_rules! MdxParseType3 {
 }
 
 macro_rules! MdlWriteType1 {
-    ($lines:ident, $indent:ident, $( $var:expr ),+ $(,)?) => {
-        $(
-            $lines.append(&mut $var.write_mdl(&$indent)?);
-        )+
+    ($lines:ident, $depth:expr, $( $var:expr ),+ $(,)?) => {
+        $( $lines.append(&mut $var.write_mdl($depth)?); )+
     };
 }
 macro_rules! MdlWriteType2 {
-    ($lines:ident, $indent:ident, $( $name:expr => $var:expr ),+ $(,)?) => {
-        $(
-            if !$var.is_empty() {
-                $lines.push(format!("{} {} {{", $name, $var.len()));
-                for a in &$var {
-                    MdlWriteType1!($lines, $indent, a);
-                }
+    ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
+        $(if !$var.is_empty() {
+            $lines.push(format!("{} {} {{", $name, $var.len()));
+            for a in &$var {
+                MdlWriteType1!($lines, $depth+1, a);
+            }
+            $lines.push(format!("}}"));
+        })+
+    };
+}
+macro_rules! MdlWriteType3 {
+    ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
+        $(if !$var.is_empty() {
+            for a in &$var {
+                $lines.push(format!("{} {{", $name));
+                MdlWriteType1!($lines, $depth+1, a);
                 $lines.push(format!("}}"));
             }
-        )+
+        })+
     };
 }
 
@@ -211,29 +218,40 @@ impl MdlxData {
 
     pub fn write_mdl(&self, _: &Path) -> Result<(), MyError> /* [todo] */ {
         let mut lines: Vec<String> = vec![];
-        let indent = indent!();
 
-        MdlWriteType1!(lines, indent, self.version, self.model);
-
-        MdlWriteType2!(lines, indent,
+        MdlWriteType1!(lines, 0, self.version, self.model);
+        MdlWriteType2!(lines, 0,
             "Sequences" => self.sequences,
             "GlobalSequences" => self.globalseqs,
             "Textures" => self.textures,
-            "TextureAnims" => self.texanims,
             "Materials" => self.materials,
+            "TextureAnims" => self.texanims,
             // "Geosets" => self.geosets,
-            // "GeosetAnims" => self.geoanims,
-            "PivotPoints" => self.pivot_points,
-            // "Cameras" => self.cameras,
             // "Bones" => self.bones,
+            // "Lights" => self.lights,
             // "Helpers" => self.helpers,
             // "Attachments" => self.attachments,
-            // "CollisionShapes" => self.collisions,
-            // "Lights" => self.lights,
-            // "EventObjects" => self.eventobjs,
+            "PivotPoints" => self.pivot_points,
             // "ParticleEmitters" => self.particle_emitters,
             // "ParticleEmitters2" => self.particle_emitters2,
             // "RibbonEmitters" => self.ribbon_emitters
+            // "EventObjects" => self.eventobjs,
+            // "Cameras" => self.cameras,
+            // "CollisionShapes" => self.collisions,
+        );
+        MdlWriteType3!(lines, 0,
+            // "Geosets" => self.geosets,
+            "GeosetAnims" => self.geoanims,
+            // "Bones" => self.bones,
+            // "Lights" => self.lights,
+            // "Helpers" => self.helpers,
+            // "Attachments" => self.attachments,
+            // "ParticleEmitters" => self.particle_emitters,
+            // "ParticleEmitters2" => self.particle_emitters2,
+            // "RibbonEmitters" => self.ribbon_emitters
+            // "EventObjects" => self.eventobjs,
+            // "Cameras" => self.cameras,
+            // "CollisionShapes" => self.collisions,
         );
 
         let text = lines.join("\n");

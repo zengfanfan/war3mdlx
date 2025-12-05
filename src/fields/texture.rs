@@ -30,8 +30,8 @@ impl Texture {
         })
     }
 
-    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
-        let indent2 = indent!(2);
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
         lines.push(F!("{indent}Bitmap {{"));
         lines.push_if_n0(&F!("{indent2}ReplaceableId"), &self.replace_id);
@@ -69,7 +69,8 @@ impl TextureAnim {
         return Ok(this);
     }
 
-    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];
         lines.push(F!("{indent}TVertexAnim {{"));
         MdlWriteAnim!(lines, 2,

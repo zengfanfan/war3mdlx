@@ -14,8 +14,8 @@ impl PivotPoint {
         return Ok(this);
     }
 
-    pub fn write_mdl(&self, indent: &str) -> Result<Vec<String>, MyError> {
-        Ok(vec![F!("{indent}{},", fmtx(&self.position))])
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        Ok(vec![F!("{}{},", indent!(depth + 1), fmtx(&self.position))])
     }
 }
 
