@@ -6,7 +6,6 @@ pub struct Texture {
     pub path: String,
     #[dbg(skip)]
     pub _unknown: i32,
-    #[dbg(fmt = "{:?}")]
     pub flags: TextureFlags,
 }
 bitflags! {

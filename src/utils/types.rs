@@ -40,6 +40,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 pub trait CheckValue {
     fn is0(&self) -> bool; //=0
     fn is1(&self) -> bool; //=1
@@ -72,6 +73,17 @@ macro_rules! impl_CheckValue {
                 }
             }
             impl CheckValue for &Vec<$t> {
+                fn is0(&self) -> bool {
+                    self.iter().all(|x| x.is0())
+                }
+                fn is1(&self) -> bool {
+                    self.iter().all(|x| x.is1())
+                }
+                fn isneg1(&self) -> bool {
+                    self.iter().all(|x| x.isneg1())
+                }
+            }
+            impl CheckValue for Vec<$t> {
                 fn is0(&self) -> bool {
                     self.iter().all(|x| x.is0())
                 }
@@ -149,16 +161,6 @@ impl CheckValue for String {
     fn isneg1(&self) -> bool {
         false
     }
-}
-
-//#endregion
-//#region trait: compare
-
-pub fn eq<T: Into<f64>, U: Into<f64>>(a: T, b: U) -> bool {
-    a.into() == b.into()
-}
-pub fn neq<T: Into<f64>, U: Into<f64>>(a: T, b: U) -> bool {
-    a.into() != b.into()
 }
 
 //#endregion

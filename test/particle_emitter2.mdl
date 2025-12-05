@@ -18,7 +18,7 @@ ParticleEmitter2 "values" {
     AlphaKey,
     static Speed 2.2,
     static Variation 3.33,
-    static Latitude 44.44, //![bug]
+    static Latitude 44.44,
     static Gravity 7777.78,
     static EmissionRate 0.1,
     static Width 555.55,

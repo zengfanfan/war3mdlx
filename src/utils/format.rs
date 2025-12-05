@@ -108,7 +108,7 @@ macro_rules! impl_Formatter_array {
         $(
             impl Formatter for Vec<$t> {
                 fn fmt(&self) -> String {
-                    format!("[{}]", self.iter().map(|x| Formatter::fmt(x)).collect::<Vec<_>>().join(", "))
+                    format!("{{ {} }}", self.iter().map(|x| Formatter::fmt(x)).collect::<Vec<_>>().join(", "))
                 }
             }
             impl Formatter for &[$t] {

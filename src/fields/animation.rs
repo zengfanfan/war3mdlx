@@ -134,31 +134,27 @@ macro_rules! MdlWriteAnimBoth {
 
 //#region InterpolationType
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum InterpolationType {
+    #[default]
     DontInterp,
     Linear,
     Hermite,
     Bezier,
     Error(u32),
 }
-impl Default for InterpolationType {
-    fn default() -> Self {
-        InterpolationType::DontInterp
-    }
-}
 impl InterpolationType {
-    fn from(v: u32) -> InterpolationType {
+    fn from(v: u32) -> Self {
         match v {
-            0 => InterpolationType::DontInterp,
-            1 => InterpolationType::Linear,
-            2 => InterpolationType::Hermite,
-            3 => InterpolationType::Bezier,
-            x => InterpolationType::Error(x),
+            0 => Self::DontInterp,
+            1 => Self::Linear,
+            2 => Self::Hermite,
+            3 => Self::Bezier,
+            x => Self::Error(x),
         }
     }
     fn has_tans(&self) -> bool {
-        matches!(self, InterpolationType::Hermite | InterpolationType::Bezier)
+        matches!(self, Self::Hermite | Self::Bezier)
     }
 }
 

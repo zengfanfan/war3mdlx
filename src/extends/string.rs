@@ -5,19 +5,15 @@ pub trait _ExtendString {}
 impl _ExtendString for String {}
 
 pub trait _ExtendStringArray<T> {
-    fn push_if(&mut self, cond: bool, v: &T);
     fn push_if_n0(&mut self, name: &str, v: &T);
     fn push_if_nneg1(&mut self, name: &str, v: &T);
 }
-impl<T: CheckValue + Display> _ExtendStringArray<T> for Vec<String> {
-    fn push_if(&mut self, cond: bool, v: &T) {
-        yes!(cond, self.push(v.to_string()));
-    }
+impl<T: CheckValue + Formatter> _ExtendStringArray<T> for Vec<String> {
     fn push_if_n0(&mut self, name: &str, v: &T) {
-        yes!(!v.is0(), self.push(F!("{} {},", name, v)));
+        yes!(!v.is0(), self.push(F!("{} {},", name, v.fmt())));
     }
     fn push_if_nneg1(&mut self, name: &str, v: &T) {
-        yes!(!v.isneg1(), self.push(F!("{} {},", name, v)));
+        yes!(!v.isneg1(), self.push(F!("{} {},", name, v.fmt())));
     }
 }
 

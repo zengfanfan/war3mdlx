@@ -5,7 +5,6 @@ pub struct Node {
     pub name: String,
     pub object_id: i32,
     pub parent_id: i32,
-    #[dbg(fmt = "{:?}")]
     pub flags: NodeFlags, // see NodeFlags
     pub translation: Option<Animation<Vec3>>,
     pub rotation: Option<Animation<Vec4>>,

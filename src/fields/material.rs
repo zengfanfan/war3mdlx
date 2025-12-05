@@ -3,7 +3,6 @@ use crate::*;
 #[derive(Dbg, Default)]
 pub struct Material {
     pub priority_plane: i32,
-    #[dbg(fmt = "{:?}")]
     pub flags: MaterialFlags,
     pub layers: Vec<Layer>,
 }
@@ -19,7 +18,6 @@ bitflags! {
 #[derive(Dbg, Default)]
 pub struct Layer {
     pub filter_mode: FilterMode,
-    #[dbg(fmt = "{:?}")]
     pub flags: LayerFlags,
     pub texture_id: i32,
     pub texture_anim_id: i32,
@@ -135,8 +133,9 @@ impl Layer {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum FilterMode {
+    #[default]
     None,
     Transparent,
     Blend,
@@ -147,23 +146,18 @@ pub enum FilterMode {
     AlphaKey,
     Error(u32),
 }
-impl Default for FilterMode {
-    fn default() -> Self {
-        FilterMode::None
-    }
-}
 impl FilterMode {
-    fn from(v: u32) -> FilterMode {
+    fn from(v: u32) -> Self {
         match v {
-            0 => FilterMode::None,
-            1 => FilterMode::Transparent,
-            2 => FilterMode::Blend,
-            3 => FilterMode::Additive,
-            4 => FilterMode::AddAlpha,
-            5 => FilterMode::Modulate,
-            6 => FilterMode::Modulate2X,
-            7 => FilterMode::AlphaKey,
-            x => FilterMode::Error(x),
+            0 => Self::None,
+            1 => Self::Transparent,
+            2 => Self::Blend,
+            3 => Self::Additive,
+            4 => Self::AddAlpha,
+            5 => Self::Modulate,
+            6 => Self::Modulate2X,
+            7 => Self::AlphaKey,
+            x => Self::Error(x),
         }
     }
 }

@@ -6,7 +6,7 @@ pub struct ParticleEmitter2 {
 
     pub speed: f32,
     pub variation: f32,
-    pub vatitude: f32,
+    pub latitude: f32,
     pub gravity: f32,
     pub lifespan: f32,
     pub emit_rate: f32,
@@ -38,14 +38,14 @@ pub struct ParticleEmitter2 {
     pub priority_plane: i32,
     pub replace_id: i32,
 
-    pub visibility: Option<Animation<f32>>,
-    pub emit_rate_anim: Option<Animation<f32>>,
-    pub width_anim: Option<Animation<f32>>,
-    pub length_anim: Option<Animation<f32>>,
     pub speed_anim: Option<Animation<f32>>,
-    pub latitude_anim: Option<Animation<f32>>,
     pub variation_anim: Option<Animation<f32>>,
+    pub latitude_anim: Option<Animation<f32>>,
     pub gravity_anim: Option<Animation<f32>>,
+    pub emit_rate_anim: Option<Animation<f32>>,
+    pub length_anim: Option<Animation<f32>>,
+    pub width_anim: Option<Animation<f32>>,
+    pub visibility: Option<Animation<f32>>,
 }
 
 impl ParticleEmitter2 {
@@ -58,6 +58,7 @@ impl ParticleEmitter2 {
     const ID_LA: u32 = MdlxMagic::KP2L as u32; /* Latitude */
     const ID_VA: u32 = MdlxMagic::KP2R as u32; /* Variation */
     const ID_G: u32 = MdlxMagic::KP2G as u32; /* Gravity */
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -65,7 +66,7 @@ impl ParticleEmitter2 {
 
         this.speed = cur.readx()?;
         this.variation = cur.readx()?;
-        this.vatitude = cur.readx()?;
+        this.latitude = cur.readx()?;
         this.gravity = cur.readx()?;
         this.lifespan = cur.readx()?;
         this.emit_rate = cur.readx()?;
@@ -116,6 +117,74 @@ impl ParticleEmitter2 {
 
         return Ok(this);
     }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
+        let mut lines: Vec<String> = vec![];
+
+        lines.append(&mut self.base.write_mdl(depth)?);
+
+        MdlWriteAnimStatic!(lines, depth,
+            "Speed" => self.speed_anim => 0.0 => self.speed,
+            "Variation" => self.variation_anim => 0.0 => self.variation,
+            "Latitude" => self.latitude_anim => 0.0 => self.latitude,
+            "Gravity" => self.gravity_anim => 0.0 => self.gravity,
+            "EmissionRate" => self.emit_rate_anim => 0.0 => self.emit_rate,
+            "Length" => self.length_anim => 0.0 => self.length,
+            "Width" => self.width_anim => 0.0 => self.width,
+        );
+
+        {
+            let mut clines: Vec<String> = vec![];
+            for c in self.segment_color.iter() {
+                let bgr = c.reverse();
+                clines.pushx_if_n0(&F!("{indent2}Color"), &bgr);
+            }
+            if !clines.is_empty() {
+                lines.push(F!("{indent}Particle {{"));
+                lines.append(&mut clines);
+                lines.push(F!("{indent}}}"));
+            }
+        }
+        lines.pushx_if_n0(&F!("{indent}Alpha"), &self.segment_alpha);
+        lines.pushx_if_n0(&F!("{indent}ParticleScaling"), &self.segment_scaling);
+        lines.push_if_n0(&F!("{indent}LifeSpanUVAnim"), &self.head_life);
+        lines.push_if_n0(&F!("{indent}DecayUVAnim"), &self.head_decay);
+        lines.push_if_n0(&F!("{indent}TailUVAnim"), &self.tail_life);
+        lines.push_if_n0(&F!("{indent}TailDecayUVAnim"), &self.tail_decay);
+
+        lines.push_if_n0(&F!("{indent}Rows"), &self.rows);
+        lines.push_if_n0(&F!("{indent}Columns"), &self.columns);
+        lines.push_if_n0(&F!("{indent}Time"), &self.time);
+        lines.push_if_n0(&F!("{indent}LifeSpan"), &self.lifespan);
+        lines.push_if_n0(&F!("{indent}TailLength"), &self.tail_length);
+        lines.push_if_nneg1(&F!("{indent}TextureID"), &self.texture_id);
+        lines.push_if_n0(&F!("{indent}ReplaceableId"), &self.replace_id);
+        lines.push_if_n0(&F!("{indent}PriorityPlane"), &self.priority_plane);
+
+        let flags = self.base.flags;
+        yes!(flags.contains(NodeFlags::PE2SortPrimFarZ), lines.push(F!("{indent}SortPrimsFarZ,")));
+        yes!(flags.contains(NodeFlags::LineEmitter), lines.push(F!("{indent}LineEmitter,")));
+        yes!(flags.contains(NodeFlags::ModelSpace), lines.push(F!("{indent}ModelSpace,")));
+        yes!(flags.contains(NodeFlags::PE2Unshaded), lines.push(F!("{indent}Unshaded,")));
+        yes!(flags.contains(NodeFlags::Unfogged), lines.push(F!("{indent}Unfogged,")));
+        yes!(flags.contains(NodeFlags::XYQuad), lines.push(F!("{indent}XYQuad,")));
+        yes!(self.squirt, lines.push(F!("{indent}Squirt,")));
+        yes!(self.head_or_tail.is_valid(), lines.push(F!("{indent}{:?},", self.head_or_tail)));
+
+        MdlWriteAnim!(lines, depth,
+            "Speed" => self.speed_anim,
+            "Variation" => self.variation_anim,
+            "Latitude" => self.latitude_anim,
+            "Gravity" => self.gravity_anim,
+            "EmissionRate" => self.emit_rate_anim,
+            "Length" => self.length_anim,
+            "Width" => self.width_anim,
+            "Visibility" => self.visibility,
+        );
+
+        return Ok(lines);
+    }
 }
 
 //#region PE2UVAnim
@@ -126,9 +195,28 @@ pub struct PE2UVAnim {
     pub end: i32,
     pub repeat: i32,
 }
+
 impl stdDebug for PE2UVAnim {
     fn fmt(&self, f: &mut stdFormatter<'_>) -> stdResult {
         write!(f, "({} ~ {}) x {}", self.start, self.end, self.repeat)
+    }
+}
+
+impl CheckValue for PE2UVAnim {
+    fn is0(&self) -> bool {
+        (self.start, self.end, self.repeat) == (0, 0, 0)
+    }
+    fn is1(&self) -> bool {
+        (self.start, self.end, self.repeat) == (1, 1, 1)
+    }
+    fn isneg1(&self) -> bool {
+        (self.start, self.end, self.repeat) == (-1, -1, -1)
+    }
+}
+
+impl Formatter for PE2UVAnim {
+    fn fmt(&self) -> String {
+        F!("{{ {}, {}, {} }}", self.start, self.end, self.repeat)
     }
 }
 
@@ -136,25 +224,24 @@ impl stdDebug for PE2UVAnim {
 //#region HeadOrTail
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum HeadOrTail {
+    #[default]
     Head = 0,
     Tail = 1,
     Both = 2,
     Error(u32),
 }
-impl Default for HeadOrTail {
-    fn default() -> Self {
-        HeadOrTail::Head
-    }
-}
 impl HeadOrTail {
-    fn from(v: u32) -> HeadOrTail {
+    fn is_valid(&self) -> bool {
+        matches!(self, Self::Head | Self::Tail | Self::Both)
+    }
+    fn from(v: u32) -> Self {
         match v {
-            0 => HeadOrTail::Head,
-            1 => HeadOrTail::Tail,
-            2 => HeadOrTail::Both,
-            x => HeadOrTail::Error(x),
+            0 => Self::Head,
+            1 => Self::Tail,
+            2 => Self::Both,
+            x => Self::Error(x),
         }
     }
 }
@@ -163,27 +250,23 @@ impl HeadOrTail {
 //#region PE2FilterMode
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum PE2FilterMode {
+    #[default]
     Blend = 0,
     Additive = 1,
     Modulate = 2,
     AlphaKey = 4,
     Error(u32),
 }
-impl Default for PE2FilterMode {
-    fn default() -> Self {
-        PE2FilterMode::Blend
-    }
-}
 impl PE2FilterMode {
-    fn from(v: u32) -> PE2FilterMode {
+    fn from(v: u32) -> Self {
         match v {
-            0 => PE2FilterMode::Blend,
-            1 => PE2FilterMode::Additive,
-            2 => PE2FilterMode::Modulate,
-            4 => PE2FilterMode::AlphaKey,
-            x => PE2FilterMode::Error(x),
+            0 => Self::Blend,
+            1 => Self::Additive,
+            2 => Self::Modulate,
+            4 => Self::AlphaKey,
+            x => Self::Error(x),
         }
     }
 }

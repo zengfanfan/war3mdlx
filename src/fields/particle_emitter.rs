@@ -68,11 +68,8 @@ impl ParticleEmitter {
         let mut lines: Vec<String> = vec![];
 
         lines.append(&mut self.base.write_mdl(depth)?);
-        let flags = self.base.flags;
-        if flags.contains(NodeFlags::ParticleEmitter) {
-            yes!(flags.contains(NodeFlags::PE1UsesMdl), lines.push(F!("{indent}EmitterUsesMDL,")));
-            yes!(flags.contains(NodeFlags::PE1UsesTga), lines.push(F!("{indent}EmitterUsesTGA,")));
-        }
+        yes!(self.base.flags.contains(NodeFlags::PE1UsesMdl), lines.push(F!("{indent}EmitterUsesMDL,")));
+        yes!(self.base.flags.contains(NodeFlags::PE1UsesTga), lines.push(F!("{indent}EmitterUsesTGA,")));
 
         MdlWriteAnimStatic!(lines, depth,
             "EmissionRate" => self.emit_rate_anim => 0.0 => self.emit_rate,
@@ -89,15 +86,15 @@ impl ParticleEmitter {
         );
 
         {
-            let mut tines: Vec<String> = vec![];
-            MdlWriteAnimBoth!(tines, depth + 1,
+            let mut tlines: Vec<String> = vec![];
+            MdlWriteAnimBoth!(tlines, depth + 1,
                 "LifeSpan" => self.lifespan_anim => 0.0 => self.lifespan,
                 "InitVelocity" => self.speed_anim => 0.0 => self.speed,
             );
-            tines.pushx_if_n0(&F!("{indent2}Path"), &self.path);
-            if !tines.is_empty() {
+            tlines.pushx_if_n0(&F!("{indent2}Path"), &self.path);
+            if !tlines.is_empty() {
                 lines.push(F!("{indent}Particle {{"));
-                lines.append(&mut tines);
+                lines.append(&mut tlines);
                 lines.push(F!("{indent}}}"));
             }
         }

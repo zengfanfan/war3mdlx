@@ -97,25 +97,21 @@ impl Light {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum LightType {
+    #[default]
     Omnidirectional = 0,
     Directional = 1,
     Ambient = 2,
     Error(u32),
 }
-impl Default for LightType {
-    fn default() -> Self {
-        LightType::Omnidirectional
-    }
-}
 impl LightType {
-    fn from(v: u32) -> LightType {
+    fn from(v: u32) -> Self {
         match v {
-            0 => LightType::Omnidirectional,
-            1 => LightType::Directional,
-            2 => LightType::Ambient,
-            _ => LightType::Error(v),
+            0 => Self::Omnidirectional,
+            1 => Self::Directional,
+            2 => Self::Ambient,
+            _ => Self::Error(v),
         }
     }
 }

@@ -46,27 +46,23 @@ impl CollisionShape {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum CollisionType {
+    #[default]
     Box = 0,
     Plane = 1,
     Sphere = 2,
     Cylinder = 3,
     Error(u32),
 }
-impl Default for CollisionType {
-    fn default() -> Self {
-        CollisionType::Box
-    }
-}
 impl CollisionType {
-    fn from(v: u32) -> CollisionType {
+    fn from(v: u32) -> Self {
         match v {
-            0 => CollisionType::Box,
-            1 => CollisionType::Plane,
-            2 => CollisionType::Sphere,
-            3 => CollisionType::Cylinder,
-            _ => CollisionType::Error(v),
+            0 => Self::Box,
+            1 => Self::Plane,
+            2 => Self::Sphere,
+            3 => Self::Cylinder,
+            _ => Self::Error(v),
         }
     }
 }

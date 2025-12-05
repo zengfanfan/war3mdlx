@@ -11,8 +11,8 @@ pub enum MyError {
 impl Display for MyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MyError::String(s) => write!(f, "{}", s),
-            MyError::Io(e) => write!(f, "{}", e),
+            Self::String(s) => write!(f, "{}", s),
+            Self::Io(e) => write!(f, "{}", e),
         }
     }
 }

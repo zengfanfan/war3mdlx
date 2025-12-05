@@ -67,19 +67,19 @@ pub enum FaceType {
     Error(u32),
 }
 impl FaceType {
-    fn from(v: u32) -> FaceType {
+    fn from(v: u32) -> Self {
         match v {
-            0 => FaceType::Points,
-            1 => FaceType::Lines,
-            2 => FaceType::LineLoop,
-            3 => FaceType::LineStrip,
-            4 => FaceType::Triangles,
-            5 => FaceType::TriangleStrip,
-            6 => FaceType::TriangleFan,
-            7 => FaceType::Quads,
-            8 => FaceType::QuadStrip,
-            9 => FaceType::Polygons,
-            x => FaceType::Error(x),
+            0 => Self::Points,
+            1 => Self::Lines,
+            2 => Self::LineLoop,
+            3 => Self::LineStrip,
+            4 => Self::Triangles,
+            5 => Self::TriangleStrip,
+            6 => Self::TriangleFan,
+            7 => Self::Quads,
+            8 => Self::QuadStrip,
+            9 => Self::Polygons,
+            x => Self::Error(x),
         }
     }
 }
