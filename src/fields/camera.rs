@@ -43,4 +43,31 @@ impl Camera {
 
         return Ok(this);
     }
+
+    pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
+        let mut lines: Vec<String> = vec![];
+
+        lines.pushx_if_n0(&F!("{indent}Position"), &self.position);
+        lines.pushx_if_n0(&F!("{indent}FieldOfView"), &self.field_of_view);
+        lines.pushx_if_n0(&F!("{indent}FarClip"), &self.far_clip);
+        lines.pushx_if_n0(&F!("{indent}NearClip"), &self.near_clip);
+        MdlWriteAnim!(lines, depth,
+            "Translation" => self.translation,
+            "Rotation" => self.rotation,
+        );
+
+        {
+            let mut tines: Vec<String> = vec![];
+            tines.pushx_if_n0(&F!("{indent2}Position"), &self.position);
+            MdlWriteAnim!(tines, depth + 1, "Translation" => self.target_translation);
+            if !tines.is_empty() {
+                lines.push(F!("{indent}Target {{"));
+                lines.append(&mut tines);
+                lines.push(F!("{indent}}}"));
+            }
+        }
+
+        return Ok(lines);
+    }
 }

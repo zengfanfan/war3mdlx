@@ -196,10 +196,10 @@ macro_rules! MdlWriteType3 {
 }
 #[macro_export] // Nodes
 macro_rules! MdlWriteType4 {
-    ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
+    ($lines:ident, $depth:expr, $member:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
         $(if !$var.is_empty() {
             for a in &$var {
-                $lines.push(format!("{} \"{}\" {{", $name, a.base.name));
+                paste!{ $lines.push(format!("{} \"{}\" {{", $name, a.$member)); }
                 MdlWriteType1!($lines, $depth+1, a);
                 $lines.push(format!("}}"));
             }
@@ -243,14 +243,12 @@ impl MdlxData {
             "Materials" => self.materials,
             "TextureAnims" => self.texanims,
             "PivotPoints" => self.pivot_points,
-            // "Camera" => self.cameras,
         );
         MdlWriteType3!(lines, 0,
             "Geoset" => self.geosets,
             "GeosetAnim" => self.geoanims,
-            // "Camera" => self.cameras,
         );
-        MdlWriteType4!(lines, 0,
+        MdlWriteType4!(lines, 0, base.name,
             "Bone" => self.bones,
             // "Lights" => self.lights,
             "Helper" => self.helpers,
@@ -259,9 +257,9 @@ impl MdlxData {
             // "ParticleEmitters" => self.particle_emitters2,
             // "RibbonEmitter" => self.ribbon_emitters
             // "EventObject" => self.eventobjs,
-            // "Camera" => self.cameras,
             // "CollisionShape" => self.collisions,
         );
+        MdlWriteType4!(lines, 0, name, "Camera" => self.cameras );
 
         let text = lines.join("\n");
         log!("\n *** ===> MDL *** \n\n{}", text); //[test]
