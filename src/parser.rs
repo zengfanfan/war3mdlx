@@ -54,13 +54,13 @@ macro_rules! MdxReadChunkType3 {
         $(if $chunk.id == <$ty>::ID {
             while !$cur.eol() {
                 let left = $cur.left();
-                yes!(left < 4, return ERR!("{} size: {}B left (need 4)", TNAME!($ty), left));
+                yes!(left < 4, EXIT!("{} size: {}B left (need 4)", TNAME!($ty), left));
                 let sz = $cur.readx::<u32>()?;
-                yes!(sz < 4, return ERR!("{} size: {} (need >= 4)", TNAME!($ty), sz));
+                yes!(sz < 4, EXIT!("{} size: {} (need >= 4)", TNAME!($ty), sz));
                 let sz = sz - 4;
 
                 let left = $cur.left();
-                yes!(left < sz, return ERR!("{} body: {}B left (need {})", TNAME!($ty), left, sz));
+                yes!(left < sz, EXIT!("{} body: {}B left (need {})", TNAME!($ty), left, sz));
                 let body = $cur.read_bytes(sz).or_else(|e| ERR!("{} body({}B): {}", TNAME!($ty), sz, e))?;
 
                 let mut cur2 = Cursor::new(&body);
@@ -70,7 +70,7 @@ macro_rules! MdxReadChunkType3 {
                     })?,
                 );
             }
-            return Ok(());
+            EXIT!();
         })+
     };
 }

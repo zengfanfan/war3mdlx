@@ -25,7 +25,7 @@ impl Texture {
             replace_id: cur.readx()?,
             path: cur.read_string(Self::PATH_SIZE)?,
             _unknown: cur.readx()?,
-            flags: TextureFlags::from_bits_retain(cur.readx::<u32>()?),
+            flags: TextureFlags::from_bits_retain(cur.readx()?),
         })
     }
 

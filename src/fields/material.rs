@@ -52,6 +52,7 @@ impl Material {
             let count: i32 = cur.readx()?;
             for _ in 0..count {
                 let sz: u32 = cur.readx()?;
+                yes!(sz < 4, EXIT!("{} layer size: {} (need >= 4)", TNAME!(), sz));
                 let body = cur.read_bytes(sz - 4)?;
                 let mut cur2 = Cursor::new(&body);
                 this.layers.push(Layer::read_mdx(&mut cur2)?);
@@ -89,7 +90,7 @@ impl Layer {
 
         this.filter_mode = FilterMode::from(cur.readx()?);
         if let FilterMode::Error(v) = this.filter_mode {
-            return ERR!("Unknown filter mode: {}", v);
+            EXIT!("Unknown filter mode: {}", v);
         }
 
         this.flags = LayerFlags::from_bits_retain(cur.readx()?);
@@ -102,7 +103,7 @@ impl Layer {
             match cur.read_be()? {
                 id @ Self::ID_ALPHA => this.alpha_anim = Some(Animation::read_mdx(cur, id)?),
                 id @ Self::ID_TEXID => this.texid_anim = Some(Animation::read_mdx(cur, id)?),
-                id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
+                id => EXIT!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
 

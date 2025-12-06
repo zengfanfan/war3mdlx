@@ -21,6 +21,7 @@ impl Node {
         let mut this = Self::default();
 
         let sz = cur.readx::<u32>()?;
+        yes!(sz < 4, EXIT!("{} node size: {} (need >= 4)", TNAME!(), sz));
         let body = cur.read_bytes(sz - 4)?;
         let mut cur = Cursor::new(&body); // use a new cursor
 
