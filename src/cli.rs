@@ -1,19 +1,5 @@
 use crate::*;
 
-macro_rules! EXIT {
-    () => {{
-        return Ok(());
-    }};
-    ($s:expr) => {{
-        elog!("{}", $s);
-        return Ok(());
-    }};
-    ($($arg:tt)*) => {{
-        elog!($($arg)*);
-        return Ok(());
-    }};
-}
-
 enum CheckResult {
     Ok,
     ExpectFileDir,
@@ -92,18 +78,16 @@ impl Args {
         Self::set_instance(Self::parse())
     }
 
-    pub fn execute(&self) -> Result<(), MyError> {
+    pub fn execute(&self, worker: &mut Worker) -> Result<(), MyError> {
         let input = PathBuf::from(&self.input);
         match self.check_input(&input) {
-            CheckResult::ExpectFileDir => ERR!("Not a file or directory: {}", self.input),
-            CheckResult::ExpectMDLX => {
-                ERR!("Invalid input path: {}, expect *.mdl or *.mdx", self.input)
-            },
-            CheckResult::ExpectMDL => ERR!("Invalid input path: {}, expect *.mdl", self.input),
-            CheckResult::ExpectMDX => ERR!("Invalid input path: {}, expect *.mdx", self.input),
+            CheckResult::ExpectFileDir => EXIT!("Not a file or directory: {}", self.input),
+            CheckResult::ExpectMDLX => EXIT!("Invalid input: {}, expect *.mdl or *.mdx", self.input),
+            CheckResult::ExpectMDL => EXIT!("Invalid input: {}, expect *.mdl", self.input),
+            CheckResult::ExpectMDX => EXIT!("Invalid input: {}, expect *.mdx", self.input),
             CheckResult::Ok => match input.ext_lower().as_str() {
-                ext @ ("mdl" | "mdx") => self.handle_file(&input, ext),
-                _ => self.handle_dir(&input),
+                ext @ ("mdl" | "mdx") => self.handle_file(worker, input, ext),
+                _ => self.handle_dir(worker, input),
             },
         }
     }
@@ -120,39 +104,34 @@ impl Args {
         }
     }
 
-    fn handle_file(&self, input: &Path, inext: &str) -> Result<(), MyError> {
-        let mut ouput = match &self.output {
+    fn handle_file(&self, worker: &mut Worker, input: PathBuf, inext: &str) -> Result<(), MyError> {
+        let mut output = match &self.output {
             Some(o) => PathBuf::from(o),
             None => input.with_extension(self.guess_output_ext(inext)),
         };
 
-        let opath = ouput.display().to_string();
-        match self.check_output(&ouput) {
+        let opath = output.display().to_string();
+        match self.check_output(&output) {
             CheckResult::ExpectFileDir => EXIT!("Not a file or directory: {}", opath),
-            CheckResult::ExpectMDLX => EXIT!("Invalid ouput path: {}, expect *.mdl or *.mdx", opath),
-            CheckResult::ExpectMDL => EXIT!("Invalid ouput path: {}, expect *.mdl", opath),
-            CheckResult::ExpectMDX => EXIT!("Invalid ouput path: {}, expect *.mdx", opath),
-            _ok => ouput = if ouput.is_dir() { ouput.join(input.file_name().unwrap()) } else { ouput },
+            CheckResult::ExpectMDLX => EXIT!("Invalid path: {}, expect *.mdl or *.mdx", opath),
+            CheckResult::ExpectMDL => EXIT!("Invalid path: {}, expect *.mdl", opath),
+            CheckResult::ExpectMDX => EXIT!("Invalid path: {}, expect *.mdx", opath),
+            _ok => output = if output.is_dir() { output.join(input.file_name().unwrap()) } else { output },
         };
 
-        if ouput.exists() && !self.overwrite {
-            log!("Skipped existing file: {:?}", ouput);
-            EXIT!();
-        }
-
-        return self.process_file(&input, &ouput);
+        self.process_file(worker, input, output);
+        EXIT!();
     }
 
-    fn handle_dir(&self, input: &Path) -> Result<(), MyError> {
+    fn handle_dir(&self, worker: &mut Worker, input: PathBuf) -> Result<(), MyError> {
         let output = self.output.as_ref().and_then(|o| Some(PathBuf::from(o))).unwrap_or(input.to_path_buf());
         if !output.is_dir() {
-            EXIT!("Output path should be also a directory: {:?}", self.output);
+            EXIT!("Output should be also a directory: {:?}", self.output);
         }
 
-        let (mut ok, mut error, mut skipped) = (0, 0, 0);
         for entry in WalkDir::new(&input).max_depth(self.max_depth as usize + 1).into_iter().filter_map(|e| e.ok()) {
-            let ifile = entry.path();
-            if !ifile.is_file() || !matches!(self.check_input(ifile), CheckResult::Ok) {
+            let ifile = entry.into_path();
+            if !ifile.is_file() || !matches!(self.check_input(&ifile), CheckResult::Ok) {
                 continue;
             }
 
@@ -162,26 +141,9 @@ impl Args {
             }
             .with_extension(self.guess_output_ext(ifile.ext_lower().as_str()));
 
-            if ofile.exists() && !self.overwrite {
-                log!("Skipped existing file: {:?}", ofile);
-                skipped += 1;
-                continue;
-            }
-
-            if let Err(err) = self.process_file(ifile, &ofile) {
-                error += 1;
-                elog!("{}", err);
-                yes!(self.stop_on_error, break);
-            } else {
-                ok += 1
-            };
+            self.process_file(worker, ifile, ofile);
         }
 
-        println!(
-            "Converted {ok} files{}{}.",
-            yesno!(skipped > 0, format!(", {skipped} skipped"), "".into()),
-            yesno!(error > 0, format!(", {error} errors"), "".into()),
-        );
         EXIT!();
     }
 
@@ -221,9 +183,14 @@ impl Args {
         }
     }
 
-    fn process_file(&self, input: &Path, output: &Path) -> Result<(), MyError> {
-        log!("Converting {:?} -> {:?} ...", input, output);
-        return MdlxData::read(input)?.write(output);
+    fn process_file(&self, worker: &mut Worker, input: PathBuf, output: PathBuf) {
+        if output.exists() && !self.overwrite {
+            log!("Skipped existing output: {:?}", output);
+            worker.skip_job();
+        } else {
+            log!("Converting {:?} -> {:?} ...", input, output);
+            worker.add_job(input, output);
+        }
     }
 }
 
@@ -251,7 +218,7 @@ macro_rules! indent {
     };
 }
 
-getter!(log_level, line_ending, precision);
+getter!(log_level, line_ending, precision, stop_on_error, overwrite);
 
 static mut G_ARGS: Option<&'static Args> = None;
 
@@ -263,7 +230,8 @@ impl Args {
         args.set_log_level();
         args.set_line_ending();
         args.set_indent();
-        /* this function is not thread-safe, make sure it will be called only once (in main thread) */
+        /* not thread-safe: make sure it is in main thread and before creating any other thread */
+        no!(Worker::is_main(), panic!("{} must be initialized in main thread!", TNAMEL!()));
         let boxed: Box<Self> = Box::new(args);
         let static_ref: &'static Self = Box::leak(boxed);
         unsafe {

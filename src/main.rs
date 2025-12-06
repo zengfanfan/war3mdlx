@@ -7,29 +7,44 @@ use paste::paste;
 use pretty_hex::*;
 use regex::Regex;
 use std::collections::HashMap;
-use std::fmt::Debug as stdDebug;
-use std::fmt::Display;
-use std::fmt::Formatter as stdFormatter;
-use std::fmt::Result as stdResult;
+use std::fmt::{Debug as stdDebug, Display, Formatter as stdFormatter, Result as stdResult};
 use std::io::{Cursor, Error as ioError, Read};
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
+use std::process::ExitCode;
 
+use walkdir::WalkDir;
 mod cli;
 mod extends;
 mod fields;
 mod parser;
 mod utils;
+mod worker;
 
 use cli::*;
 use extends::*;
 use fields::*;
 use parser::*;
 use utils::*;
+use worker::*;
 
-fn main() {
-    if let Err(e) = Args::init().execute() {
+#[macro_export]
+macro_rules! EXIT {
+    () => {{ return Ok(()); }};
+    ($($arg:tt)*) => {{ return ERR!($($arg)*); }};
+}
+
+fn _main() -> Result<(), MyError> {
+    let args = Args::init();
+    let mut worker = Worker::init();
+    args.execute(&mut worker)?;
+    return worker.join();
+}
+
+fn main() -> ExitCode {
+    if let Err(e) = _main() {
         elog!("{}", e);
-        std::process::exit(1);
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
     }
 }

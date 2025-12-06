@@ -7,6 +7,7 @@ pub struct Version {
 
 impl Version {
     pub const ID: u32 = MdlxMagic::VERS as u32;
+    pub const SUPPORTED_VERSION: [u32; 1] = [800];
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Self { format_version: cur.readx()? })

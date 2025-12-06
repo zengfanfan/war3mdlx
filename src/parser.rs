@@ -26,41 +26,52 @@ pub struct MdlxData {
     ribbon_emitters: Vec<RibbonEmitter>,
 }
 
-macro_rules! MdxParseType1 {
-    ($chunk:expr, $cur:expr, $( $ty:ty => $vec:expr ),+ $(,)?) => {
-        $(
-            if $chunk.id == <$ty>::ID {
-                $vec = <$ty>::read_mdx(&mut $cur)?;
-                return Ok(());
-            }
-        )+
+macro_rules! MdxReadChunkType1 {
+    ($chunk:expr, $cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
+        $(if $chunk.id == <$ty>::ID {
+            $var = <$ty>::read_mdx(&mut $cur)
+            .or_else(|e| ERR!("{}({}): {}", TNAME!($ty), u32_to_ascii(<$ty>::ID), e))?;
+            return Ok(());
+        })+
     };
 }
-macro_rules! MdxParseType2 {
-    ($chunk:expr, $cur:expr, $( $ty:ty => $vec:expr ),+ $(,)?) => {
-        $(
-            if $chunk.id == <$ty>::ID {
-                while !$cur.eol() {
-                    $vec.push(<$ty>::read_mdx(&mut $cur)?);
-                }
-                return Ok(());
+macro_rules! MdxReadChunkType2 {
+    ($chunk:expr, $cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
+        $(if $chunk.id == <$ty>::ID {
+            while !$cur.eol() {
+                $var.push(
+                    <$ty>::read_mdx(&mut $cur).or_else(|e| {
+                        ERR!("{}({})[{}th]: {}", TNAME!($ty), u32_to_ascii(<$ty>::ID), $var.len(), e)
+                    })?,
+                );
             }
-        )+
+            return Ok(());
+        })+
     };
 }
-macro_rules! MdxParseType3 {
-    ($chunk:expr, $cur:expr, $( $ty:ty => $vec:expr ),+ $(,)?) => {
-        $(
-            if $chunk.id == <$ty>::ID {
-                while !$cur.eol() {
-                    let sz = $cur.readx::<u32>()? - 4;
-                    let body = $cur.read_bytes(sz)?;
-                    let mut cur2 = Cursor::new(&body);
-                    $vec.push(<$ty>::read_mdx(&mut cur2)?);
-                }
-                return Ok(());
+macro_rules! MdxReadChunkType3 {
+    ($chunk:expr, $cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
+        $(if $chunk.id == <$ty>::ID {
+            while !$cur.eol() {
+                let left = $cur.left();
+                yes!(left < 4, return ERR!("{} size: {}B left (need 4)", TNAME!($ty), left));
+                let sz = $cur.readx::<u32>()?;
+                yes!(sz < 4, return ERR!("{} size: {} (need >= 4)", TNAME!($ty), sz));
+                let sz = sz - 4;
+
+                let left = $cur.left();
+                yes!(left < sz, return ERR!("{} body: {}B left (need {})", TNAME!($ty), left, sz));
+                let body = $cur.read_bytes(sz).or_else(|e| ERR!("{} body({}B): {}", TNAME!($ty), sz, e))?;
+
+                let mut cur2 = Cursor::new(&body);
+                $var.push(
+                    <$ty>::read_mdx(&mut cur2).or_else(|e| {
+                        ERR!("{}({})[{}th]: {}", TNAME!($ty), u32_to_ascii(<$ty>::ID), $var.len(), e)
+                    })?,
+                );
             }
-        )+
+            return Ok(());
+        })+
     };
 }
 
@@ -110,26 +121,24 @@ macro_rules! MdlWriteType4 {
 
 impl MdlxData {
     pub fn read(path: &Path) -> Result<Self, MyError> {
-        let ext = path.ext_lower();
-        match ext.as_str() {
+        match path.ext_lower().as_str() {
             "mdl" => match std::fs::read_to_string(path) {
-                Err(e) => ERR!("Failed to read file: {:?}, {}", path, e),
-                Ok(s) => Self::read_mdl(&s),
+                Err(e) => ERR!("Failed to read file {:?}: {}", path, e),
+                Ok(s) => Self::read_mdl(&s).or_else(|e| ERR!("Failed to read file {:?}: {}", path, e)),
             },
             "mdx" => match std::fs::read(path) {
-                Err(e) => ERR!("Failed to read file: {:?}, {}", path, e),
-                Ok(s) => Self::read_mdx(&s),
+                Err(e) => ERR!("Failed to read file {:?}: {}", path, e),
+                Ok(s) => Self::read_mdx(&s).or_else(|e| ERR!("Failed to read file {:?}: {}", path, e)),
             },
             _ => ERR!("Invalid input path: {:?}, expected *.mdl or *.mdx", path),
         }
     }
 
     pub fn write(&self, path: &Path) -> Result<(), MyError> {
-        let ext = path.ext_lower();
-        match ext.as_str() {
-            "mdl" => self.write_mdl(path),
-            "mdx" => self.write_mdx(path),
-            _ => ERR!("Invalid input path: {:?}, expected *.mdl or *.mdx", path),
+        match path.ext_lower().as_ref() {
+            "mdl" => self.write_mdl(path).or_else(|e| ERR!("Failed to write file {:?}: {}", path, e)),
+            "mdx" => self.write_mdx(path).or_else(|e| ERR!("Failed to write file {:?}: {}", path, e)),
+            _ => ERR!("Invalid output path: {:?}, expected *.mdl or *.mdx", path),
         }
     }
 
@@ -177,30 +186,35 @@ impl MdlxData {
     }
 
     pub fn read_mdx(input: &Vec<u8>) -> Result<Self, MyError> {
-        let mut ret = MdlxData::default();
+        let mut this = MdlxData::default();
         let mut cur = Cursor::new(input);
 
-        let magic = cur.read_be::<u32>()?;
+        let magic = cur.read_be::<u32>().unwrap_or(0);
         if magic != MdlxMagic::MDLX as u32 {
-            return ERR!("Invalid magic: 0x{:08X}", magic);
+            return ERR!("Invalid magic: 0x{:08X} ({})", magic, u32_to_ascii(magic));
         }
 
         while !cur.eol() {
             let chunk = MdxChunk::read_mdx(&mut cur)?;
-            ret.parse_chunk(&chunk)?;
+            this.parse_chunk(&chunk)?;
         }
 
-        dbgx!(&ret); //[test]
-        return Ok(ret);
+        let format_version = this.version.format_version;
+        if !Version::SUPPORTED_VERSION.contains(&format_version) {
+            EXIT!("Unsupported version: {} (should be one of {:?})", format_version, Version::SUPPORTED_VERSION);
+        }
+
+        dbgx!(&this); //[test]
+        return Ok(this);
     }
 
     fn parse_chunk(&mut self, chunk: &MdxChunk) -> Result<(), MyError> {
         let mut cur = Cursor::new(&chunk.body);
-        MdxParseType1!(chunk, cur,
+        MdxReadChunkType1!(chunk, cur,
             Version => self.version,
             Model   => self.model,
         );
-        MdxParseType2!(chunk, cur,
+        MdxReadChunkType2!(chunk, cur,
             Sequence        => self.sequences,
             GlobalSequence  => self.globalseqs,
             Texture         => self.textures,
@@ -210,7 +224,7 @@ impl MdlxData {
             CollisionShape  => self.collisions,
             PivotPoint      => self.pivot_points,
         );
-        MdxParseType3!(chunk, cur,
+        MdxReadChunkType3!(chunk, cur,
             TextureAnim     => self.texanims,
             Material        => self.materials,
             Geoset          => self.geosets,

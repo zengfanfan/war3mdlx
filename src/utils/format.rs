@@ -62,6 +62,8 @@ pub fn u32_to_ascii(n: u32) -> String {
     String::from_utf8_lossy(&bytes).into_owned()
 }
 
+//#region trait: typename
+
 #[macro_export]
 macro_rules! TNAMEL {
     () => {
@@ -75,10 +77,10 @@ macro_rules! TNAMEL {
 #[macro_export]
 macro_rules! TNAME {
     () => {
-        tname_last_seg_trim::<Self>(2)
+        crate::format::tname_last_seg_trim::<Self>(2)
     };
     ($t:ty) => {
-        tname_last_seg_trim::<$t>(2)
+        crate::format::tname_last_seg_trim::<$t>(2)
     };
 }
 
@@ -90,6 +92,7 @@ pub fn tname_last_seg_trim<T>(n: u32) -> String {
     if n >= len { full.to_string() } else { parts[len - n..].join("::") }
 }
 
+//#endregion
 //#region trait: Formatter
 
 pub trait Formatter {

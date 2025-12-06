@@ -22,10 +22,10 @@ impl _ExtendCursor for Cursor<&Vec<u8>> {
         self.read_le()
     }
     fn read_le<T: ReadFromCursor>(&mut self) -> Result<T, MyError> {
-        Ok(T::read_from(self)?)
+        T::read_from(self)
     }
     fn read_be<T: ReadFromCursor>(&mut self) -> Result<T, MyError> {
-        Ok(T::read_from_be(self)?)
+        T::read_from_be(self)
     }
 
     fn read_bytes(&mut self, n: u32) -> Result<Vec<u8>, MyError> {
