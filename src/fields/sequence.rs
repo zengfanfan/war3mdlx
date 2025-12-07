@@ -39,14 +39,16 @@ impl Sequence {
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
-        lines.push(F!("{indent}Anim: \"{}\" {{", self.name));
-        lines.push(F!("{indent2}Interval: {{ {}, {} }},", self.start_frame, self.end_frame));
+        lines.push(F!("{indent}Anim \"{}\" {{", self.name));
+        lines.push(F!("{indent2}Interval {{ {}, {} }},", self.start_frame, self.end_frame));
         lines.pushx_if_n0(&F!("{indent2}MoveSpeed"), &self.move_speed);
         yes!(!self.looping, lines.push(F!("{indent2}NonLooping,")));
         lines.pushx_if_n0(&F!("{indent2}Rarity"), &self.rarity);
-        lines.pushx_if_n0(&F!("{indent2}BoundsRadius"), &self.bounds_radius);
-        lines.pushx_if_n0(&F!("{indent2}MinimumExtent"), &self.min_extent);
-        lines.pushx_if_n0(&F!("{indent2}MaximumExtent"), &self.max_extent);
+        if !(self.bounds_radius.is0() && self.min_extent.is0() && self.max_extent.is0()) {
+            lines.push(F!("{indent2}BoundsRadius {},", fmtx(&self.bounds_radius)));
+            lines.push(F!("{indent2}MinimumExtent {},", fmtx(&self.min_extent)));
+            lines.push(F!("{indent2}MaximumExtent {},", fmtx(&self.max_extent)));
+        }
         lines.push(F!("{indent}}}"));
         return Ok(lines);
     }

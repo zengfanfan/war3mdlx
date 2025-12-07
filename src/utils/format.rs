@@ -125,8 +125,8 @@ macro_rules! impl_Formatter_vec234 {
         $(
             impl Formatter for $t {
                 fn fmt(&self) -> String {
-                    let s=Formatter::fmt(&self.to_array().to_vec());
-                    format!("{{ {} }}", s[1..s.len()-1].to_string())
+                    let s = Formatter::fmt(&self.to_array().to_vec());
+                    F!("{{{}}}", &s[1..s.len()-1])
                 }
             }
         )*

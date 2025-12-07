@@ -218,7 +218,7 @@ macro_rules! indent {
     };
 }
 
-getter!(log_level, line_ending, precision, stop_on_error, overwrite);
+getter!(log_level, line_ending, precision, stop_on_error, overwrite, start_time);
 
 static mut G_ARGS: Option<&'static Args> = None;
 

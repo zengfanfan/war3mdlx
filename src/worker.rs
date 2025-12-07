@@ -33,17 +33,8 @@ impl StopSignal {
 
 //#endregion
 
-#[allow(dead_code)]
-fn timestamp() -> String {
-    let now = std::time::SystemTime::now();
-    let duration = now.duration_since(std::time::UNIX_EPOCH).unwrap();
-    let ms = duration.as_millis();
-    let s = ms / 1000;
-    let m = s / 60 % 60;
-    return F!("{:02}:{:02}.{:03}", m, s % 60, ms % 1000);
-}
-
 pub struct Worker {
+    start_time: i128,
     total: i32,
     ok: i32,
     skip: i32,
@@ -62,8 +53,16 @@ impl Worker {
         let (jobtx, jobrx) = channel::<Job>();
         let (restx, resrx) = channel::<JobResult>();
         let jobrx = Arc::new(Mutex::new(jobrx)); // to share it across threads
-        let mut this =
-            Self { jobtx: Some(jobtx), resrx: Some(resrx), ok: 0, skip: 0, fail: 0, total: 0, handles: vec![] };
+        let mut this = Self {
+            jobtx: Some(jobtx),
+            resrx: Some(resrx),
+            ok: 0,
+            skip: 0,
+            fail: 0,
+            total: 0,
+            handles: vec![],
+            start_time: timestamp_ms() as i128,
+        };
         let stop_signal = StopSignal { signal: Arc::new(AtomicBool::new(false)) };
 
         let ncpus = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
@@ -100,7 +99,7 @@ impl Worker {
             };
             dead = match job {
                 Err(_) => true, // caused by drop(sender)
-                Ok(job) => match MdlxData::read(&job.input).and_then(|a| a.write(&job.output)) {
+                Ok(job) => match MdlxData::read(&job.input).and_then(|mut a| a.write(&job.output)) {
                     Ok(_) => tx.send(JobResult::Ok).is_err(),
                     Err(e) => {
                         yes!(stop_on_error, stop_signal.stop());
@@ -133,19 +132,37 @@ impl Worker {
         self.resrx = None; // close the receiver
 
         for h in self.handles {
-            if let Err(e) = h.join() { // ?: do not return error, just log and keep going
-                elog!("Failed to join thread: {:?}", e);
-            }
+            // ?: do not return error, just log and keep going
+            h.join().unwrap_or_else(|e| elog!("Failed to join thread: {:?}", e));
         }
 
+        let time = timestamp_ms() as i128 - self.start_time;
         let (ok, skip, error) = (self.ok, self.skip, self.fail);
         if self.total > 1 {
             print!("Converted {ok} files");
             yes!(skip > 0, print!(", {skip} skipped"));
             yes!(error > 0, print!(", {error} errors"));
-            println!(".");
+            println!(", cost {}.{:03}s.", time / 1000, time % 1000);
         };
 
         return Ok(());
     }
 }
+
+//#region timestamp
+
+#[allow(dead_code)]
+pub fn timestamp_ms() -> u128 {
+    let now = std::time::SystemTime::now();
+    let duration = now.duration_since(std::time::UNIX_EPOCH).unwrap();
+    return duration.as_millis();
+}
+#[allow(dead_code)]
+pub fn timestamp_logstr() -> String {
+    let ms = timestamp_ms();
+    let s = ms / 1000;
+    let m = s / 60 % 60;
+    return F!("{:02}:{:02}.{:03}", m, s % 60, ms % 1000);
+}
+
+//#endregion

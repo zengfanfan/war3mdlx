@@ -75,25 +75,20 @@ impl RibbonEmitter {
         let bgr = self.color.reverse();
         let bgr_anim = self.color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
 
-        MdlWriteAnimStatic!(lines, depth,
-            "HeightAbove" => self.height_above_anim => 0.0 => self.height_above,
-            "HeightBelow" => self.height_below_anim => 0.0 => self.height_below,
-            "Alpha" => self.alpha_anim => 0.0 => self.alpha,
-            "Color" => bgr_anim => Vec3::ZERO => bgr,
-        );
-
         lines.pushx_if_n0(&F!("{indent}EmissionRate"), &self.emit_rate);
         lines.pushx_if_n0(&F!("{indent}LifeSpan"), &self.lifespan);
         lines.push_if_n0(&F!("{indent}Gravity"), &self.gravity);
         lines.push_if_n0(&F!("{indent}Rows"), &self.rows);
         lines.push_if_n0(&F!("{indent}Columns"), &self.columns);
-        lines.push_if_n0(&F!("{indent}MaterialID"), &self.material_id);
+        lines.push_if_nneg1(&F!("{indent}MaterialID"), &self.material_id);
 
+        MdlWriteAnimBoth!(lines, depth,
+            "HeightAbove" => self.height_above_anim => 0.0 => self.height_above,
+            "HeightBelow" => self.height_below_anim => 0.0 => self.height_below,
+            "Alpha" => self.alpha_anim => 1.0 => self.alpha,
+            "Color" => bgr_anim => Vec3::ONE => bgr,
+        );
         MdlWriteAnim!(lines, depth,
-            "HeightAbove" => self.height_above_anim,
-            "HeightBelow" => self.height_below_anim,
-            "Alpha" => self.alpha_anim,
-            "Color" => bgr_anim,
             "TextureSlot" => self.texslot_anim,
             "Visibility" => self.visibility,
         );

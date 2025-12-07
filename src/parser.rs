@@ -99,9 +99,9 @@ macro_rules! MdlWriteType3 {
     ($lines:ident, $depth:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
         $(if !$var.is_empty() {
             for a in &$var {
-                $lines.push(format!("{} {{", $name));
+                $lines.push(F!("{} {{", $name));
                 MdlWriteType1!($lines, $depth+1, a);
-                $lines.push(format!("}}"));
+                $lines.push(F!("}}"));
             }
         })+
     };
@@ -111,9 +111,9 @@ macro_rules! MdlWriteType4 {
     ($lines:ident, $depth:expr, $member:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
         $(if !$var.is_empty() {
             for a in &$var {
-                paste!{ $lines.push(format!("{} \"{}\" {{", $name, a.$member)); }
+                paste!{ $lines.push(F!("{} \"{}\" {{", $name, a.$member)); }
                 MdlWriteType1!($lines, $depth+1, a);
-                $lines.push(format!("}}"));
+                $lines.push(F!("}}"));
             }
         })+
     };
@@ -134,7 +134,7 @@ impl MdlxData {
         }
     }
 
-    pub fn write(&self, path: &Path) -> Result<(), MyError> {
+    pub fn write(&mut self, path: &Path) -> Result<(), MyError> {
         match path.ext_lower().as_ref() {
             "mdl" => self.write_mdl(path).or_else(|e| ERR!("Failed to write file {:?}: {}", path, e)),
             "mdx" => self.write_mdx(path).or_else(|e| ERR!("Failed to write file {:?}: {}", path, e)),
@@ -142,7 +142,7 @@ impl MdlxData {
         }
     }
 
-    pub fn write_mdl(&self, _: &Path) -> Result<(), MyError> /* [todo] */ {
+    pub fn write_mdl(&mut self, path: &Path) -> Result<(), MyError> {
         let mut lines: Vec<String> = vec![];
 
         MdlWriteType1!(lines, 0, self.version, self.model);
@@ -152,7 +152,6 @@ impl MdlxData {
             "Textures" => self.textures,
             "Materials" => self.materials,
             "TextureAnims" => self.texanims,
-            "PivotPoints" => self.pivot_points,
         );
         MdlWriteType3!(lines, 0,
             "Geoset" => self.geosets,
@@ -160,7 +159,7 @@ impl MdlxData {
         );
         MdlWriteType4!(lines, 0, base.name,
             "Bone" => self.bones,
-            "Lights" => self.lights,
+            "Light" => self.lights,
             "Helper" => self.helpers,
             "Attachment" => self.attachments,
             "ParticleEmitter" => self.particle_emitters,
@@ -169,12 +168,11 @@ impl MdlxData {
             "EventObject" => self.eventobjs,
             "CollisionShape" => self.collisions,
         );
+        MdlWriteType2!(lines, 0, "PivotPoints" => self.pivot_points );
         MdlWriteType4!(lines, 0, name, "Camera" => self.cameras );
 
-        let text = lines.join("\n");
-        log!("\n *** ===> MDL *** \n\n{}", text); //[test]
-        return Ok(());
-        // return Ok(std::fs::write(path, text)?);
+        let text = lines.join("\n") + "\n";
+        return Ok(std::fs::write(path, text)?);
     }
 
     pub fn write_mdx(&self, _: &Path) -> Result<(), MyError> /* [todo] */ {
@@ -204,7 +202,11 @@ impl MdlxData {
             EXIT!("Unsupported version: {} (should be one of {:?})", format_version, Version::SUPPORTED_VERSION);
         }
 
-        dbgx!(&this); //[test]
+        for (i, a) in this.attachments.iter_mut().enumerate() {
+            a.aindex = i as i32;
+        }
+
+        dbgx!(&this);
         return Ok(this);
     }
 

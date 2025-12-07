@@ -124,30 +124,21 @@ impl ParticleEmitter2 {
 
         lines.append(&mut self.base.write_mdl(depth)?);
 
-        MdlWriteAnimStatic!(lines, depth,
-            "Speed" => self.speed_anim => 0.0 => self.speed,
-            "Variation" => self.variation_anim => 0.0 => self.variation,
-            "Latitude" => self.latitude_anim => 0.0 => self.latitude,
-            "Gravity" => self.gravity_anim => 0.0 => self.gravity,
-            "EmissionRate" => self.emit_rate_anim => 0.0 => self.emit_rate,
-            "Length" => self.length_anim => 0.0 => self.length,
-            "Width" => self.width_anim => 0.0 => self.width,
-        );
-
+        lines.push(F!("{indent}{:?},", &self.filter_mode));
         {
             let mut clines: Vec<String> = vec![];
             for c in self.segment_color.iter() {
                 let bgr = c.reverse();
-                clines.pushx_if_n0(&F!("{indent2}Color"), &bgr);
+                clines.push(F!("{indent2}Color {},", fmtx(&bgr)));
             }
             if !clines.is_empty() {
-                lines.push(F!("{indent}Particle {{"));
+                lines.push(F!("{indent}SegmentColor {{"));
                 lines.append(&mut clines);
-                lines.push(F!("{indent}}}"));
+                lines.push(F!("{indent}}},"));
             }
         }
-        lines.pushx_if_n0(&F!("{indent}Alpha"), &self.segment_alpha);
-        lines.pushx_if_n0(&F!("{indent}ParticleScaling"), &self.segment_scaling);
+        lines.pushx(&F!("{indent}Alpha"), &self.segment_alpha);
+        lines.pushx(&F!("{indent}ParticleScaling"), &self.segment_scaling);
         lines.push_if_n0(&F!("{indent}LifeSpanUVAnim"), &self.head_life);
         lines.push_if_n0(&F!("{indent}DecayUVAnim"), &self.head_decay);
         lines.push_if_n0(&F!("{indent}TailUVAnim"), &self.tail_life);
@@ -172,16 +163,16 @@ impl ParticleEmitter2 {
         yes!(self.squirt, lines.push(F!("{indent}Squirt,")));
         yes!(self.head_or_tail.is_valid(), lines.push(F!("{indent}{:?},", self.head_or_tail)));
 
-        MdlWriteAnim!(lines, depth,
-            "Speed" => self.speed_anim,
-            "Variation" => self.variation_anim,
-            "Latitude" => self.latitude_anim,
-            "Gravity" => self.gravity_anim,
-            "EmissionRate" => self.emit_rate_anim,
-            "Length" => self.length_anim,
-            "Width" => self.width_anim,
-            "Visibility" => self.visibility,
+        MdlWriteAnimBoth!(lines, depth,
+            "Speed" => self.speed_anim => 0.0 => self.speed,
+            "Variation" => self.variation_anim => 0.0 => self.variation,
+            "Latitude" => self.latitude_anim => 0.0 => self.latitude,
+            "Gravity" => self.gravity_anim => 0.0 => self.gravity,
+            "EmissionRate" => self.emit_rate_anim => 0.0 => self.emit_rate,
+            "Length" => self.length_anim => 0.0 => self.length,
+            "Width" => self.width_anim => 0.0 => self.width,
         );
+        MdlWriteAnim!(lines, depth, "Visibility" => self.visibility);
 
         return Ok(lines);
     }

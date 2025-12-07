@@ -43,9 +43,9 @@ impl BoundExtent {
     }
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         Ok(vec![
-            format!("{}BoundsRadius {},", indent!(depth), self.bound_radius),
-            format!("{}MinimumExtent {},", indent!(depth), self.min_extent),
-            format!("{}MaximumExtent {},", indent!(depth), self.max_extent),
+            F!("{}BoundsRadius {},", indent!(depth), fmtx(&self.bound_radius)),
+            F!("{}MinimumExtent {},", indent!(depth), fmtx(&self.min_extent)),
+            F!("{}MaximumExtent {},", indent!(depth), fmtx(&self.max_extent)),
         ])
     }
 }
@@ -97,13 +97,13 @@ impl Geoset {
             } else if id == MdlxMagic::NRMS as u32 {
                 this.normals = cur.read_array(n)?;
             } else if id == MdlxMagic::PTYP as u32 {
-                yes!(n > 1, elog!("OMG! [face type count] {n} > 1 ?"));
+                yes!(n > 1, EXIT!("OMG! [face type count] {n} > 1 ?"));
                 this.face_types = cur.read_array::<u32>(n)?.iter().map(|a| FaceType::from(*a)).collect();
                 if this.face_types.iter().any(|&x| x != FaceType::Triangles) {
-                    elog!("Only triangle(4) is supported: {:?}", this.face_types);
+                    EXIT!("Only triangle(4) is supported: {:?}", this.face_types);
                 }
             } else if id == MdlxMagic::PCNT as u32 {
-                yes!(n > 1, elog!("OMG! [vertex count for each face type] {n} > 1 ?"));
+                yes!(n > 1, EXIT!("OMG! [vertex count for each face type] {n} > 1 ?"));
                 this.face_vtxcnts = cur.read_array(n)?;
             } else if id == MdlxMagic::PVTX as u32 {
                 this.face_vertices = cur.read_array(n)?;
@@ -114,7 +114,7 @@ impl Geoset {
             } else if id == MdlxMagic::MATS as u32 {
                 this.mtx_indices = cur.read_array(n)?;
             } else if id == MdlxMagic::UVAS as u32 {
-                yes!(n > 1, return ERR!("OMG! [number for UV group] {n} > 1 ?"));
+                yes!(n > 1, EXIT!("OMG! [number for UV group] {n} > 1 ?"));
             } else if id == MdlxMagic::UVBS as u32 {
                 this.uvs = cur.read_array(n)?;
             } else {
@@ -168,7 +168,7 @@ impl Geoset {
                 slist.push(F!("Matrices {{"));
                 if let Some(slice) = &self.mtx_indices.get(i..i + n) {
                     let s = slice.iter().map(|x| fmtx(x)).collect::<Vec<String>>().join(", ");
-                    slist.push(F!("{},", s));
+                    slist.push(F!("{}", s));
                 }
                 slist.push(F!("}},"));
                 lines.push(F!("{indent2}{}", slist.join(" ")));
@@ -185,7 +185,7 @@ impl Geoset {
         }
 
         lines.push_if_nneg1(&F!("{indent}MaterialID"), &self.material_id);
-        lines.push_if_n0(&F!("{indent}SelectionGroup"), &self.sel_group);
+        lines.push_if_nneg1(&F!("{indent}SelectionGroup"), &self.sel_group);
         yes!(self.sel_type != 0, lines.push(F!("{indent}Unselectable,")));
 
         return Ok(lines);
@@ -244,6 +244,7 @@ impl GeosetAnim {
         yes!(self.flags.contains(GeosetAnimFlags::DropShadow), lines.push(F!("{indent}DropShadow,")));
 
         MdlWriteAnimBoth!(lines, depth, "Alpha" => self.alpha_anim => 1.0 => self.alpha);
+        // [todo] check if color anim need reverse as static does
         if self.flags.contains(GeosetAnimFlags::UseColor) {
             if let Some(anim) = &self.color_anim {
                 let bgr = anim.convert(|v| v.reverse());

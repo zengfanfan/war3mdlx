@@ -74,23 +74,15 @@ impl Light {
         let bgr_anim = self.color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
         let bgr2_anim = self.ambient_color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
 
-        MdlWriteAnimStatic!(lines, depth,
+        MdlWriteAnimBoth!(lines, depth,
             "AttenuationStart" => self.attenuate_start_anim => 0.0 => self.attenuate_start,
             "AttenuationEnd" => self.attenuate_end_anim => 0.0 => self.attenuate_end,
-            "Color" => bgr_anim => Vec3::NEG_ONE => bgr,
+            "Color" => bgr_anim => Vec3::ZERO => bgr,
             "Intensity" => self.intensity_anim => 0.0 => self.intensity,
-            "AmbColor" => bgr2_anim => Vec3::NEG_ONE => bgr2,
+            "AmbColor" => bgr2_anim => Vec3::ZERO => bgr2,
             "AmbIntensity" => self.ambient_intensity_anim => 0.0 => self.ambient_intensity,
         );
-        MdlWriteAnim!(lines, depth,
-            "AttenuationStart" => self.attenuate_start_anim,
-            "AttenuationEnd" => self.attenuate_end_anim,
-            "Color" => bgr_anim,
-            "Intensity" => self.intensity_anim,
-            "AmbColor" => bgr2_anim,
-            "AmbIntensity" => self.ambient_intensity_anim,
-            "Visibility" => self.visibility,
-        );
+        MdlWriteAnim!(lines, depth, "Visibility" => self.visibility);
 
         return Ok(lines);
     }

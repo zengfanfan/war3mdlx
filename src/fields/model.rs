@@ -32,9 +32,11 @@ impl Model {
         let indent = indent!(depth + 1);
         let mut lines: Vec<String> = vec![];
         lines.push(F!("Model \"{}\" {{", self.name));
-        lines.pushx_if_n0(&F!("{indent}BoundsRadius"), &self.bounds_radius);
-        lines.pushx_if_n0(&F!("{indent}MinimumExtent"), &self.min_extent);
-        lines.pushx_if_n0(&F!("{indent}MaximumExtent"), &self.max_extent);
+        if !(self.bounds_radius.is0() && self.min_extent.is0() && self.max_extent.is0()) {
+            lines.push(F!("{indent}BoundsRadius {},", fmtx(&self.bounds_radius)));
+            lines.push(F!("{indent}MinimumExtent {},", fmtx(&self.min_extent)));
+            lines.push(F!("{indent}MaximumExtent {},", fmtx(&self.max_extent)));
+        }
         lines.push(F!("{indent}BlendTime {},", self.blend_time));
         lines.push(F!("}}"));
         return Ok(lines);

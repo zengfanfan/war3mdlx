@@ -21,8 +21,7 @@ pub struct Layer {
     pub flags: LayerFlags,
     pub texture_id: i32,
     pub texture_anim_id: i32,
-    #[dbg(skip)]
-    pub _unknown: i32,
+    pub coordid: i32,
     pub alpha: f32,
     pub alpha_anim: Option<Animation<f32>>,
     pub texid_anim: Option<Animation<i32>>,
@@ -96,8 +95,10 @@ impl Layer {
         this.flags = LayerFlags::from_bits_retain(cur.readx()?);
         this.texture_id = cur.readx()?;
         this.texture_anim_id = cur.readx()?;
-        this._unknown = cur.readx()?;
+        this.coordid = cur.readx()?;
         this.alpha = cur.readx()?;
+
+        yes!(this.coordid != 0, EXIT!("OMG! [coordid] {} not 0 ?", this.coordid));
 
         while cur.left() >= 16 {
             match cur.read_be()? {
@@ -116,17 +117,18 @@ impl Layer {
         lines.push(F!("{indent}Layer {{"));
         lines.push(F!("{indent2}FilterMode {:?},", self.filter_mode));
 
-        yes!(self.flags.contains(LayerFlags::TwoSided), lines.push(F!("{indent2}TwoSided,")));
         yes!(self.flags.contains(LayerFlags::Unshaded), lines.push(F!("{indent2}Unshaded,")));
-        yes!(self.flags.contains(LayerFlags::Unfogged), lines.push(F!("{indent2}Unfogged,")));
         yes!(self.flags.contains(LayerFlags::SphereEnvMap), lines.push(F!("{indent2}SphereEnvMap,")));
+        yes!(self.flags.contains(LayerFlags::TwoSided), lines.push(F!("{indent2}TwoSided,")));
+        yes!(self.flags.contains(LayerFlags::Unfogged), lines.push(F!("{indent2}Unfogged,")));
         yes!(self.flags.contains(LayerFlags::NoDepthTest), lines.push(F!("{indent2}NoDepthTest,")));
         yes!(self.flags.contains(LayerFlags::NoDepthSet), lines.push(F!("{indent2}NoDepthSet,")));
         lines.push_if_nneg1(&F!("{indent2}TVertexAnimId"), &self.texture_anim_id);
+        lines.push_if_n0(&F!("{indent2}CoordId"), &self.coordid);
 
         MdlWriteAnimBoth!(lines, depth + 1,
-            "Alpha" => self.alpha_anim => 1.0 => self.alpha,
             "TextureID" => self.texid_anim => -1 => self.texture_id,
+            "Alpha" => self.alpha_anim => 1.0 => self.alpha,
         );
 
         lines.push(F!("{indent}}}"));
@@ -143,7 +145,7 @@ pub enum FilterMode {
     Additive,
     AddAlpha,
     Modulate,
-    Modulate2X,
+    Modulate2x,
     AlphaKey,
     Error(u32),
 }
@@ -156,7 +158,7 @@ impl FilterMode {
             3 => Self::Additive,
             4 => Self::AddAlpha,
             5 => Self::Modulate,
-            6 => Self::Modulate2X,
+            6 => Self::Modulate2x,
             7 => Self::AlphaKey,
             x => Self::Error(x),
         }

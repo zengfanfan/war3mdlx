@@ -7,6 +7,7 @@ pub struct Attachment {
     #[dbg(skip)]
     pub _unknown: i32,
     pub attachment_id: i32,
+    pub aindex: i32, // the order appears in the file
     pub visibility: Option<Animation<f32>>,
 }
 
@@ -37,7 +38,7 @@ impl Attachment {
         let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];
         lines.append(&mut self.base.write_mdl(depth)?);
-        lines.push_if_nneg1(&F!("{indent}AttachmentID"), &self.attachment_id);
+        yes!(self.attachment_id != self.aindex, lines.push(F!("{indent}AttachmentID {},", self.attachment_id)));
         lines.pushx_if_n0(&F!("{indent}Path"), &self.path);
         MdlWriteAnim!(lines, depth, "Visibility" => self.visibility);
         return Ok(lines);

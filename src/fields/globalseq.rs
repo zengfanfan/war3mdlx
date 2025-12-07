@@ -15,7 +15,7 @@ impl GlobalSequence {
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
-        Ok(vec![F!("{}Duration: {},", indent!(depth), self.duration)])
+        Ok(vec![F!("{}Duration {},", indent!(depth), self.duration)])
     }
 }
 
