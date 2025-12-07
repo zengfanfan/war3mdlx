@@ -199,7 +199,7 @@ impl MdlxData {
 
         let format_version = this.version.format_version;
         if !Version::SUPPORTED_VERSION.contains(&format_version) {
-            EXIT!("Unsupported version: {} (should be one of {:?})", format_version, Version::SUPPORTED_VERSION);
+            EXIT1!("Unsupported version: {} (should be one of {:?})", format_version, Version::SUPPORTED_VERSION);
         }
 
         for (i, a) in this.attachments.iter_mut().enumerate() {

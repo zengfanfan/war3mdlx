@@ -1,450 +1,650 @@
 Version {
-    FormatVersion 800,
+	FormatVersion 800,
 }
 Model "ALLMIXED" {
-    NumGeosets 1,
-    NumGeosetAnims 2,
-    NumHelpers 1,
-    NumBones 2,
-    NumLights 1,
-    NumAttachments 1,
-    NumEvents 1,
-    NumParticleEmitters 1,
-    NumParticleEmitters2 1,
-    NumRibbonEmitters 1,
-    BlendTime 155,
-    MinimumExtent { 111.1, 222.22, 333.333 },
-    MaximumExtent { 444.444, 555.556, 666.667 },
-    BoundsRadius 456.789,
+	BoundsRadius 456.789001,
+	MinimumExtent { 111.099998, 222.220001, 333.333008 },
+	MaximumExtent { 444.444, 555.55603, 666.666992 },
+	BlendTime 155,
 }
 Sequences 2 {
-    Anim "Name" {
-        Interval { 123, 456 },
-        Rarity 1.23,
-        MoveSpeed 4.56,
-        NonLooping,
-        MinimumExtent { 1.1, 2.2, 3.3 },
-        MaximumExtent { 4.4, 5.5, 6.6 },
-        BoundsRadius 7.89,
-    }
-    Anim "0" {
-        Interval { 0, 0 },
-    }
+	Anim "Name" {
+		Interval { 123, 456 },
+		MoveSpeed 4.56,
+		NonLooping,
+		Rarity 1.23,
+		BoundsRadius 7.89,
+		MinimumExtent { 1.1, 2.2, 3.3 },
+		MaximumExtent { 4.4, 5.5, 6.6 },
+	}
+	Anim "0" {
+		Interval { 0, 0 },
+	}
 }
 GlobalSequences 3 {
-    Duration 0,
-    Duration 123,
-    Duration 123456,
+	Duration 0,
+	Duration 123,
+	Duration 123456,
 }
 Textures 4 {
-    Bitmap {
-        Image "",
-        ReplaceableId 2,
-    }
-    Bitmap {
-        Image "",
-        ReplaceableId 1,
-    }
-    Bitmap {
-        Image "hello kitty",
+	Bitmap {
+		ReplaceableId 2,
+	}
+	Bitmap {
+		ReplaceableId 1,
+	}
+	Bitmap {
+		Image "hello\baby\what.blp",
 		WrapWidth,
 		WrapHeight,
-    }
-    Bitmap {
-        Image "",
-        ReplaceableId 37,
-    }
+	}
+	Bitmap {
+		ReplaceableId 37,
+	}
 }
 Materials 3 {
-    Material {
-    }
-    Material {
-        Layer {
-            FilterMode None,
-            static TextureID 0,
-        }
-    }
-    Material {
-        ConstantColor,
-        SortPrimsFarZ,
-        FullResolution,
-        PriorityPlane 99,
-        Layer {
-            FilterMode Blend,
-            static Alpha 0.55,
-            static TextureID 3,
-            TwoSided,
-            Unshaded,
-            Unfogged,
-            SphereEnvMap,
-            NoDepthTest,
-            NoDepthSet,
-        }
-        Layer {
-            FilterMode None,
-            Alpha 1 {
-                Hermite,
-                0: 1,
-                    InTan 0,
-                    OutTan 0,
-            }
-            TextureID 2 {
-                DontInterp,
-                0: 1,
-                1: 0,
-            }
-        }
-    }
+	Material {
+	}
+	Material {
+		Layer {
+			FilterMode None,
+			static TextureID 0,
+		}
+	}
+	Material {
+		PriorityPlane 99,
+		ConstantColor,
+		SortPrimsFarZ,
+		FullResolution,
+		Layer {
+			FilterMode Blend,
+			Unshaded,
+			SphereEnvMap,
+			TwoSided,
+			Unfogged,
+			NoDepthTest,
+			NoDepthSet,
+			CoordId 321,
+			static TextureID 3,
+			static Alpha 0.55,
+		}
+		Layer {
+			FilterMode None,
+			TVertexAnimId 123,
+			TextureID 2 {
+				DontInterp,
+				0: 1,
+				1: 0,
+			}
+			Alpha 1 {
+				Hermite,
+				0: 1,
+					InTan 0,
+					OutTan 0,
+			}
+		}
+	}
 }
 TextureAnims 2 {
-    TVertexAnim {
-        Translation 1 {
-            Linear,
-            0: { 0, 0, 0 },
-        }
-        Rotation 1 {
-            Hermite,
-            0: { 0, 0, 0, 1 },
-                InTan { 0, 0, 0, 0 },
-                OutTan { 0, 0, 0, 0 },
-        }
-        Scaling 1 {
-            Bezier,
-            0: { 1, 1, 1 },
-                InTan { 0, 0, 0 },
-                OutTan { 0, 0, 0 },
-        }
-    }
-    TVertexAnim {
-    }
+	TVertexAnim {
+		Translation 1 {
+			Linear,
+			GlobalSeqId 0,
+			0: { 0, 0, 0 },
+		}
+		Rotation 1 {
+			Hermite,
+			GlobalSeqId -11,
+			0: { 0, 0, 0, 1 },
+				InTan { 0, 0, 0, 0 },
+				OutTan { 0, 0, 0, 0 },
+		}
+		Scaling 1 {
+			Bezier,
+			GlobalSeqId 618,
+			0: { 1, 1, 1 },
+				InTan { 0, 0, 0 },
+				OutTan { 0, 0, 0 },
+		}
+	}
+	TVertexAnim {
+	}
 }
 Geoset {
-    Vertices 14 {
-        { -20, 20, 40 },
-        { 20, -20, 40 },
-        { 20, 20, 40 },
-        { -20, -20, 0 },
-        { 20, -20, 0 },
-        { -20, -20, 40 },
-        { -20, 20, 0 },
-        { -20, -20, 0 },
-        { 20, 20, 0 },
-        { -20, -20, 0 },
-        { -20, 20, 0 },
-        { -20, 20, 40 },
-        { -20, -20, 40 },
-        { -20, -20, 40 },
-    }
-    Normals 14 {
-        { -0.577328, 0.577361, 0.577361 },
-        { 0.577328, -0.577361, 0.577361 },
-        { 0.577372, 0.577339, 0.577339 },
-        { -0.577328, -0.577361, -0.577361 },
-        { 0.577372, -0.577339, -0.577339 },
-        { -0.577372, -0.577339, 0.577339 },
-        { -0.577372, 0.577339, -0.577339 },
-        { -0.577328, -0.577361, -0.577361 },
-        { 0.577328, 0.577361, -0.577361 },
-        { -0.577328, -0.577361, -0.577361 },
-        { -0.577372, 0.577339, -0.577339 },
-        { -0.577328, 0.577361, 0.577361 },
-        { -0.577372, -0.577339, 0.577339 },
-        { -0.577372, -0.577339, 0.577339 },
-    }
-    TVertices 14 {
-        { 0.875, 0.5 },
-        { 0.625, 0.25 },
-        { 0.625, 0.5 },
-        { 0.375, 0 },
-        { 0.375, 0.25 },
-        { 0.625, 1 },
-        { 0.375, 0.75 },
-        { 0.375, 1 },
-        { 0.375, 0.5 },
-        { 0.125, 0.25 },
-        { 0.125, 0.5 },
-        { 0.625, 0.75 },
-        { 0.875, 0.25 },
-        { 0.625, 0 },
-    }
-    VertexGroup  {
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-    }
-    Faces 1 36 {
-        Triangles {
-            { 0, 1, 2, 1, 3, 4, 5, 6, 7, 8, 9, 10, 2, 4, 8, 11, 8, 6, 0, 12, 1, 1, 13, 3, 5, 11, 6, 8, 4, 9, 2, 1, 4, 11, 2, 8 },
-        }
-    }
-    Groups 1 1 {
-        Matrices { 0 },
-    }
-    MinimumExtent { -20, -20, 0 },
-    MaximumExtent { 20, 20, 40 },
-    BoundsRadius 41.6986,
-    Anim {
-        MinimumExtent { -20, -20, 0 },
-        MaximumExtent { 20, 20, 40 },
-        BoundsRadius 41.6986,
-    }
-    Anim {
-        MinimumExtent { -20, -20, 0 },
-        MaximumExtent { 20, 20, 40 },
-        BoundsRadius 41.6986,
-    }
-    Anim {
-        MinimumExtent { -20, -20, 0 },
-        MaximumExtent { 20, 20, 40 },
-        BoundsRadius 41.6986,
-    }
-    MaterialID 0,
-    SelectionGroup 123,
-    Unselectable,
+	Vertices 14 {
+		{ -20, 20, 40 },
+		{ 20, -20, 40 },
+		{ 20, 20, 40 },
+		{ -20, -20, 0 },
+		{ 20, -20, 0 },
+		{ -20, -20, 40 },
+		{ -20, 20, 0 },
+		{ -20, -20, 0 },
+		{ 20, 20, 0 },
+		{ -20, -20, 0 },
+		{ -20, 20, 0 },
+		{ -20, 20, 40 },
+		{ -20, -20, 40 },
+		{ -20, -20, 40 },
+	}
+	Normals 14 {
+		{ -0.577328, 0.577361, 0.577361 },
+		{ 0.577328, -0.577361, 0.577361 },
+		{ 0.577372, 0.577339, 0.577339 },
+		{ -0.577328, -0.577361, -0.577361 },
+		{ 0.577372, -0.577339, -0.577339 },
+		{ -0.577372, -0.577339, 0.577339 },
+		{ -0.577372, 0.577339, -0.577339 },
+		{ -0.577328, -0.577361, -0.577361 },
+		{ 0.577328, 0.577361, -0.577361 },
+		{ -0.577328, -0.577361, -0.577361 },
+		{ -0.577372, 0.577339, -0.577339 },
+		{ -0.577328, 0.577361, 0.577361 },
+		{ -0.577372, -0.577339, 0.577339 },
+		{ -0.577372, -0.577339, 0.577339 },
+	}
+	TVertices 14 {
+		{ 0.875, 0.5 },
+		{ 0.625, 0.25 },
+		{ 0.625, 0.5 },
+		{ 0.375, 0 },
+		{ 0.375, 0.25 },
+		{ 0.625, 1 },
+		{ 0.375, 0.75 },
+		{ 0.375, 1 },
+		{ 0.375, 0.5 },
+		{ 0.125, 0.25 },
+		{ 0.125, 0.5 },
+		{ 0.625, 0.75 },
+		{ 0.875, 0.25 },
+		{ 0.625, 0 },
+	}
+	VertexGroup {
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+	}
+	Faces 1 36 {
+		Triangles {
+			{ 0, 1, 2, 1, 3, 4, 5, 6, 7, 8, 9, 10, 2, 4, 8, 11, 8, 6, 0, 12, 1, 1, 13, 3, 5, 11, 6, 8, 4, 9, 2, 1, 4, 11, 2, 8 },
+		}
+	}
+	Groups 2 5 {
+		Matrices { 0 },
+		Matrices { 0, 1, 2, 3 },
+	}
+	BoundsRadius 41.698601,
+	MinimumExtent { -20, -20, 0 },
+	MaximumExtent { 20, 20, 40 },
+	Anim {
+		BoundsRadius 41.698601,
+		MinimumExtent { -20, -20, 0 },
+		MaximumExtent { 20, 20, 40 },
+	}
+	Anim {
+		BoundsRadius 41.698601,
+		MinimumExtent { -20, -20, 0 },
+		MaximumExtent { 20, 20, 40 },
+	}
+	Anim {
+		BoundsRadius 41.698601,
+		MinimumExtent { -20, -20, 0 },
+		MaximumExtent { 20, 20, 40 },
+	}
+	MaterialID 478,
+	SelectionGroup 123,
+	Unselectable,
 }
 GeosetAnim {
-    static Alpha 0.5,
-    static Color { 0.129412, 0.870588, 0.435294 },
-    DropShadow,
+	DropShadow,
+	static Alpha 0.5,
+	static Color { 0.129412, 0.870588, 0.435294 },
 }
 GeosetAnim {
-    GeosetId 0,
-    Alpha 1 {
-        Bezier,
-        0: 1,
-            InTan 0,
-            OutTan 0,
-    }
-    Color 1 {
-        Hermite,
-        0: { 1, 1, 1 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-    }
+	GeosetId 0,
+	Alpha 1 {
+		Bezier,
+		0: 1,
+			InTan 2,
+			OutTan 3,
+	}
+	Color 1 {
+		Hermite,
+		0: { 1, 0.5, 0 },
+			InTan { 1, 2, 3 },
+			OutTan { 3, 33, 333 },
+	}
 }
 Bone "parent" {
-    ObjectId 0,
-    GeosetId Multiple,
-    GeosetAnimId None,
+	ObjectId 0,
 }
 Bone "child" {
-    ObjectId 1,
-    Parent 0,
-    DontInherit { Translation },
-    DontInherit { Rotation },
-    DontInherit { Scaling },
-    Billboarded,
-    BillboardedLockX,
-    BillboardedLockY,
-    BillboardedLockZ,
-    CameraAnchored,
-    Translation 3 {
-        Hermite,
-        0: { 0, 0, 0 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-        1: { 1, 0.1, 1.1 },
-            InTan { 1, 2, 3 },
-            OutTan { 4, 5, 6 },
-        2: { 2, 0.2, 2.2 },
-            InTan { 7.8, 9, 0.1 },
-            OutTan { 20, 303, 40.4 },
-    }
-    Rotation 4 {
-        Linear,
-        10: { 0, 0, 0, 1 },
-        20: { 0, 0, 0, 1 },
-        30: { 0, 0, 0, 1 },
-        40: { 0, 0, 0, 1 },
-    }
-    Scaling 7 {
-        Bezier,
-        110: { 1, 1, 1 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-        220: { 1, 1, 1 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-        330: { 1, 1, 1 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-        440: { 1, 1, 1 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-        550: { 1, 1, 1 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-        660: { 1, 1, 1 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-        770: { 1, 1, 1 },
-            InTan { 0, 0, 0 },
-            OutTan { 0, 0, 0 },
-    }
-    GeosetId 0,
-    GeosetAnimId 0,
+	ObjectId 1,
+	Parent 0,
+	DontInherit { Translation },
+	DontInherit { Rotation },
+	DontInherit { Scaling },
+	Billboarded,
+	BillboardedLockX,
+	BillboardedLockY,
+	BillboardedLockZ,
+	CameraAnchored,
+	Translation 3 {
+		Hermite,
+		0: { 0, 0, 0 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+		1: { 1, 0.1, 1.1 },
+			InTan { 1, 2, 3 },
+			OutTan { 4, 5, 6 },
+		2: { 2, 0.2, 2.2 },
+			InTan { 7.8, 9, 0.1 },
+			OutTan { 20, 303, 40.400002 },
+	}
+	Rotation 4 {
+		Linear,
+		10: { 0, 0, 0, 1 },
+		20: { 0, 0, 0, 1 },
+		30: { 0, 0, 0, 1 },
+		40: { 0, 0, 0, 1 },
+	}
+	Scaling 7 {
+		Bezier,
+		110: { 1, 1, 1 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+		220: { 1, 1, 1 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+		330: { 1, 1, 1 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+		440: { 1, 1, 1 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+		550: { 1, 1, 1 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+		660: { 1, 1, 1 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+		770: { 1, 1, 1 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+	}
+	GeosetId 210,
+	GeosetAnimId 340,
 }
 Light "LITE" {
-    ObjectId 2,
-    Directional,
-    static AttenuationStart 11,
-    static AttenuationEnd 44,
-    static Color { 0, 0, 1 },
-    static Intensity 22,
-    static AmbColor { 1, 0, 0 },
-    static AmbIntensity 33,
-    Visibility 1 {
-        Linear,
-        0: 1,
-    }
+	ObjectId 2,
+	Parent 1,
+	Directional,
+	static AttenuationStart 11,
+	static AttenuationEnd 44,
+	static Color { 0.1, 0.2, 1.3 },
+	static Intensity 22,
+	static AmbColor { 1.11, 0.22, 0.33 },
+	static AmbIntensity 33,
+	Visibility 2 {
+		Linear,
+		0: 1,
+		10: 12,
+	}
+}
+Light "LITE.2 color anim" {
+	ObjectId 21,
+	Parent 2,
+	Directional,
+	AttenuationStart 2 {
+		Linear,
+		110: 199,
+		120: 16,
+	}
+	AttenuationEnd 2 {
+		Linear,
+		220: 299,
+		220: 26,
+	}
+	Color 3 {
+		Hermite,
+		123: { 1, 2, 3 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+		456: { 4, 5, 6 },
+			InTan { 0, 0, 0 },
+			OutTan { 0, 0, 0 },
+		123: { 7, 8, 9 },
+			InTan { 11, 22, 33 },
+			OutTan { 44, 55, 66 },
+	}
+	Intensity 2 {
+		Linear,
+		330: 399,
+		320: 36,
+	}
+	AmbColor 3 {
+		Hermite,
+		2123: { 2.1, 2.2, 2.3 },
+			InTan { 21.0, 21.0, 21.0 },
+			OutTan { 22.0, 22.0, 22.0 },
+		2456: { 2.4, 2.5, 2.6 },
+			InTan { 21.0, 21.0, 21.0 },
+			OutTan { 22.0, 22.0, 22.0 },
+		2123: { 2.7, 2.8, 2.9 },
+			InTan { 21.11, 21.22, 21.33 },
+			OutTan { 22.44, 22.55, 22.66 },
+	}
+	AmbIntensity 2 {
+		Linear,
+		440: 499,
+		420: 46,
+	}
 }
 Helper "HELP" {
-    ObjectId 3,
+	ObjectId 3,
 }
 Attachment "ATAH" {
-    ObjectId 4,
-    AttachmentID 0,
-    Path "path",
-    Visibility 1 {
-        Linear,
-        0: 1,
-    }
-}
-PivotPoints 11 {
-    { 0, 0, 0 },
-    { 123, 456, 789 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
+	ObjectId 4,
+	Visibility 1 {
+		Linear,
+		0: 1,
+	}
+	Path "path",
 }
 ParticleEmitter "PERM" {
-    ObjectId 5,
-    EmitterUsesMDL,
-    EmitterUsesTGA,
-    static EmissionRate 111,
-    static Gravity 444,
-    static Longitude 555,
-    static Latitude 666,
-    Visibility 1 {
-        Linear,
-        0: 1,
-    }
-    Particle {
-        static LifeSpan 222,
-        static InitVelocity 333,
-        Path "88.88",
-    }
+	ObjectId 5,
+	EmitterUsesTGA,
+	static EmissionRate 111,
+	static Gravity 444,
+	static Longitude 555,
+	static Latitude 666,
+	Visibility 1 {
+		Linear,
+		0: 1,
+	}
+	Particle {
+		static LifeSpan 222,
+		static InitVelocity 333,
+		Path "88.88",
+	}
+}
+ParticleEmitter "PERM anim" {
+	ObjectId 51,
+	Parent 5,
+	EmitterUsesTGA,
+	EmissionRate 2 {
+		Linear,
+		1123: 1456,
+		1789: 1987,
+	}
+	Gravity 2 {
+		Linear,
+		2123: 2456,
+		2789: 2987,
+	}
+	Longitude 2 {
+		Linear,
+		3123: 3456,
+		3789: 3987,
+	}
+	Latitude 2 {
+		Linear,
+		4123: 4456,
+		4789: 4987,
+	}
+	Visibility 2 {
+		Linear,
+		50: 1.1,
+		51: 0.5,
+	}
+	Particle {
+		LifeSpan 2 {
+			Linear,
+			650: 61.099998,
+			651: 60.5,
+		}
+		InitVelocity 2 {
+			Linear,
+			750: 71.099998,
+			751: 70.5,
+		}
+		Path "88.88",
+	}
 }
 ParticleEmitter2 "PRE2" {
-    ObjectId 6,
-    AlphaKey,
-    static Speed 2,
-    static Variation 3,
-    static Latitude 4,
-    static Gravity 7,
-    static EmissionRate 1.11,
-    static Width 5,
-    static Length 6,
-    static Visibility 0.1,
-    SegmentColor {
-        Color { 0, 0, 1 },
-        Color { 1, 1, 0 },
-        Color { 1, 0, 1 },
-    },
-    Alpha { 111, 222, 33 },
-    ParticleScaling { 33, 44, 55 },
-    LifeSpanUVAnim { 11, 22, 33 },
-    DecayUVAnim { 44, 55, 66 },
-    TailUVAnim { 77, 88, 99 },
-    TailDecayUVAnim { 12, 34, 56 },
-    Rows 78,
-    Columns 90,
-    TextureID 0,
-    Time 0.618,
-    LifeSpan 14,
-    TailLength 47,
-    SortPrimsFarZ,
-    LineEmitter,
-    ModelSpace,
-    AlphaKey,
-    Unshaded,
-    Unfogged,
-    XYQuad,
-    Squirt,
-    Both,
+	ObjectId 6,
+	AlphaKey,
+	SegmentColor {
+		Color { 1.1, 1.2, 1.3 },
+		Color { 2.1, 2.2, 2.3 },
+		Color { 3.1, 3.2, 3.3 },
+	},
+	Alpha { 111, 222, 33 },
+	ParticleScaling { 33, 44, 55 },
+	LifeSpanUVAnim { 11, 22, 33 },
+	DecayUVAnim { 44, 55, 66 },
+	TailUVAnim { 77, 88, 99 },
+	TailDecayUVAnim { 12, 34, 56 },
+	Rows 78,
+	Columns 90,
+	Time 0.618,
+	LifeSpan 14,
+	TailLength 47,
+	TextureID 0,
+	ReplaceableId 21,
+	PriorityPlane 89,
+	SortPrimsFarZ,
+	LineEmitter,
+	ModelSpace,
+	Unshaded,
+	Unfogged,
+	XYQuad,
+	Squirt,
+	Both,
+	static Speed 2,
+	static Variation 3,
+	static Latitude 4,
+	static Gravity 7,
+	static EmissionRate 1.11,
+	static Length 6,
+	static Width 5,
+}
+ParticleEmitter2 "PRE2 anim" {
+	ObjectId 61,
+	Parent 6,
+	AlphaKey,
+	SegmentColor {
+		Color { 1.1, 1.2, 1.3 },
+		Color { 2.1, 2.2, 2.3 },
+		Color { 3.1, 3.2, 3.3 },
+	},
+	Alpha { 111, 222, 33 },
+	ParticleScaling { 33, 44, 55 },
+	LifeSpanUVAnim { 11, 22, 33 },
+	DecayUVAnim { 44, 55, 66 },
+	TailUVAnim { 77, 88, 99 },
+	TailDecayUVAnim { 12, 34, 56 },
+	Rows 78,
+	Columns 90,
+	Time 0.618,
+	LifeSpan 14,
+	TailLength 47,
+	TextureID 0,
+	SortPrimsFarZ,
+	LineEmitter,
+	ModelSpace,
+	Unshaded,
+	Unfogged,
+	XYQuad,
+	Squirt,
+	Both,
+	Speed 2 {
+		Linear,
+		1123: 11.23,
+		1456: 14.56,
+	}
+	Variation 2 {
+		Linear,
+		2123: 21.23,
+		2456: 24.559999,
+	}
+	Latitude 2 {
+		Linear,
+		3123: 31.23,
+		3456: 34.560001,
+	}
+	Gravity 2 {
+		Linear,
+		4123: 41.23,
+		4456: 44.560001,
+	}
+	EmissionRate 2 {
+		Linear,
+		5123: 51.23,
+		5456: 54.560001,
+	}
+	Length 2 {
+		Linear,
+		7123: 71.230003,
+		7456: 74.559998,
+	}
+	Width 2 {
+		Linear,
+		6123: 61.23,
+		6456: 64.559998,
+	}
+	Visibility 2 {
+		Linear,
+		1010: 10.1,
+		2020: 2.02,
+	}
 }
 RibbonEmitter "RIBE" {
-    ObjectId 7,
-    static HeightAbove 123,
-    static HeightBelow 45,
-    static Alpha 0.78,
-    static Color { 0, 1, 1 },
-    static TextureSlot 7,
-    static Visibility 0.66,
-    EmissionRate 33,
-    LifeSpan 44,
-    Gravity 55,
-    Rows 11,
-    Columns 22,
-    MaterialID 1,
+	ObjectId 7,
+	EmissionRate 33,
+	LifeSpan 44,
+	Gravity 55,
+	Rows 11,
+	Columns 22,
+	MaterialID 1,
+	static HeightAbove 123,
+	static HeightBelow 45,
+	static Alpha 0.78,
+	static Color { 0.11, 0.22, 0.33 },
+}
+RibbonEmitter "RIBE anim" {
+	ObjectId 71,
+	Parent 7,
+	EmissionRate 33,
+	LifeSpan 44,
+	Gravity 55,
+	Rows 11,
+	Columns 22,
+	MaterialID 1,
+	HeightAbove 2 {
+		DontInterp,
+		1123: 412.299988,
+		1456: 445.600006,
+	}
+	HeightBelow 2 {
+		DontInterp,
+		2123: 512.299988,
+		2456: 545.599976,
+	}
+	Alpha 2 {
+		DontInterp,
+		3123: 612.299988,
+		3456: 645.599976,
+	}
+	Color 2 {
+		Bezier,
+		123: { 0.1, 0.2, 0.3 },
+			InTan { 0.2, 0.3, 0.4 },
+			OutTan { 0.3, 0.4, 0.5 },
+		456: { 0.4, 0.5, 0.6 },
+			InTan { 0.5, 0.6, 0.7 },
+			OutTan { 0.6, 0.7, 0.8 },
+	}
+	Visibility 2 {
+		Linear,
+		3010: 310.100006,
+		3020: 32.02,
+	}
 }
 EventObject "SNDxASHP" {
-    ObjectId 8,
-    EventTrack 3 {
-        1,
-        22,
-        333,
-    }
-}
-Camera "Camera01" {
-    FieldOfView 0.785398,
-    FarClip 10000,
-    NearClip 1,
-    Position { 141.421, 455.1, 426.183 },
-    Target {
-        Position { 66.66, 77.8, 888 },
-    }
-}
-Camera "Name" {
-    FieldOfView 0.785398,
-    FarClip 10000,
-    NearClip 1,
-    Position { 0, 0, 0 },
-    Target {
-        Position { 0, 0, 0 },
-    }
+	ObjectId 8,
+	EventTrack 3 {
+		1,
+		22,
+		333,
+	}
 }
 CollisionShape "BOXy" {
-    ObjectId 9,
-    Box,
-    Vertices 2 {
-        { 11, 22, 33 },
-        { 44, 55, 66 },
-    }
+	ObjectId 9,
+	Box,
+	Vertices 2 {
+		{ 11, 22, 33 },
+		{ 44, 55, 66 },
+	}
 }
 CollisionShape "SPRE" {
-    ObjectId 10,
-    Parent 9,
-    Sphere,
-    Vertices 1 {
-        { 66, 77, 88 },
-    }
-    BoundsRadius 999,
+	ObjectId 10,
+	Parent 9,
+	Sphere,
+	Vertices 1 {
+		{ 66, 77, 88 },
+	}
+	BoundsRadius 999,
+}
+PivotPoints 11 {
+	{ 0, 0, 0 },
+	{ 123, 456, 789 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+}
+Camera "Camera01" {
+	Position { 141.421005, 455.100006, 426.183014 },
+	FieldOfView 0.785398,
+	FarClip 10000,
+	NearClip 1,
+	Translation 2 {
+		Linear,
+		123: { 1, 2, 3 },
+		456: { 4, 5, 6 },
+	}
+	Target {
+		Position { 66.660004, 77.800003, 888 },
+		Translation 2 {
+			Linear,
+			123: { 11, 22, 33 },
+			456: { 44, 55, 66 },
+		}
+	}
+}
+Camera "Name" {
+	Position { 0, 0, 0 },
+	FieldOfView 0.785398,
+	FarClip 10000,
+	NearClip 1,
+	Target {
+		Position { 0, 0, 0 },
+	}
 }

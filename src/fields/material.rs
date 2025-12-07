@@ -51,7 +51,7 @@ impl Material {
             let count: i32 = cur.readx()?;
             for _ in 0..count {
                 let sz: u32 = cur.readx()?;
-                yes!(sz < 4, EXIT!("{} layer size: {} (need >= 4)", TNAME!(), sz));
+                yes!(sz < 4, EXIT1!("{} layer size: {} (need >= 4)", TNAME!(), sz));
                 let body = cur.read_bytes(sz - 4)?;
                 let mut cur2 = Cursor::new(&body);
                 this.layers.push(Layer::read_mdx(&mut cur2)?);
@@ -89,7 +89,7 @@ impl Layer {
 
         this.filter_mode = FilterMode::from(cur.readx()?);
         if let FilterMode::Error(v) = this.filter_mode {
-            EXIT!("Unknown filter mode: {}", v);
+            EXIT1!("Unknown filter mode: {}", v);
         }
 
         this.flags = LayerFlags::from_bits_retain(cur.readx()?);
@@ -98,13 +98,13 @@ impl Layer {
         this.coordid = cur.readx()?;
         this.alpha = cur.readx()?;
 
-        yes!(this.coordid != 0, EXIT!("OMG! [coordid] {} not 0 ?", this.coordid));
+        yes!(this.coordid != 0, log!("OMG! {}[CoordId] {} not 0 ?", TNAME!(), this.coordid));
 
         while cur.left() >= 16 {
             match cur.read_be()? {
                 id @ Self::ID_ALPHA => this.alpha_anim = Some(Animation::read_mdx(cur, id)?),
                 id @ Self::ID_TEXID => this.texid_anim = Some(Animation::read_mdx(cur, id)?),
-                id => EXIT!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
+                id => EXIT1!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
 
@@ -117,12 +117,12 @@ impl Layer {
         lines.push(F!("{indent}Layer {{"));
         lines.push(F!("{indent2}FilterMode {:?},", self.filter_mode));
 
-        yes!(self.flags.contains(LayerFlags::Unshaded), lines.push(F!("{indent2}Unshaded,")));
-        yes!(self.flags.contains(LayerFlags::SphereEnvMap), lines.push(F!("{indent2}SphereEnvMap,")));
-        yes!(self.flags.contains(LayerFlags::TwoSided), lines.push(F!("{indent2}TwoSided,")));
-        yes!(self.flags.contains(LayerFlags::Unfogged), lines.push(F!("{indent2}Unfogged,")));
-        yes!(self.flags.contains(LayerFlags::NoDepthTest), lines.push(F!("{indent2}NoDepthTest,")));
-        yes!(self.flags.contains(LayerFlags::NoDepthSet), lines.push(F!("{indent2}NoDepthSet,")));
+        lines.push_if(self.flags.contains(LayerFlags::Unshaded), F!("{indent2}Unshaded,"));
+        lines.push_if(self.flags.contains(LayerFlags::SphereEnvMap), F!("{indent2}SphereEnvMap,"));
+        lines.push_if(self.flags.contains(LayerFlags::TwoSided), F!("{indent2}TwoSided,"));
+        lines.push_if(self.flags.contains(LayerFlags::Unfogged), F!("{indent2}Unfogged,"));
+        lines.push_if(self.flags.contains(LayerFlags::NoDepthTest), F!("{indent2}NoDepthTest,"));
+        lines.push_if(self.flags.contains(LayerFlags::NoDepthSet), F!("{indent2}NoDepthSet,"));
         lines.push_if_nneg1(&F!("{indent2}TVertexAnimId"), &self.texture_anim_id);
         lines.push_if_n0(&F!("{indent2}CoordId"), &self.coordid);
 

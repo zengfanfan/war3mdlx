@@ -9,7 +9,7 @@ pub struct Geoset {
     #[dbg(formatter = "fmtx")]
     pub normals: Vec<Vec3>,
     #[dbg(formatter = "fmtx")]
-    pub uvs: Vec<Vec2>,
+    pub uvss: Vec<Vec<Vec2>>,
     pub face_types: Vec<FaceType>,
     #[dbg(formatter = "fmtx")]
     pub face_vtxcnts: Vec<i32>,
@@ -97,13 +97,13 @@ impl Geoset {
             } else if id == MdlxMagic::NRMS as u32 {
                 this.normals = cur.read_array(n)?;
             } else if id == MdlxMagic::PTYP as u32 {
-                yes!(n > 1, EXIT!("OMG! [face type count] {n} > 1 ?"));
+                yes!(n > 1, EXIT1!("OMG! {} [face type count] {n} > 1 ?", TNAME!()));
                 this.face_types = cur.read_array::<u32>(n)?.iter().map(|a| FaceType::from(*a)).collect();
                 if this.face_types.iter().any(|&x| x != FaceType::Triangles) {
-                    EXIT!("Only triangle(4) is supported: {:?}", this.face_types);
+                    EXIT1!("Only triangle(4) is supported: {:?}", this.face_types);
                 }
             } else if id == MdlxMagic::PCNT as u32 {
-                yes!(n > 1, EXIT!("OMG! [vertex count for each face type] {n} > 1 ?"));
+                yes!(n > 1, EXIT1!("OMG! {} [vertex count for each face type] {n} > 1 ?", TNAME!()));
                 this.face_vtxcnts = cur.read_array(n)?;
             } else if id == MdlxMagic::PVTX as u32 {
                 this.face_vertices = cur.read_array(n)?;
@@ -114,9 +114,9 @@ impl Geoset {
             } else if id == MdlxMagic::MATS as u32 {
                 this.mtx_indices = cur.read_array(n)?;
             } else if id == MdlxMagic::UVAS as u32 {
-                yes!(n > 1, EXIT!("OMG! [number for UV group] {n} > 1 ?"));
+                yes!(n > 1, log!("OMG! {} [number for UV group] {n} > 1 ?", TNAME!()));
             } else if id == MdlxMagic::UVBS as u32 {
-                this.uvs = cur.read_array(n)?;
+                this.uvss.push(cur.read_array(n)?);
             } else {
                 this.material_id = id.swap_bytes() as i32;
                 this.sel_group = n;
@@ -138,7 +138,9 @@ impl Geoset {
 
         MdlWriteType2!(lines, depth, "Vertices" => self.vertices);
         MdlWriteType2!(lines, depth, "Normals" => self.normals);
-        MdlWriteType2!(lines, depth, "TVertices" => self.uvs);
+        for uvs in self.uvss.iter() {
+            MdlWriteType2!(lines, depth, "TVertices" => *uvs);
+        }
         {
             lines.push(F!("{indent}VertexGroup {{"));
             lines.append(&mut self.vtxgrps.iter().map(|x| F!("{indent2}{},", fmtx(x))).collect::<Vec<String>>());
@@ -241,7 +243,7 @@ impl GeosetAnim {
         let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];
         lines.push_if_nneg1(&F!("{indent}GeosetId"), &self.geoset_id);
-        yes!(self.flags.contains(GeosetAnimFlags::DropShadow), lines.push(F!("{indent}DropShadow,")));
+        lines.push_if(self.flags.contains(GeosetAnimFlags::DropShadow), F!("{indent}DropShadow,"));
 
         MdlWriteAnimBoth!(lines, depth, "Alpha" => self.alpha_anim => 1.0 => self.alpha);
         // [todo] check if color anim need reverse as static does

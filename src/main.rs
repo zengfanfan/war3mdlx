@@ -8,6 +8,7 @@ use pretty_hex::*;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fmt::{Debug as stdDebug, Display, Formatter as stdFormatter, Result as stdResult};
+use std::fs;
 use std::io::{Cursor, Error as ioError, Read};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -29,6 +30,11 @@ use worker::*;
 
 #[macro_export]
 macro_rules! EXIT {
+    () => {{ return Ok(()); }};
+    ($($arg:tt)*) => {{ log!($($arg)*); EXIT!(); }};
+}
+#[macro_export]
+macro_rules! EXIT1 {
     () => {{ return Ok(()); }};
     ($($arg:tt)*) => {{ return ERR!($($arg)*); }};
 }

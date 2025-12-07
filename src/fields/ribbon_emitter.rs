@@ -77,10 +77,10 @@ impl RibbonEmitter {
 
         lines.pushx_if_n0(&F!("{indent}EmissionRate"), &self.emit_rate);
         lines.pushx_if_n0(&F!("{indent}LifeSpan"), &self.lifespan);
-        lines.push_if_n0(&F!("{indent}Gravity"), &self.gravity);
-        lines.push_if_n0(&F!("{indent}Rows"), &self.rows);
-        lines.push_if_n0(&F!("{indent}Columns"), &self.columns);
-        lines.push_if_nneg1(&F!("{indent}MaterialID"), &self.material_id);
+        lines.pushx_if_n0(&F!("{indent}Gravity"), &self.gravity);
+        lines.pushx_if_n0(&F!("{indent}Rows"), &self.rows);
+        lines.pushx_if_n0(&F!("{indent}Columns"), &self.columns);
+        lines.pushx_if_nneg1(&F!("{indent}MaterialID"), &self.material_id);
 
         MdlWriteAnimBoth!(lines, depth,
             "HeightAbove" => self.height_above_anim => 0.0 => self.height_above,

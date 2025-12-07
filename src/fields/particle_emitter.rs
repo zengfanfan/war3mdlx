@@ -68,8 +68,8 @@ impl ParticleEmitter {
         let mut lines: Vec<String> = vec![];
 
         lines.append(&mut self.base.write_mdl(depth)?);
-        yes!(self.base.flags.contains(NodeFlags::PE1UsesMdl), lines.push(F!("{indent}EmitterUsesMDL,")));
-        yes!(self.base.flags.contains(NodeFlags::PE1UsesTga), lines.push(F!("{indent}EmitterUsesTGA,")));
+        lines.push_if(self.base.flags.contains(NodeFlags::PE1UsesMdl), F!("{indent}EmitterUsesMDL,"));
+        lines.push_if(self.base.flags.contains(NodeFlags::PE1UsesTga), F!("{indent}EmitterUsesTGA,"));
 
         MdlWriteAnimStatic!(lines, depth,
             "EmissionRate" => self.emit_rate_anim => 0.0 => self.emit_rate,

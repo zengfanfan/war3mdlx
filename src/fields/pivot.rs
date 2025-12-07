@@ -22,6 +22,6 @@ impl PivotPoint {
 impl Formatter for Vec<PivotPoint> {
     fn fmt(&self) -> String {
         let s = self.iter().map(|x| fmtx(&x.position)).collect::<Vec<_>>().join(", ");
-        return format!("[{}]", s);
+        return F!("[{}]", s);
     }
 }

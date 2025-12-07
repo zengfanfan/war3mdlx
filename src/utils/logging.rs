@@ -70,7 +70,7 @@ macro_rules! vvvlog {
 //#region dbgx!
 
 pub fn _dbgx<T: stdDebug>(val: &T, indent: usize) {
-    let s = format!("{:#?}", val);
+    let s = F!("{:#?}", val);
     vvvlog!("{}", s.replace("    ", &" ".repeat(indent)));
 }
 #[macro_export]

@@ -81,10 +81,10 @@ impl Args {
     pub fn execute(&self, worker: &mut Worker) -> Result<(), MyError> {
         let input = PathBuf::from(&self.input);
         match self.check_input(&input) {
-            CheckResult::ExpectFileDir => EXIT!("Not a file or directory: {}", self.input),
-            CheckResult::ExpectMDLX => EXIT!("Invalid input: {}, expect *.mdl or *.mdx", self.input),
-            CheckResult::ExpectMDL => EXIT!("Invalid input: {}, expect *.mdl", self.input),
-            CheckResult::ExpectMDX => EXIT!("Invalid input: {}, expect *.mdx", self.input),
+            CheckResult::ExpectFileDir => EXIT1!("Not a file or directory: {:?}", input),
+            CheckResult::ExpectMDLX => EXIT1!("Invalid input: {:?}, expect *.mdl or *.mdx", input),
+            CheckResult::ExpectMDL => EXIT1!("Invalid input: {:?}, expect *.mdl", input),
+            CheckResult::ExpectMDX => EXIT1!("Invalid input: {:?}, expect *.mdx", input),
             CheckResult::Ok => match input.ext_lower().as_str() {
                 ext @ ("mdl" | "mdx") => self.handle_file(worker, input, ext),
                 _ => self.handle_dir(worker, input),
@@ -112,12 +112,14 @@ impl Args {
 
         let opath = output.display().to_string();
         match self.check_output(&output) {
-            CheckResult::ExpectFileDir => EXIT!("Not a file or directory: {}", opath),
-            CheckResult::ExpectMDLX => EXIT!("Invalid path: {}, expect *.mdl or *.mdx", opath),
-            CheckResult::ExpectMDL => EXIT!("Invalid path: {}, expect *.mdl", opath),
-            CheckResult::ExpectMDX => EXIT!("Invalid path: {}, expect *.mdx", opath),
+            CheckResult::ExpectFileDir => EXIT1!("Not a file or directory: {}", opath),
+            CheckResult::ExpectMDLX => EXIT1!("Invalid path: {}, expect *.mdl or *.mdx", opath),
+            CheckResult::ExpectMDL => EXIT1!("Invalid path: {}, expect *.mdl", opath),
+            CheckResult::ExpectMDX => EXIT1!("Invalid path: {}, expect *.mdx", opath),
             _ok => output = if output.is_dir() { output.join(input.file_name().unwrap()) } else { output },
         };
+
+        yes!(input.same_as(&output), EXIT!("Input and output are the same, do nothing."));
 
         self.process_file(worker, input, output);
         EXIT!();
@@ -126,7 +128,7 @@ impl Args {
     fn handle_dir(&self, worker: &mut Worker, input: PathBuf) -> Result<(), MyError> {
         let output = self.output.as_ref().and_then(|o| Some(PathBuf::from(o))).unwrap_or(input.to_path_buf());
         if !output.is_dir() {
-            EXIT!("Output should be also a directory: {:?}", self.output);
+            EXIT1!("Output should be also a directory: {}", output.fmtx());
         }
 
         for entry in WalkDir::new(&input).max_depth(self.max_depth as usize + 1).into_iter().filter_map(|e| e.ok()) {
@@ -185,10 +187,10 @@ impl Args {
 
     fn process_file(&self, worker: &mut Worker, input: PathBuf, output: PathBuf) {
         if output.exists() && !self.overwrite {
-            log!("Skipped existing output: {:?}", output);
+            log!("Skipped existing output: {}", output.fmtx());
             worker.skip_job();
         } else {
-            log!("Converting {:?} -> {:?} ...", input, output);
+            log!("Converting {} -> {} ...", input.fmtx(), output.fmtx());
             worker.add_job(input, output);
         }
     }

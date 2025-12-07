@@ -33,9 +33,9 @@ impl Model {
         let mut lines: Vec<String> = vec![];
         lines.push(F!("Model \"{}\" {{", self.name));
         if !(self.bounds_radius.is0() && self.min_extent.is0() && self.max_extent.is0()) {
-            lines.push(F!("{indent}BoundsRadius {},", fmtx(&self.bounds_radius)));
-            lines.push(F!("{indent}MinimumExtent {},", fmtx(&self.min_extent)));
-            lines.push(F!("{indent}MaximumExtent {},", fmtx(&self.max_extent)));
+            lines.pushx(&F!("{indent}BoundsRadius"), &self.bounds_radius);
+            lines.pushx(&F!("{indent}MinimumExtent"), &self.min_extent);
+            lines.pushx(&F!("{indent}MaximumExtent"), &self.max_extent);
         }
         lines.push(F!("{indent}BlendTime {},", self.blend_time));
         lines.push(F!("}}"));

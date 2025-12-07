@@ -45,9 +45,9 @@ impl Sequence {
         yes!(!self.looping, lines.push(F!("{indent2}NonLooping,")));
         lines.pushx_if_n0(&F!("{indent2}Rarity"), &self.rarity);
         if !(self.bounds_radius.is0() && self.min_extent.is0() && self.max_extent.is0()) {
-            lines.push(F!("{indent2}BoundsRadius {},", fmtx(&self.bounds_radius)));
-            lines.push(F!("{indent2}MinimumExtent {},", fmtx(&self.min_extent)));
-            lines.push(F!("{indent2}MaximumExtent {},", fmtx(&self.max_extent)));
+            lines.pushx(&F!("{indent2}BoundsRadius"), &self.bounds_radius);
+            lines.pushx(&F!("{indent2}MinimumExtent"), &self.min_extent);
+            lines.pushx(&F!("{indent2}MaximumExtent"), &self.max_extent);
         }
         lines.push(F!("{indent}}}"));
         return Ok(lines);

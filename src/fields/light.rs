@@ -77,9 +77,9 @@ impl Light {
         MdlWriteAnimBoth!(lines, depth,
             "AttenuationStart" => self.attenuate_start_anim => 0.0 => self.attenuate_start,
             "AttenuationEnd" => self.attenuate_end_anim => 0.0 => self.attenuate_end,
-            "Color" => bgr_anim => Vec3::ZERO => bgr,
+            "Color" => bgr_anim => Vec3::ONE => bgr,
             "Intensity" => self.intensity_anim => 0.0 => self.intensity,
-            "AmbColor" => bgr2_anim => Vec3::ZERO => bgr2,
+            "AmbColor" => bgr2_anim => Vec3::ONE => bgr2,
             "AmbIntensity" => self.ambient_intensity_anim => 0.0 => self.ambient_intensity,
         );
         MdlWriteAnim!(lines, depth, "Visibility" => self.visibility);

@@ -22,6 +22,6 @@ impl GlobalSequence {
 impl Formatter for Vec<GlobalSequence> {
     fn fmt(&self) -> String {
         let s = self.iter().map(|x| fmtx(&x.duration)).collect::<Vec<_>>().join(", ");
-        return format!("[{}]", s);
+        return F!("[{}]", s);
     }
 }

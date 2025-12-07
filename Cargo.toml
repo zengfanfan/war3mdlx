@@ -13,3 +13,4 @@ pretty-hex = { version = "0.4.1", registry = "aliyun" }
 paste = { version = "1.0.15", registry = "aliyun" }
 bitflags = { version = "2.10.0", registry = "aliyun" }
 regex = { version = "1.12.2", registry = "aliyun" }
+path-clean = { version = "1.0.1", registry = "aliyun" }

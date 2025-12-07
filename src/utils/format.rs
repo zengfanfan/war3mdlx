@@ -27,27 +27,27 @@ fn trim_float_str(s: &str) -> String {
     if i.len() == 0 {
         i = "0";
     }
-    if f.len() == 0 { i.to_string() } else { format!("{}.{}", i, f) }
+    if f.len() == 0 { i.to_string() } else { F!("{}.{}", i, f) }
 }
 
 pub fn fmt_float(v: &f32, len: u32, precision: u32) -> String {
     let len = len as usize;
     let precision = precision as usize;
-    let s = format!("{:.*}", precision, v);
+    let s = F!("{:.*}", precision, v);
     let s = trim_float_str(&s);
     if s.len() <= len {
         return s;
     }
-    let s = format!("{:.*e}", precision, v);
+    let s = F!("{:.*e}", precision, v);
     let (i, e) = s.split_once('e').unwrap();
     let i = trim_float_str(&i);
-    let s = format!("{}e{}", i, e);
+    let s = F!("{}e{}", i, e);
     let ev: i32 = e.parse().unwrap();
     match ev.abs() as usize > (len + precision) / 2 {
         true => s,
         false => {
             let v: f32 = s.parse().unwrap();
-            let s = format!("{:.*}", precision, v);
+            let s = F!("{:.*}", precision, v);
             return trim_float_str(&s);
         },
     }
@@ -111,7 +111,7 @@ macro_rules! impl_Formatter_array {
         $(
             impl Formatter for Vec<$t> {
                 fn fmt(&self) -> String {
-                    format!("{{ {} }}", self.iter().map(|x| Formatter::fmt(x)).collect::<Vec<_>>().join(", "))
+                    F!("{{ {} }}", self.iter().map(|x| Formatter::fmt(x)).collect::<Vec<_>>().join(", "))
                 }
             }
             impl Formatter for &[$t] {
@@ -137,6 +137,7 @@ impl_Formatter!(i8, u8, i16, u16, i32, u32);
 impl_Formatter_array!(i8, u8, i16, u16, i32, u32, f32);
 impl_Formatter_vec234!(Vec2, Vec3, Vec4);
 impl_Formatter_array!(Vec2, Vec3, Vec4);
+impl_Formatter_array!(Vec<Vec2>, Vec<Vec3>, Vec<Vec4>);
 
 impl Formatter for f32 {
     fn fmt(&self) -> String {

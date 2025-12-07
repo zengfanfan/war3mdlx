@@ -38,7 +38,7 @@ impl Attachment {
         let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];
         lines.append(&mut self.base.write_mdl(depth)?);
-        yes!(self.attachment_id != self.aindex, lines.push(F!("{indent}AttachmentID {},", self.attachment_id)));
+        lines.push_if(self.attachment_id != self.aindex, F!("{indent}AttachmentID {},", self.attachment_id));
         lines.pushx_if_n0(&F!("{indent}Path"), &self.path);
         MdlWriteAnim!(lines, depth, "Visibility" => self.visibility);
         return Ok(lines);

@@ -19,7 +19,7 @@ pub struct Animation<T: TAnimation> {
     pub id: u32,
     pub interp_type: InterpolationType,
     pub global_seq_id: i32,
-    #[dbg(formatter = "fmt_key_frames")]
+    #[dbg(formatter = "fmtx")]
     pub key_frames: Vec<KeyFrame<T>>,
 }
 
@@ -57,10 +57,10 @@ impl<T: TAnimation> Animation<T> {
         lines.push(F!("{indent}{:?},", self.interp_type));
         lines.push_if_nneg1(&F!("{indent}GlobalSeqId"), &self.global_seq_id);
         for kf in &self.key_frames {
-            lines.push(F!("{indent}{}: {},", kf.frame, fmtx(&kf.value)));
+            lines.pushx(&F!("{indent}{}:", kf.frame), &kf.value);
             if kf.has_tans {
-                lines.push(F!("{indent2}InTan {},", fmtx(&kf.itan)));
-                lines.push(F!("{indent2}OutTan {},", fmtx(&kf.otan)));
+                lines.pushx(&F!("{indent2}InTan"), &kf.itan);
+                lines.pushx(&F!("{indent2}OutTan"), &kf.otan);
             }
         }
         return Ok(lines);
@@ -161,17 +161,23 @@ impl InterpolationType {
 //#endregion
 //#region formatter
 
-fn fmt_key_frames<T: TAnimation>(key_frames: &Vec<KeyFrame<T>>) -> String {
-    let mut list: Vec<String> = Vec::with_capacity(key_frames.len());
-    for kf in key_frames {
-        list.push(fmt_key_frame_1(kf));
+impl<T: TAnimation> Formatter for KeyFrame<T> {
+    fn fmt(&self) -> String {
+        match self.has_tans {
+            true => {
+                F!("{}: {}, InTan={}, OutTan={},", self.frame, fmtx(&self.value), fmtx(&self.itan), fmtx(&self.otan))
+            },
+            false => F!("{}: {},", self.frame, fmtx(&self.value)),
+        }
     }
-    format!("[\n    {}\n]", list.join("\n    "))
 }
-fn fmt_key_frame_1<T: TAnimation>(kf: &KeyFrame<T>) -> String {
-    match kf.has_tans {
-        true => format!("{}: {}, InTan={}, OutTan={},", kf.frame, fmtx(&kf.value), fmtx(&kf.itan), fmtx(&kf.otan)),
-        false => format!("{}: {},", kf.frame, fmtx(&kf.value)),
+impl<T: TAnimation> Formatter for Vec<KeyFrame<T>> {
+    fn fmt(&self) -> String {
+        let mut list: Vec<String> = Vec::with_capacity(self.len());
+        for kf in self {
+            list.push(fmtx(kf));
+        }
+        return F!("[\n    {}\n]", list.join("\n    "));
     }
 }
 

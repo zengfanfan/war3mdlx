@@ -129,7 +129,7 @@ impl ParticleEmitter2 {
             let mut clines: Vec<String> = vec![];
             for c in self.segment_color.iter() {
                 let bgr = c.reverse();
-                clines.push(F!("{indent2}Color {},", fmtx(&bgr)));
+                clines.pushx(&F!("{indent2}Color"), &bgr);
             }
             if !clines.is_empty() {
                 lines.push(F!("{indent}SegmentColor {{"));
@@ -139,29 +139,29 @@ impl ParticleEmitter2 {
         }
         lines.pushx(&F!("{indent}Alpha"), &self.segment_alpha);
         lines.pushx(&F!("{indent}ParticleScaling"), &self.segment_scaling);
-        lines.push_if_n0(&F!("{indent}LifeSpanUVAnim"), &self.head_life);
-        lines.push_if_n0(&F!("{indent}DecayUVAnim"), &self.head_decay);
-        lines.push_if_n0(&F!("{indent}TailUVAnim"), &self.tail_life);
-        lines.push_if_n0(&F!("{indent}TailDecayUVAnim"), &self.tail_decay);
+        lines.pushx_if_n0(&F!("{indent}LifeSpanUVAnim"), &self.head_life);
+        lines.pushx_if_n0(&F!("{indent}DecayUVAnim"), &self.head_decay);
+        lines.pushx_if_n0(&F!("{indent}TailUVAnim"), &self.tail_life);
+        lines.pushx_if_n0(&F!("{indent}TailDecayUVAnim"), &self.tail_decay);
 
-        lines.push_if_n0(&F!("{indent}Rows"), &self.rows);
-        lines.push_if_n0(&F!("{indent}Columns"), &self.columns);
-        lines.push_if_n0(&F!("{indent}Time"), &self.time);
-        lines.push_if_n0(&F!("{indent}LifeSpan"), &self.lifespan);
-        lines.push_if_n0(&F!("{indent}TailLength"), &self.tail_length);
-        lines.push_if_nneg1(&F!("{indent}TextureID"), &self.texture_id);
-        lines.push_if_n0(&F!("{indent}ReplaceableId"), &self.replace_id);
-        lines.push_if_n0(&F!("{indent}PriorityPlane"), &self.priority_plane);
+        lines.pushx_if_n0(&F!("{indent}Rows"), &self.rows);
+        lines.pushx_if_n0(&F!("{indent}Columns"), &self.columns);
+        lines.pushx_if_n0(&F!("{indent}Time"), &self.time);
+        lines.pushx_if_n0(&F!("{indent}LifeSpan"), &self.lifespan);
+        lines.pushx_if_n0(&F!("{indent}TailLength"), &self.tail_length);
+        lines.pushx_if_nneg1(&F!("{indent}TextureID"), &self.texture_id);
+        lines.pushx_if_n0(&F!("{indent}ReplaceableId"), &self.replace_id);
+        lines.pushx_if_n0(&F!("{indent}PriorityPlane"), &self.priority_plane);
 
         let flags = self.base.flags;
-        yes!(flags.contains(NodeFlags::PE2SortPrimFarZ), lines.push(F!("{indent}SortPrimsFarZ,")));
-        yes!(flags.contains(NodeFlags::LineEmitter), lines.push(F!("{indent}LineEmitter,")));
-        yes!(flags.contains(NodeFlags::ModelSpace), lines.push(F!("{indent}ModelSpace,")));
-        yes!(flags.contains(NodeFlags::PE2Unshaded), lines.push(F!("{indent}Unshaded,")));
-        yes!(flags.contains(NodeFlags::Unfogged), lines.push(F!("{indent}Unfogged,")));
-        yes!(flags.contains(NodeFlags::XYQuad), lines.push(F!("{indent}XYQuad,")));
-        yes!(self.squirt, lines.push(F!("{indent}Squirt,")));
-        yes!(self.head_or_tail.is_valid(), lines.push(F!("{indent}{:?},", self.head_or_tail)));
+        lines.push_if(flags.contains(NodeFlags::PE2SortPrimFarZ), F!("{indent}SortPrimsFarZ,"));
+        lines.push_if(flags.contains(NodeFlags::LineEmitter), F!("{indent}LineEmitter,"));
+        lines.push_if(flags.contains(NodeFlags::ModelSpace), F!("{indent}ModelSpace,"));
+        lines.push_if(flags.contains(NodeFlags::PE2Unshaded), F!("{indent}Unshaded,"));
+        lines.push_if(flags.contains(NodeFlags::Unfogged), F!("{indent}Unfogged,"));
+        lines.push_if(flags.contains(NodeFlags::XYQuad), F!("{indent}XYQuad,"));
+        lines.push_if(self.squirt, F!("{indent}Squirt,"));
+        lines.push_if(self.head_or_tail.is_valid(), F!("{indent}{:?},", self.head_or_tail));
 
         MdlWriteAnimBoth!(lines, depth,
             "Speed" => self.speed_anim => 0.0 => self.speed,

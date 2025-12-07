@@ -1,8 +1,12 @@
 use crate::*;
+use path_clean::PathClean;
 
 pub trait _ExtendPath {
     fn ext(&self) -> &str;
     fn ext_lower(&self) -> String;
+    fn same_as(&self, other: &Self) -> bool;
+    fn shorten(&self, max_len: usize) -> String;
+    fn fmtx(&self) -> String;
 }
 
 impl _ExtendPath for Path {
@@ -11,5 +15,48 @@ impl _ExtendPath for Path {
     }
     fn ext_lower(&self) -> String {
         self.ext().to_lowercase()
+    }
+
+    fn same_as(&self, other: &Self) -> bool {
+        let ca = fs::canonicalize(self).ok();
+        let cb = fs::canonicalize(other).ok();
+        if let (Some(pa), Some(pb)) = (ca, cb) {
+            return pa == pb;
+        }
+
+        let pa = self.clean();
+        let pb = other.clean();
+
+        #[cfg(windows)]
+        let pa = PathBuf::from(pa.to_string_lossy().to_lowercase());
+        #[cfg(windows)]
+        let pb = PathBuf::from(pb.to_string_lossy().to_lowercase());
+
+        return pa == pb;
+    }
+
+    fn shorten(&self, max_len: usize) -> String {
+        let s = self.to_string_lossy();
+        yes!(s.len() <= max_len, return s.to_string());
+
+        let path = self.clean();
+        let s = path.to_string_lossy();
+        yes!(s.len() <= max_len, return s.to_string());
+
+        let ellipsis = "...";
+        yes!(max_len <= ellipsis.len(), return ellipsis.to_string());
+        let keep = max_len - ellipsis.len();
+
+        let left = keep / 2;
+        let right = keep - left;
+
+        let start = &s[..left];
+        let end = &s[s.len() - right..];
+
+        return F!("{start}{ellipsis}{end}");
+    }
+
+    fn fmtx(&self) -> String {
+        fmtx(&self.shorten(60))
     }
 }

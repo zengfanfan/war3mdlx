@@ -34,9 +34,9 @@ impl Texture {
         let mut lines: Vec<String> = vec![];
         lines.push(F!("{indent}Bitmap {{"));
         lines.push_if_n0(&F!("{indent2}ReplaceableId"), &self.replace_id);
-        yes!(self.replace_id.is0(), lines.push(F!("{indent2}Image \"{}\",", self.path)));
-        yes!(self.flags.contains(TextureFlags::WrapWidth), lines.push(F!("{indent2}WrapWidth,")));
-        yes!(self.flags.contains(TextureFlags::WrapHeight), lines.push(F!("{indent2}WrapHeight,")));
+        lines.push_if(self.replace_id.is0(), F!("{indent2}Image \"{}\",", self.path));
+        lines.push_if(self.flags.contains(TextureFlags::WrapWidth), F!("{indent2}WrapWidth,"));
+        lines.push_if(self.flags.contains(TextureFlags::WrapHeight), F!("{indent2}WrapHeight,"));
         lines.push(F!("{indent}}}"));
         return Ok(lines);
     }

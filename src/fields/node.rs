@@ -21,7 +21,7 @@ impl Node {
         let mut this = Self::default();
 
         let sz = cur.readx::<u32>()?;
-        yes!(sz < 4, EXIT!("{} node size: {} (need >= 4)", TNAME!(), sz));
+        yes!(sz < 4, EXIT1!("{} node size: {} (need >= 4)", TNAME!(), sz));
         let body = cur.read_bytes(sz - 4)?;
         let mut cur = Cursor::new(&body); // use a new cursor
 
@@ -49,21 +49,14 @@ impl Node {
         lines.push(F!("{indent}ObjectId {},", self.object_id));
         lines.push_if_nneg1(&F!("{indent}Parent"), &self.parent_id);
 
-        if self.flags.contains(NodeFlags::DontInheritTranslation) {
-            lines.push(F!("{indent}DontInherit {{ Translation }},"));
-        }
-        if self.flags.contains(NodeFlags::DontInheritRotation) {
-            lines.push(F!("{indent}DontInherit {{ Rotation }},"));
-        }
-        if self.flags.contains(NodeFlags::DontInheritScaling) {
-            lines.push(F!("{indent}DontInherit {{ Scaling }},"));
-        }
-
-        yes!(self.flags.contains(NodeFlags::Billboarded), lines.push(F!("{indent}Billboarded,")));
-        yes!(self.flags.contains(NodeFlags::BillboardedLockX), lines.push(F!("{indent}BillboardedLockX,")));
-        yes!(self.flags.contains(NodeFlags::BillboardedLockY), lines.push(F!("{indent}BillboardedLockY,")));
-        yes!(self.flags.contains(NodeFlags::BillboardedLockZ), lines.push(F!("{indent}BillboardedLockZ,")));
-        yes!(self.flags.contains(NodeFlags::CameraAnchored), lines.push(F!("{indent}CameraAnchored,")));
+        lines.push_if(self.flags.contains(NodeFlags::DontInheritT), F!("{indent}DontInherit {{ Translation }},"));
+        lines.push_if(self.flags.contains(NodeFlags::DontInheritR), F!("{indent}DontInherit {{ Rotation }},"));
+        lines.push_if(self.flags.contains(NodeFlags::DontInheritS), F!("{indent}DontInherit {{ Scaling }},"));
+        lines.push_if(self.flags.contains(NodeFlags::Billboarded), F!("{indent}Billboarded,"));
+        lines.push_if(self.flags.contains(NodeFlags::BillboardedLockX), F!("{indent}BillboardedLockX,"));
+        lines.push_if(self.flags.contains(NodeFlags::BillboardedLockY), F!("{indent}BillboardedLockY,"));
+        lines.push_if(self.flags.contains(NodeFlags::BillboardedLockZ), F!("{indent}BillboardedLockZ,"));
+        lines.push_if(self.flags.contains(NodeFlags::CameraAnchored), F!("{indent}CameraAnchored,"));
 
         MdlWriteAnim!(lines, depth,
             "Translation" => self.translation,
@@ -82,9 +75,9 @@ bitflags! {
     pub struct NodeFlags: u32 {
         const All = !0;
         const Helper = 0;
-        const DontInheritTranslation = 1 << 0;
-        const DontInheritRotation = 1 << 1;
-        const DontInheritScaling = 1 << 2;
+        const DontInheritT = 1 << 0;
+        const DontInheritR = 1 << 1;
+        const DontInheritS = 1 << 2;
         const Billboarded = 1 << 3;
         const BillboardedLockX = 1 << 4;
         const BillboardedLockY = 1 << 5;
