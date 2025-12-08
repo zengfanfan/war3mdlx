@@ -1,3 +1,8 @@
+// ================ //
+// header comment 1 //
+// header comment 2 //
+// header comment 3 //
+// ================ //
 Version {
 	FormatVersion 800,
 }
@@ -7,23 +12,26 @@ Model "ALLMIXED" {
 	MaximumExtent { 444.444, 555.55603, 666.666992 },
 	BlendTime 155,
 }
+// single line comment
 Sequences 2 {
 	Anim "Name" {
 		Interval { 123, 456 },
 		MoveSpeed 4.56,
-		NonLooping,
+		NonLooping, // line comment
 		Rarity 1.23,
 		BoundsRadius 7.89,
 		MinimumExtent { 1.1, 2.2, 3.3 },
 		MaximumExtent { 4.4, 5.5, 6.6 },
 	}
-	Anim "0" {
+	Anim "0" {/* block comment */
 		Interval { 0, 0 },
 	}
 }
 GlobalSequences 3 {
 	Duration 0,
-	Duration 123,
+	Duration /*
+	multiline block comment
+	 */ 123,
 	Duration 123456,
 }
 Textures 4 {
@@ -648,3 +656,6 @@ Camera "Name" {
 		Position { 0, 0, 0 },
 	}
 }
+/// ========= ///
+/* *********** */
+/* end of file */

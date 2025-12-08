@@ -36,6 +36,30 @@ impl Sequence {
         })
     }
 
+    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.name = block.name;
+        this.looping = true;
+        for f in block.fields {
+            match f.name.as_str() {
+                "MoveSpeed" => this.move_speed = f.value.into(),
+                "NonLooping" => this.looping = false,
+                "Rarity" => this.rarity = f.value.into(),
+                "BoundsRadius" => this.bounds_radius = f.value.into(),
+                "MinimumExtent" => this.min_extent = f.value.into(),
+                "MaximumExtent" => this.max_extent = f.value.into(),
+                "Interval" => {
+                    log!("Interval: {:#?}", f.value);
+                    let interval: Vec<i32> = f.value.into();
+                    this.start_frame = interval.get(0).cloned().unwrap_or(0);
+                    this.end_frame = interval.get(1).cloned().unwrap_or(0);
+                },
+                _other => (),
+            }
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];

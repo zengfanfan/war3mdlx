@@ -8,7 +8,6 @@ macro_rules! MdlReadBlockType1 {
         $(if $block.typ == stringify!($ty) {
             $var = <$ty>::read_mdl($block)
             .or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
-            log!("[MdlReadBlockType1] {:#?}", $var);//[test]
             return Ok(());
         })+
     };
@@ -61,6 +60,8 @@ macro_rules! MdlWriteType4 {
 #[derive(Parser)]
 #[grammar = "mdl.pest"]
 pub struct MdlParser;
+
+//#region structs
 
 #[derive(Dbg, Default)]
 pub struct MdlBlock {
@@ -168,7 +169,7 @@ impl MdlValue {
             Rule::number_array => {
                 let inner = p.into_inner();
                 let mut fv = Vec::<f32>::with_capacity(inner.len());
-                let mut iv = Vec::<i32>::with_capacity(inner.len());
+                let mut iv = Vec::<i32>::with_capacity(fv.capacity());
                 for p in inner {
                     if p.as_rule() == Rule::float {
                         fv.push(p.as_str().parse().unwrap());
@@ -178,7 +179,7 @@ impl MdlValue {
                         fv.push(s.parse().unwrap());
                     }
                 }
-                yesno!(fv.is_empty(), Ok(Self::IntegerArray(iv)), Ok(Self::FloatArray(fv)))
+                yesno!(iv.len() == fv.len(), Ok(Self::IntegerArray(iv)), Ok(Self::FloatArray(fv)))
             },
             _impossible => Ok(Self::None),
         }
@@ -193,6 +194,8 @@ impl MdlValue {
         s.to_string()
     }
 }
+
+//#endregion
 
 impl MdlxData {
     pub fn write_mdl(&mut self, path: &Path) -> Result<(), MyError> {
@@ -251,6 +254,26 @@ impl MdlxData {
             Version => self.version,
             Model   => self.model,
         );
+
+        if block.typ == "Sequences" {
+            for a in block.blocks {
+                if a.typ == "Anim" {
+                    self.sequences.push(Sequence::read_mdl(a)?);
+                }
+            }
+            log!("[MdlReadBlockType2] {:#?}", self.sequences); //[test]
+            return Ok(());
+        }
+        if block.typ == "GlobalSequences" {
+            for a in block.fields {
+                self.globalseqs.push(GlobalSequence::read_mdl(a)?);
+            }
+            log!("[MdlReadBlockType2] {:#?}", self.globalseqs); //[test]
+            return Ok(());
+        }
+
+        log!(" *** ??? *** {}: {:#?}", block.typ, block);
+
         return Ok(());
     }
 }
@@ -276,15 +299,28 @@ impl FromMdlValue<MdlValue> for Vec<i32> {
         if let MdlValue::IntegerArray(iv) = v { iv } else { Self::default() }
     }
 }
+impl FromMdlValue<MdlValue> for Vec<u32> {
+    fn from(v: MdlValue) -> Self {
+        if let MdlValue::IntegerArray(iv) = v { iv.convert(|v| yesno!(v < 0, 0u32, v as u32)) } else { Self::default() }
+    }
+}
 
 impl FromMdlValue<MdlValue> for f32 {
     fn from(v: MdlValue) -> Self {
-        if let MdlValue::Float(f) = v { f } else { Self::default() }
+        match v {
+            MdlValue::Float(f) => f,
+            MdlValue::Integer(i) => i as f32,
+            _ => Self::default(),
+        }
     }
 }
 impl FromMdlValue<MdlValue> for Vec<f32> {
     fn from(v: MdlValue) -> Self {
-        if let MdlValue::FloatArray(fv) = v { fv } else { Self::default() }
+        match v {
+            MdlValue::FloatArray(fv) => fv,
+            MdlValue::IntegerArray(iv) => iv.convert(|v| v as f32),
+            _ => Self::default(),
+        }
     }
 }
 impl FromMdlValue<MdlValue> for Vec2 {

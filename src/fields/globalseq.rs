@@ -14,6 +14,10 @@ impl GlobalSequence {
         return Ok(this);
     }
 
+    pub fn read_mdl(field: MdlField) -> Result<Self, MyError> {
+        Ok(Self { duration: yesno!(field.name == "Duration", field.value.into(), 0) })
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         Ok(vec![F!("{}Duration {},", indent!(depth), self.duration)])
     }
