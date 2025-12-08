@@ -82,51 +82,67 @@ impl FaceType {
             x => Self::Error(x),
         }
     }
+    fn to(&self) -> u32 {
+        match self {
+            Self::Points => 0,
+            Self::Lines => 1,
+            Self::LineLoop => 2,
+            Self::LineStrip => 3,
+            Self::Triangles => 4,
+            Self::TriangleStrip => 5,
+            Self::TriangleFan => 6,
+            Self::Quads => 7,
+            Self::QuadStrip => 8,
+            Self::Polygons => 9,
+            Self::Error(x) => *x,
+        }
+    }
 }
 
 impl Geoset {
-    pub const ID: u32 = MdlxMagic::GEOS as u32;
+    pub const ID: u32 = MdlxMagic::GEOS;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
+        let mut uvsn = 0_usize;
         while cur.left() >= 16 {
             let (id, n) = (cur.read_be::<u32>()?, cur.readx::<u32>()?);
-            if id == MdlxMagic::VRTX as u32 {
-                this.vertices = cur.read_array(n)?;
-            } else if id == MdlxMagic::NRMS as u32 {
-                this.normals = cur.read_array(n)?;
-            } else if id == MdlxMagic::PTYP as u32 {
-                yes!(n > 1, EXIT1!("OMG! {} [face type count] {n} > 1 ?", TNAME!()));
-                this.face_types = cur.read_array::<u32>(n)?.iter().map(|a| FaceType::from(*a)).collect();
-                if this.face_types.iter().any(|&x| x != FaceType::Triangles) {
-                    EXIT1!("Only triangle(4) is supported: {:?}", this.face_types);
-                }
-            } else if id == MdlxMagic::PCNT as u32 {
-                yes!(n > 1, EXIT1!("OMG! {} [vertex count for each face type] {n} > 1 ?", TNAME!()));
-                this.face_vtxcnts = cur.read_array(n)?;
-            } else if id == MdlxMagic::PVTX as u32 {
-                this.face_vertices = cur.read_array(n)?;
-            } else if id == MdlxMagic::GNDX as u32 {
-                this.vtxgrps = cur.read_array(n)?;
-            } else if id == MdlxMagic::MTGC as u32 {
-                this.mtxgrpcnts = cur.read_array(n)?;
-            } else if id == MdlxMagic::MATS as u32 {
-                this.mtx_indices = cur.read_array(n)?;
-            } else if id == MdlxMagic::UVAS as u32 {
-                yes!(n > 1, log!("OMG! {} [number for UV group] {n} > 1 ?", TNAME!()));
-            } else if id == MdlxMagic::UVBS as u32 {
-                this.uvss.push(cur.read_array(n)?);
-            } else {
-                this.material_id = id.swap_bytes() as i32;
-                this.sel_group = n;
-                this.sel_type = cur.readx()?;
-                this.extent = BoundExtent::read_mdx(cur)?;
-                let en = cur.readx()?;
-                for _ in 0..en {
-                    this.anim_extents.push(BoundExtent::read_mdx(cur)?);
-                }
+            match id {
+                MdlxMagic::VRTX => this.vertices = cur.read_array(n)?,
+                MdlxMagic::NRMS => this.normals = cur.read_array(n)?,
+                MdlxMagic::PTYP => this.face_types = cur.read_array::<u32>(n)?.convert(|a| FaceType::from(a)),
+                MdlxMagic::PCNT => this.face_vtxcnts = cur.read_array(n)?,
+                MdlxMagic::PVTX => this.face_vertices = cur.read_array(n)?,
+                MdlxMagic::GNDX => this.vtxgrps = cur.read_array(n)?,
+                MdlxMagic::MTGC => this.mtxgrpcnts = cur.read_array(n)?,
+                MdlxMagic::MATS => this.mtx_indices = cur.read_array(n)?,
+                MdlxMagic::UVAS => uvsn = n as usize,
+                MdlxMagic::UVBS => this.uvss.push(cur.read_array(n)?),
+                id => {
+                    this.material_id = id.swap_bytes() as i32;
+                    this.sel_group = n;
+                    this.sel_type = cur.readx()?;
+                    this.extent = BoundExtent::read_mdx(cur)?;
+                    let en = cur.readx()?;
+                    for _ in 0..en {
+                        this.anim_extents.push(BoundExtent::read_mdx(cur)?);
+                    }
+                },
             }
+        }
+
+        let (nnorm, nvert) = (this.normals.len(), this.vertices.len());
+        yes!(nnorm != nvert, log!("OMG! {} #[normals] {} != {} #[vertices] ?", TNAME!(), nnorm, nvert));
+
+        yes!(uvsn != this.uvss.len(), log!("OMG! {} [number for UVs] {uvsn} != {} ?", TNAME!(), this.uvss.len()));
+        let n = this.face_vtxcnts.len();
+        yes!(n > 1, log!("OMG! {} #[face_vtxcnts] {n} > 1 ?", TNAME!()));
+
+        let n = this.face_types.len();
+        yes!(n > 1, log!("OMG! {} #[face_types] {n} > 1 ?", TNAME!()));
+        if this.face_types.iter().any(|&x| x != FaceType::Triangles) {
+            log!("OMG! face type other than triangle({}): {:?}", FaceType::Triangles.to(), this.face_types);
         }
 
         return Ok(this);

@@ -28,6 +28,21 @@ impl Model {
         })
     }
 
+    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.name = block.name;
+        for f in block.fields {
+            match f.name.as_str() {
+                "BoundsRadius" => this.bounds_radius = f.value.into(),
+                "MinimumExtent" => this.min_extent = f.value.into(),
+                "MaximumExtent" => this.max_extent = f.value.into(),
+                "BlendTime" => this.blend_time = f.value.into(),
+                _other => (),
+            }
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let indent = indent!(depth + 1);
         let mut lines: Vec<String> = vec![];

@@ -1,0 +1,45 @@
+WHITESPACE = _{
+      " "
+    | "\t"
+    | "\r"
+    | "\n"
+    | line_comment
+    | block_comment
+}
+
+line_comment  = _{ "//" ~ (!"\n" ~ ANY)* }
+block_comment = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+
+file = { SOI ~ block* ~ EOI }
+
+block = { identifier ~ (string|integer+)? ~ "{" ~ (block | field | frame)* ~ "}" ~ ","? }
+
+field = { "static"? ~ (identifier ~ value | identifier | value) ~ "," }
+frame = {
+    integer ~ ":" ~ (number|number_array) ~ "," ~ (
+        "InTan" ~ (number|number_array) ~ "," ~
+        "OutTan" ~ (number|number_array) ~ ","
+    )?
+}
+
+value = _{
+      number
+    | string
+    | array
+    | identifier
+}
+
+number = _{ float | integer }
+
+identifier = @{ !ASCII_DIGIT ~ ASCII_ALPHANUMERIC+ }
+string = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+float = @{(
+    ("-"|"+")? ~
+    ( ASCII_DIGIT* ~ "." ~ ASCII_DIGIT+ | ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* ) ~
+    (("e"|"E") ~ ("-"|"+")? ~ ASCII_DIGIT+ )?
+)}
+integer = @{ ( ("-"|"+")? ~ ASCII_DIGIT+ ) }
+
+array =  _{ number_array | identifier_array }
+number_array =  { "{" ~ (number ~ ("," ~ number)*)? ~ ","? ~ "}" }
+identifier_array =  { "{" ~ (identifier ~ ("," ~ identifier)*)? ~ ","? ~ "}" }

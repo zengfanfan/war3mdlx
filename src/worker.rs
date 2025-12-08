@@ -157,6 +157,7 @@ pub fn timestamp_ms() -> u128 {
     let duration = now.duration_since(std::time::UNIX_EPOCH).unwrap();
     return duration.as_millis();
 }
+
 #[allow(dead_code)]
 pub fn timestamp_logstr() -> String {
     let ms = timestamp_ms();

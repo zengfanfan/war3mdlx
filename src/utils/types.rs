@@ -138,3 +138,21 @@ impl CheckValue for String {
 }
 
 //#endregion
+//#region convert
+
+pub trait ConvertVec<A> {
+    fn convert<B, F>(self, f: F) -> Vec<B>
+    where
+        F: FnMut(A) -> B;
+}
+
+impl<A> ConvertVec<A> for Vec<A> {
+    fn convert<B, F>(self, f: F) -> Vec<B>
+    where
+        F: FnMut(A) -> B,
+    {
+        self.into_iter().map(f).collect()
+    }
+}
+
+//#endregion
