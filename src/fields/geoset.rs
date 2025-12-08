@@ -50,24 +50,23 @@ impl BoundExtent {
     }
 }
 
-#[repr(u32)]
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum FaceType {
-    Points = 0,
-    Lines = 1,
-    LineLoop = 2,
-    LineStrip = 3,
+    Points,
+    Lines,
+    LineLoop,
+    LineStrip,
     #[default]
-    Triangles = 4,
-    TriangleStrip = 5,
-    TriangleFan = 6,
-    Quads = 7,
-    QuadStrip = 8,
-    Polygons = 9,
-    Error(u32),
+    Triangles,
+    TriangleStrip,
+    TriangleFan,
+    Quads,
+    QuadStrip,
+    Polygons,
+    Error(i32),
 }
 impl FaceType {
-    fn from(v: u32) -> Self {
+    fn from(v: i32) -> Self {
         match v {
             0 => Self::Points,
             1 => Self::Lines,
@@ -82,7 +81,7 @@ impl FaceType {
             x => Self::Error(x),
         }
     }
-    fn to(&self) -> u32 {
+    fn to(&self) -> i32 {
         match self {
             Self::Points => 0,
             Self::Lines => 1,
@@ -111,7 +110,7 @@ impl Geoset {
             match id {
                 MdlxMagic::VRTX => this.vertices = cur.read_array(n)?,
                 MdlxMagic::NRMS => this.normals = cur.read_array(n)?,
-                MdlxMagic::PTYP => this.face_types = cur.read_array::<u32>(n)?.convert(|a| FaceType::from(a)),
+                MdlxMagic::PTYP => this.face_types = cur.read_array::<i32>(n)?.convert(|a| FaceType::from(a)),
                 MdlxMagic::PCNT => this.face_vtxcnts = cur.read_array(n)?,
                 MdlxMagic::PVTX => this.face_vertices = cur.read_array(n)?,
                 MdlxMagic::GNDX => this.vtxgrps = cur.read_array(n)?,
@@ -246,8 +245,8 @@ impl GeosetAnim {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_ALPHA => this.alpha_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_COLOR => this.color_anim = Some(Animation::read_mdx(cur, id)?),
+                Self::ID_ALPHA => this.alpha_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_COLOR => this.color_anim = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }

@@ -1,7 +1,7 @@
 use crate::*;
 
-pub trait TAnimation: ReadFromCursor + std::fmt::Debug + Default + Formatter {}
-impl<T> TAnimation for T where T: ReadFromCursor + std::fmt::Debug + Default + Formatter {}
+pub trait TAnimation: ReadFromCursor + FromMdlValue + std::fmt::Debug + Default + Formatter {}
+impl<T> TAnimation for T where T: ReadFromCursor + FromMdlValue + std::fmt::Debug + Default + Formatter {}
 
 #[derive(Dbg, Default)]
 pub struct KeyFrame<T: TAnimation> {
@@ -15,8 +15,6 @@ pub struct KeyFrame<T: TAnimation> {
 
 #[derive(Dbg, Default)]
 pub struct Animation<T: TAnimation> {
-    #[dbg(formatter = "fmt_id4s")]
-    pub id: u32,
     pub interp_type: InterpolationType,
     pub global_seq_id: i32,
     #[dbg(formatter = "fmtx")]
@@ -24,10 +22,9 @@ pub struct Animation<T: TAnimation> {
 }
 
 impl<T: TAnimation> Animation<T> {
-    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>, id: u32) -> Result<Self, MyError> {
+    pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
-        this.id = id;
         let kfn = cur.readx()?;
         this.interp_type = InterpolationType::from(cur.readx()?);
         this.global_seq_id = cur.readx()?;
@@ -51,6 +48,28 @@ impl<T: TAnimation> Animation<T> {
         return Ok(this);
     }
 
+    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.global_seq_id = -1;
+        for f in block.fields {
+            if let MdlValue::None = f.value {
+                this.interp_type = InterpolationType::from_str(f.name.as_str());
+            } else if f.name == "GlobalSeqId" {
+                this.global_seq_id = f.value.into();
+            }
+        }
+        for f in block.frames {
+            this.key_frames.push(KeyFrame {
+                frame: f.frame,
+                value: f.value.into(),
+                itan: f.intan.into(),
+                otan: f.outan.into(),
+                has_tans: this.interp_type.has_tans(),
+            });
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
@@ -68,7 +87,6 @@ impl<T: TAnimation> Animation<T> {
 
     pub fn convert<F: Fn(&T) -> T>(&self, f: F) -> Self {
         let mut this = Self::default();
-        this.id = self.id;
         this.interp_type = self.interp_type;
         this.global_seq_id = self.global_seq_id;
         for kf in &self.key_frames {
@@ -141,16 +159,25 @@ pub enum InterpolationType {
     Linear,
     Hermite,
     Bezier,
-    Error(u32),
+    Error(i32),
 }
 impl InterpolationType {
-    fn from(v: u32) -> Self {
+    fn from(v: i32) -> Self {
         match v {
             0 => Self::DontInterp,
             1 => Self::Linear,
             2 => Self::Hermite,
             3 => Self::Bezier,
             x => Self::Error(x),
+        }
+    }
+    fn from_str(s: &str) -> Self {
+        match s {
+            "DontInterp" => Self::DontInterp,
+            "Linear" => Self::Linear,
+            "Hermite" => Self::Hermite,
+            "Bezier" => Self::Bezier,
+            _err => Self::Error(-1),
         }
     }
     fn has_tans(&self) -> bool {

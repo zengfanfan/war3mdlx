@@ -102,8 +102,8 @@ impl Layer {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_ALPHA => this.alpha_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_TEXID => this.texid_anim = Some(Animation::read_mdx(cur, id)?),
+                Self::ID_ALPHA => this.alpha_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_TEXID => this.texid_anim = Some(Animation::read_mdx(cur)?),
                 id => EXIT1!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
@@ -147,10 +147,10 @@ pub enum FilterMode {
     Modulate,
     Modulate2x,
     AlphaKey,
-    Error(u32),
+    Error(i32),
 }
 impl FilterMode {
-    fn from(v: u32) -> Self {
+    fn from(v: i32) -> Self {
         match v {
             0 => Self::None,
             1 => Self::Transparent,

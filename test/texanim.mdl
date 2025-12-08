@@ -1,9 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    BlendTime 150,
-}
 TextureAnims 1 {
     TVertexAnim {
         Translation 3 {

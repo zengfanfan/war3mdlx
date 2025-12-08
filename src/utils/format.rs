@@ -53,6 +53,7 @@ pub fn fmt_float(v: &f32, len: u32, precision: u32) -> String {
     }
 }
 
+#[allow(dead_code)]
 pub fn fmt_id4s(v: &u32) -> String {
     u32_to_ascii(*v)
 }

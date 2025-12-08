@@ -26,7 +26,7 @@ impl Attachment {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_V => this.visibility = Some(Animation::read_mdx(cur, id)?),
+                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }

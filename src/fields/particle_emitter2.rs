@@ -103,14 +103,14 @@ impl ParticleEmitter2 {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_V => this.visibility = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_ER => this.emit_rate_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_W => this.width_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_L => this.length_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_SPD => this.speed_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_LA => this.latitude_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_VA => this.variation_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_G => this.gravity_anim = Some(Animation::read_mdx(cur, id)?),
+                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
+                Self::ID_ER => this.emit_rate_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_W => this.width_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_L => this.length_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_SPD => this.speed_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_LA => this.latitude_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_VA => this.variation_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_G => this.gravity_anim = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
@@ -214,20 +214,19 @@ impl Formatter for PE2UVAnim {
 //#endregion
 //#region HeadOrTail
 
-#[repr(u32)]
 #[derive(Debug, Default)]
 pub enum HeadOrTail {
     #[default]
-    Head = 0,
-    Tail = 1,
-    Both = 2,
-    Error(u32),
+    Head,
+    Tail,
+    Both,
+    Error(i32),
 }
 impl HeadOrTail {
     fn is_valid(&self) -> bool {
         matches!(self, Self::Head | Self::Tail | Self::Both)
     }
-    fn from(v: u32) -> Self {
+    fn from(v: i32) -> Self {
         match v {
             0 => Self::Head,
             1 => Self::Tail,
@@ -240,18 +239,17 @@ impl HeadOrTail {
 //#endregion
 //#region PE2FilterMode
 
-#[repr(u32)]
 #[derive(Debug, Default)]
 pub enum PE2FilterMode {
     #[default]
-    Blend = 0,
-    Additive = 1,
-    Modulate = 2,
-    AlphaKey = 4,
-    Error(u32),
+    Blend,
+    Additive,
+    Modulate,
+    AlphaKey,
+    Error(i32),
 }
 impl PE2FilterMode {
-    fn from(v: u32) -> Self {
+    fn from(v: i32) -> Self {
         match v {
             0 => Self::Blend,
             1 => Self::Additive,

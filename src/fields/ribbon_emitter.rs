@@ -53,12 +53,12 @@ impl RibbonEmitter {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_V => this.visibility = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_HA => this.height_above_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_HB => this.height_below_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_A => this.alpha_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_TS => this.texslot_anim = Some(Animation::read_mdx(cur, id)?),
+                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
+                Self::ID_HA => this.height_above_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_HB => this.height_below_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_A => this.alpha_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_TS => this.texslot_anim = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }

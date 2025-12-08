@@ -1,9 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    BlendTime 150,
-}
 GlobalSequences 9 {
     Duration 1,
     Duration 22,

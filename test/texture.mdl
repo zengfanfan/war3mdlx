@@ -1,9 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "test" {
-    BlendTime 150,
-}
 Textures 4 {
     Bitmap {
         ReplaceableId 1,

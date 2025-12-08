@@ -185,7 +185,7 @@ impl MdlValue {
         }
     }
 
-    pub fn into<T: FromMdlValue<Self>>(self) -> T {
+    pub fn into<T: FromMdlValue>(self) -> T {
         T::from(self)
     }
 
@@ -272,6 +272,26 @@ impl MdlxData {
             return Ok(());
         }
 
+        if block.typ == "Textures" {
+            for a in block.blocks {
+                if a.typ == "Bitmap" {
+                    self.textures.push(Texture::read_mdl(a)?);
+                }
+            }
+            log!("[MdlReadBlockType2] {:#?}", self.textures); //[test]
+            return Ok(());
+        }
+
+        if block.typ == "TextureAnims" {
+            for a in block.blocks {
+                if a.typ == "TVertexAnim" {
+                    self.texanims.push(TextureAnim::read_mdl(a)?);
+                }
+            }
+            log!("[MdlReadBlockType2] {:#?}", self.texanims); //[test]
+            return Ok(());
+        }
+
         log!(" *** ??? *** {}: {:#?}", block.typ, block);
 
         return Ok(());
@@ -280,32 +300,32 @@ impl MdlxData {
 
 //#region trait: FromMdlValue
 
-pub trait FromMdlValue<T> {
-    fn from(v: T) -> Self;
+pub trait FromMdlValue {
+    fn from(v: MdlValue) -> Self;
 }
 
-impl FromMdlValue<MdlValue> for i32 {
+impl FromMdlValue for i32 {
     fn from(v: MdlValue) -> Self {
         if let MdlValue::Integer(i) = v { i } else { Self::default() }
     }
 }
-impl FromMdlValue<MdlValue> for u32 {
+impl FromMdlValue for u32 {
     fn from(v: MdlValue) -> Self {
         if let MdlValue::Integer(iv) = v { yesno!(iv < 0, 0u32, iv as u32) } else { Self::default() }
     }
 }
-impl FromMdlValue<MdlValue> for Vec<i32> {
+impl FromMdlValue for Vec<i32> {
     fn from(v: MdlValue) -> Self {
         if let MdlValue::IntegerArray(iv) = v { iv } else { Self::default() }
     }
 }
-impl FromMdlValue<MdlValue> for Vec<u32> {
+impl FromMdlValue for Vec<u32> {
     fn from(v: MdlValue) -> Self {
         if let MdlValue::IntegerArray(iv) = v { iv.convert(|v| yesno!(v < 0, 0u32, v as u32)) } else { Self::default() }
     }
 }
 
-impl FromMdlValue<MdlValue> for f32 {
+impl FromMdlValue for f32 {
     fn from(v: MdlValue) -> Self {
         match v {
             MdlValue::Float(f) => f,
@@ -314,7 +334,7 @@ impl FromMdlValue<MdlValue> for f32 {
         }
     }
 }
-impl FromMdlValue<MdlValue> for Vec<f32> {
+impl FromMdlValue for Vec<f32> {
     fn from(v: MdlValue) -> Self {
         match v {
             MdlValue::FloatArray(fv) => fv,
@@ -323,7 +343,7 @@ impl FromMdlValue<MdlValue> for Vec<f32> {
         }
     }
 }
-impl FromMdlValue<MdlValue> for Vec2 {
+impl FromMdlValue for Vec2 {
     fn from(v: MdlValue) -> Self {
         match v {
             MdlValue::FloatArray(fv) => Self::from_slice(fv.as_slice()),
@@ -332,7 +352,7 @@ impl FromMdlValue<MdlValue> for Vec2 {
         }
     }
 }
-impl FromMdlValue<MdlValue> for Vec3 {
+impl FromMdlValue for Vec3 {
     fn from(v: MdlValue) -> Self {
         match v {
             MdlValue::FloatArray(fv) => Self::from_slice(fv.as_slice()),
@@ -341,7 +361,7 @@ impl FromMdlValue<MdlValue> for Vec3 {
         }
     }
 }
-impl FromMdlValue<MdlValue> for Vec4 {
+impl FromMdlValue for Vec4 {
     fn from(v: MdlValue) -> Self {
         match v {
             MdlValue::FloatArray(fv) => Self::from_slice(fv.as_slice()),
@@ -351,7 +371,7 @@ impl FromMdlValue<MdlValue> for Vec4 {
     }
 }
 
-impl FromMdlValue<MdlValue> for String {
+impl FromMdlValue for String {
     fn from(v: MdlValue) -> Self {
         match v {
             MdlValue::String(s) => s,
@@ -360,7 +380,7 @@ impl FromMdlValue<MdlValue> for String {
         }
     }
 }
-impl FromMdlValue<MdlValue> for Vec<String> {
+impl FromMdlValue for Vec<String> {
     fn from(v: MdlValue) -> Self {
         if let MdlValue::FlagArray(sv) = v { sv } else { Self::default() }
     }

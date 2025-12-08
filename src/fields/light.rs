@@ -49,13 +49,13 @@ impl Light {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_V => this.visibility = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_AS => this.attenuate_start_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_AE => this.attenuate_end_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_I => this.intensity_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_AC => this.ambient_color_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_AI => this.ambient_intensity_anim = Some(Animation::read_mdx(cur, id)?),
+                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
+                Self::ID_AS => this.attenuate_start_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_AE => this.attenuate_end_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_I => this.intensity_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_AC => this.ambient_color_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_AI => this.ambient_intensity_anim = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
@@ -88,17 +88,16 @@ impl Light {
     }
 }
 
-#[repr(u32)]
 #[derive(Debug, Default)]
 pub enum LightType {
     #[default]
-    Omnidirectional = 0,
-    Directional = 1,
-    Ambient = 2,
-    Error(u32),
+    Omnidirectional,
+    Directional,
+    Ambient,
+    Error(i32),
 }
 impl LightType {
-    fn from(v: u32) -> Self {
+    fn from(v: i32) -> Self {
         match v {
             0 => Self::Omnidirectional,
             1 => Self::Directional,

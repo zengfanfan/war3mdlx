@@ -34,9 +34,9 @@ impl Camera {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_T => this.translation = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_R => this.rotation = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_TT => this.target_translation = Some(Animation::read_mdx(cur, id)?),
+                Self::ID_T => this.translation = Some(Animation::read_mdx(cur)?),
+                Self::ID_R => this.rotation = Some(Animation::read_mdx(cur)?),
+                Self::ID_TT => this.target_translation = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }

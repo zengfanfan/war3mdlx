@@ -49,13 +49,13 @@ impl ParticleEmitter {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_V => this.visibility = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_ER => this.emit_rate_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_G => this.gravity_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_LO => this.longitude_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_LA => this.latitude_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_LS => this.lifespan_anim = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_SPD => this.speed_anim = Some(Animation::read_mdx(cur, id)?),
+                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
+                Self::ID_ER => this.emit_rate_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_G => this.gravity_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_LO => this.longitude_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_LA => this.latitude_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_LS => this.lifespan_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_SPD => this.speed_anim = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }

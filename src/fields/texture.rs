@@ -29,6 +29,20 @@ impl Texture {
         })
     }
 
+    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        for f in block.fields {
+            match f.name.as_str() {
+                "ReplaceableId" => this.replace_id = f.value.into(),
+                "Image" => this.path = f.value.into(),
+                "WrapWidth" => this.flags.insert(TextureFlags::WrapWidth),
+                "WrapHeight" => this.flags.insert(TextureFlags::WrapHeight),
+                _other => (),
+            }
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
@@ -59,10 +73,23 @@ impl TextureAnim {
         let mut this = Self::default();
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_T => this.translation = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_R => this.rotation = Some(Animation::read_mdx(cur, id)?),
-                id @ Self::ID_S => this.scaling = Some(Animation::read_mdx(cur, id)?),
+                Self::ID_T => this.translation = Some(Animation::read_mdx(cur)?),
+                Self::ID_R => this.rotation = Some(Animation::read_mdx(cur)?),
+                Self::ID_S => this.scaling = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
+            }
+        }
+        return Ok(this);
+    }
+
+    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        for f in block.blocks {
+            match f.typ.as_str() {
+                "Translation" => this.translation = Some(Animation::read_mdl(f)?),
+                "Rotation" => this.rotation = Some(Animation::read_mdl(f)?),
+                "Scaling" => this.scaling = Some(Animation::read_mdl(f)?),
+                _other => (),
             }
         }
         return Ok(this);

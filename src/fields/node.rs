@@ -32,9 +32,9 @@ impl Node {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                id @ Self::ID_T => this.translation = Some(Animation::read_mdx(&mut cur, id)?),
-                id @ Self::ID_R => this.rotation = Some(Animation::read_mdx(&mut cur, id)?),
-                id @ Self::ID_S => this.scaling = Some(Animation::read_mdx(&mut cur, id)?),
+                Self::ID_T => this.translation = Some(Animation::read_mdx(&mut cur)?),
+                Self::ID_R => this.rotation = Some(Animation::read_mdx(&mut cur)?),
+                Self::ID_S => this.scaling = Some(Animation::read_mdx(&mut cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
