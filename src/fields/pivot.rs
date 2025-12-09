@@ -2,6 +2,7 @@ use crate::*;
 
 #[derive(Dbg, Default)]
 pub struct PivotPoint {
+    #[dbg(fmt = "{:?}")]
     pub position: Vec3,
 }
 
@@ -12,6 +13,10 @@ impl PivotPoint {
         let mut this = Self::default();
         this.position = cur.readx()?;
         return Ok(this);
+    }
+
+    pub fn read_mdl(field: &MdlField) -> Result<Self, MyError> {
+        Ok(Self { position: field.value.to() })
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {

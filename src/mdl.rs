@@ -281,6 +281,7 @@ impl MdlxData {
             log!("[MdlReadBlockType2] {:#?}", self.sequences); //[test]
             return Ok(());
         }
+
         if block.typ == "GlobalSequences" {
             for a in &block.fields {
                 self.globalseqs.push(GlobalSequence::read_mdl(a)?);
@@ -328,6 +329,14 @@ impl MdlxData {
         if block.typ == "GeosetAnim" {
             self.geoanims.push(GeosetAnim::read_mdl(&block)?);
             log!("[MdlReadBlockType3] {:#?}", self.geoanims.last()); //[test]
+            return Ok(());
+        }
+
+        if block.typ == "PivotPoints" {
+            for a in &block.fields {
+                self.pivot_points.push(PivotPoint::read_mdl(a)?);
+            }
+            log!("[MdlReadBlockType2] {:#?}", self.pivot_points); //[test]
             return Ok(());
         }
 

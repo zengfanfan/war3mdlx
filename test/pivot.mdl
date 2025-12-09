@@ -1,18 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    BlendTime 150,
-}
-Bone "1" {
-    ObjectId 0,
-}
-Bone "2" {
-    ObjectId 1,
-}
-Bone "3" {
-    ObjectId 2,
-}
 PivotPoints 3 {
     { 0.1, 0.2, 0.3 },
     { 1, 2.2, 33.3 },
