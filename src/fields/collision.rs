@@ -38,6 +38,7 @@ impl CollisionShape {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.base = Node::read_mdl(block)?;
+        this.base.flags.insert(NodeFlags::CollisionShape);
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "BoundsRadius" => this.bounds_radius = f.value.to(),

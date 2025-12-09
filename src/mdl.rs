@@ -362,6 +362,12 @@ impl MdlxData {
             return Ok(());
         }
 
+        if block.typ == "ParticleEmitter" {
+            self.particle_emitters.push(ParticleEmitter::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.particle_emitters.last()); //[test]
+            return Ok(());
+        }
+
         if block.typ == "CollisionShape" {
             self.collisions.push(CollisionShape::read_mdl(&block)?);
             log!("[MdlReadBlockType3] {:#?}", self.collisions.last()); //[test]

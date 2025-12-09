@@ -41,6 +41,7 @@ impl Attachment {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.base = Node::read_mdl(block)?;
+        this.base.flags.insert(NodeFlags::Attachment);
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "Path" => this.path = f.value.to(),

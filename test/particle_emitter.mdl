@@ -1,10 +1,5 @@
-Model "Name" {
-    NumParticleEmitters 3,
-}
-PivotPoints 3 {
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
+Version {
+    FormatVersion 800,
 }
 ParticleEmitter "default" {
     ObjectId 0,

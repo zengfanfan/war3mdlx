@@ -15,8 +15,6 @@ pub struct ParticleEmitter {
     pub speed: f32,
 
     #[dbg(formatter = "fmtxx")]
-    pub visibility: Option<Animation<f32>>,
-    #[dbg(formatter = "fmtxx")]
     pub emit_rate_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
     pub gravity_anim: Option<Animation<f32>>,
@@ -28,6 +26,8 @@ pub struct ParticleEmitter {
     pub lifespan_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
     pub speed_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
+    pub visibility: Option<Animation<f32>>,
 }
 
 impl ParticleEmitter {
@@ -68,6 +68,53 @@ impl ParticleEmitter {
         }
 
         return Ok(this);
+    }
+
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.base = Node::read_mdl(block)?;
+        this.base.flags.insert(NodeFlags::ParticleEmitter);
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "EmissionRate" => this.emit_rate = f.value.to(),
+                "Gravity" => this.gravity = f.value.to(),
+                "Longitude" => this.longitude = f.value.to(),
+                "Latitude" => this.latitude = f.value.to(),
+                "EmitterUsesMDL" => this.base.flags.insert(NodeFlags::PE1UsesMdl),
+                "EmitterUsesTGA" => this.base.flags.insert(NodeFlags::PE1UsesTga),
+                _other => (),
+            );
+        }
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "Particle" => this.read_mdl_particle(b)?,
+                "EmissionRate" => this.emit_rate_anim = Some(Animation::read_mdl(b)?),
+                "Gravity" => this.gravity_anim = Some(Animation::read_mdl(b)?),
+                "Longitude" => this.longitude_anim = Some(Animation::read_mdl(b)?),
+                "Latitude" => this.latitude_anim = Some(Animation::read_mdl(b)?),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
+                _other => (),
+            );
+        }
+        return Ok(this);
+    }
+    fn read_mdl_particle(&mut self, block: &MdlBlock) -> Result<(), MyError> {
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "Path" => self.path = f.value.to(),
+                "LifeSpan" => self.lifespan = f.value.to(),
+                "InitVelocity" => self.speed = f.value.to(),
+                _other => (),
+            );
+        }
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "LifeSpan" => self.lifespan_anim = Some(Animation::read_mdl(b)?),
+                "InitVelocity" => self.speed_anim = Some(Animation::read_mdl(b)?),
+                _other => (),
+            );
+        }
+        return Ok(());
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {

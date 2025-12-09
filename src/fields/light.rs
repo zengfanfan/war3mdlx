@@ -16,8 +16,6 @@ pub struct Light {
     pub ambient_intensity: f32,
 
     #[dbg(formatter = "fmtxx")]
-    pub visibility: Option<Animation<f32>>,
-    #[dbg(formatter = "fmtxx")]
     pub attenuate_start_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
     pub attenuate_end_anim: Option<Animation<f32>>,
@@ -29,6 +27,8 @@ pub struct Light {
     pub ambient_color_anim: Option<Animation<Vec3>>,
     #[dbg(formatter = "fmtxx")]
     pub ambient_intensity_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
+    pub visibility: Option<Animation<f32>>,
 }
 
 impl Light {
@@ -76,6 +76,7 @@ impl Light {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.base = Node::read_mdl(block)?;
+        this.base.flags.insert(NodeFlags::Light);
         this.color = Vec3::ONE;
         this.intensity = 1.0;
         this.ambient_intensity = 1.0;

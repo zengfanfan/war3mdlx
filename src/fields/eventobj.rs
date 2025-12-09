@@ -26,6 +26,7 @@ impl EventObject {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.base = Node::read_mdl(block)?;
+        this.base.flags.insert(NodeFlags::EventObject);
         for b in &block.blocks {
             match_istr!(b.typ.as_str(),
                 "EventTrack" => this.track = EventTrack::read_mdl(b)?,

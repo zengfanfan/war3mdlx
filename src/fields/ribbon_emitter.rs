@@ -19,8 +19,6 @@ pub struct RibbonEmitter {
     pub gravity: f32,
 
     #[dbg(formatter = "fmtxx")]
-    pub visibility: Option<Animation<f32>>,
-    #[dbg(formatter = "fmtxx")]
     pub height_above_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
     pub height_below_anim: Option<Animation<f32>>,
@@ -30,6 +28,8 @@ pub struct RibbonEmitter {
     pub color_anim: Option<Animation<Vec3>>,
     #[dbg(formatter = "fmtxx")]
     pub texslot_anim: Option<Animation<i32>>,
+    #[dbg(formatter = "fmtxx")]
+    pub visibility: Option<Animation<f32>>,
 }
 
 impl RibbonEmitter {

@@ -17,6 +17,7 @@ impl Bone {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.base = Node::read_mdl(block)?;
+        this.base.flags.insert(NodeFlags::Bone);
         this.geoset_id = -1;
         this.geoanim_id = -1;
         for f in &block.fields {

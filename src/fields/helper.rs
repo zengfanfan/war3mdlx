@@ -13,7 +13,9 @@ impl Helper {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        Ok(Self { base: Node::read_mdl(block)? })
+        let mut base: Node = Node::read_mdl(block)?;
+        base.flags.insert(NodeFlags::Helper);
+        return Ok(Self { base });
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
