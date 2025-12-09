@@ -47,6 +47,45 @@ impl Node {
         return Ok(this);
     }
 
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.name = block.name.clone();
+        this.object_id = -1;
+        this.parent_id = -1;
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "ObjectId" => this.object_id = f.value.to(),
+                "Parent" => this.parent_id = f.value.to(),
+                "DontInherit" => {
+                    let flags: Vec<String> = f.value.to();
+                    for s in &flags {
+                        match_istr!(s.as_str(),
+                            "Translation" => this.flags.insert(NodeFlags::DontInheritT),
+                            "Rotation" => this.flags.insert(NodeFlags::DontInheritR),
+                            "Scaling" => this.flags.insert(NodeFlags::DontInheritS),
+                            _other => (),
+                        );
+                    }
+                },
+                "Billboarded" => this.flags.insert(NodeFlags::Billboarded),
+                "BillboardedLockX" => this.flags.insert(NodeFlags::BillboardedLockX),
+                "BillboardedLockY" => this.flags.insert(NodeFlags::BillboardedLockY),
+                "BillboardedLockZ" => this.flags.insert(NodeFlags::BillboardedLockZ),
+                "CameraAnchored" => this.flags.insert(NodeFlags::CameraAnchored),
+                _other => (),
+            );
+        }
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "Translation" => this.translation = Some(Animation::read_mdl(b)?),
+                "Rotation" => this.rotation = Some(Animation::read_mdl(b)?),
+                "Scaling" => this.scaling = Some(Animation::read_mdl(b)?),
+                _other => (),
+            );
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];

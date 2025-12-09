@@ -14,6 +14,21 @@ impl Bone {
         Ok(Self { base: Node::read_mdx(cur)?, geoset_id: cur.readx()?, geoanim_id: cur.readx()? })
     }
 
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.base = Node::read_mdl(block)?;
+        this.geoset_id = -1;
+        this.geoanim_id = -1;
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "GeosetId" => this.geoset_id = f.value.to(),
+                "GeosetAnimId" => this.geoanim_id = f.value.to(),
+                _other => (),
+            );
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];

@@ -96,7 +96,7 @@ impl FaceType {
         }
     }
     fn from_str(s: &str) -> Self {
-        match s {
+        match_istr!(s,
             "Points" => Self::Points,
             "Lines" => Self::Lines,
             "LineLoop" => Self::LineLoop,
@@ -108,7 +108,7 @@ impl FaceType {
             "QuadStrip" => Self::QuadStrip,
             "Polygons" => Self::Polygons,
             _err => Self::Error(-1),
-        }
+        )
     }
     fn to(&self) -> i32 {
         match self {

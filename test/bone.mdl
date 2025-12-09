@@ -1,10 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    NumBones 3,
-    BlendTime 150,
-}
 Bone "default" {
     ObjectId 0,
 }
@@ -14,8 +10,6 @@ Bone "+" {
 Bone "- values" {
     ObjectId -321,
     Parent 123,
-    GeosetId 456,
-    GeosetAnimId 789,
     DontInherit { Translation },
     DontInherit { Rotation },
     DontInherit { Scaling },
@@ -24,9 +18,6 @@ Bone "- values" {
     BillboardedLockY,
     BillboardedLockZ,
     CameraAnchored,
-}
-PivotPoints 3 {
-    { 0,0,0 },
-    { 0,0,0 },
-    { 0,0,0 },
+    GeosetId 456,
+    GeosetAnimId 789,
 }

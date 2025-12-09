@@ -221,7 +221,7 @@ impl FilterMode {
         }
     }
     fn from_str(s: &str) -> FilterMode {
-        match s {
+        match_istr!(s,
             "None" => FilterMode::None,
             "Transparent" => FilterMode::Transparent,
             "Blend" => FilterMode::Blend,
@@ -230,7 +230,7 @@ impl FilterMode {
             "Modulate" => FilterMode::Modulate,
             "Modulate2x" => FilterMode::Modulate2x,
             "AlphaKey" => FilterMode::AlphaKey,
-            _ => FilterMode::Error(-1),
-        }
+            _err => FilterMode::Error(-1),
+        )
     }
 }

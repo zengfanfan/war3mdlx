@@ -332,6 +332,12 @@ impl MdlxData {
             return Ok(());
         }
 
+        if block.typ == "Bone" {
+            self.bones.push(Bone::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.bones.last()); //[test]
+            return Ok(());
+        }
+
         if block.typ == "Camera" {
             self.cameras.push(Camera::read_mdl(&block)?);
             log!("[MdlReadBlockType3] {:#?}", self.cameras.last()); //[test]

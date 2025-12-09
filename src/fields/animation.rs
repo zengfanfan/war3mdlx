@@ -172,13 +172,13 @@ impl InterpolationType {
         }
     }
     fn from_str(s: &str) -> Self {
-        match s {
+        match_istr!(s,
             "DontInterp" => Self::DontInterp,
             "Linear" => Self::Linear,
             "Hermite" => Self::Hermite,
             "Bezier" => Self::Bezier,
             _err => Self::Error(-1),
-        }
+        )
     }
     fn has_tans(&self) -> bool {
         matches!(self, Self::Hermite | Self::Bezier)
