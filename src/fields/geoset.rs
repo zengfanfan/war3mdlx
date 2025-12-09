@@ -258,6 +258,34 @@ impl GeosetAnim {
         return Ok(this);
     }
 
+    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.alpha = 1.0;
+        this.color = Vec3::ONE;
+        this.geoset_id = -1;
+        for f in block.fields {
+            match_istr!(f.name.as_str(),
+                "Alpha" => this.alpha = f.value.into(),
+                "UseColor" => this.flags.insert(GeosetAnimFlags::UseColor),
+                "DropShadow" => this.flags.insert(GeosetAnimFlags::DropShadow),
+                "Color" => {
+                    this.color = f.value.into();
+                    this.flags.insert(GeosetAnimFlags::UseColor);
+                },
+                "GeosetID" => this.geoset_id = f.value.into(),
+                _other => (),
+            );
+        }
+        for f in block.blocks {
+            match_istr!(f.typ.as_str(),
+                "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
+                "Color" => this.color_anim = Some(Animation::read_mdl(f)?),
+                _other => (),
+            );
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];

@@ -8,6 +8,7 @@ macro_rules! MdlReadBlockType1 {
         $(if $block.typ == stringify!($ty) {
             $var = <$ty>::read_mdl($block)
             .or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
+            log!("[MdlReadBlockType2] {}: {:#?}", TNAME!($ty), $var); //[test]
             return Ok(());
         })+
     };
@@ -315,6 +316,12 @@ impl MdlxData {
                 }
             }
             log!("[MdlReadBlockType2] {:#?}", self.materials); //[test]
+            return Ok(());
+        }
+
+        if block.typ == "GeosetAnim" {
+            self.geoanims.push(GeosetAnim::read_mdl(block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.geoanims.last()); //[test]
             return Ok(());
         }
 
