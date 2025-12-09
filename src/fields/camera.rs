@@ -10,7 +10,7 @@ pub struct Camera {
     pub near_clip: f32,
     #[dbg(formatter = "fmtx")]
     pub target: Vec3,
-    
+
     #[dbg(formatter = "fmtxx")]
     pub translation: Option<Animation<Vec3>>,
     #[dbg(formatter = "fmtxx")]
@@ -46,6 +46,44 @@ impl Camera {
         }
 
         return Ok(this);
+    }
+
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.name = block.name.clone();
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "Position" => this.position = f.value.to(),
+                "FieldOfView" => this.field_of_view = f.value.to(),
+                "FarClip" => this.far_clip = f.value.to(),
+                "NearClip" => this.near_clip = f.value.to(),
+                _other => (),
+            );
+        }
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "Target" => this.read_mdl_target(b)?,
+                "Translation" => this.translation = Some(Animation::read_mdl(b)?),
+                "Rotation" => this.rotation = Some(Animation::read_mdl(b)?),
+                _other => (),
+            );
+        }
+        return Ok(this);
+    }
+    pub fn read_mdl_target(&mut self, block: &MdlBlock) -> Result<(), MyError> {
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "Position" => self.target = f.value.to(),
+                _other => (),
+            );
+        }
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "Translation" => self.target_translation = Some(Animation::read_mdl(b)?),
+                _other => (),
+            );
+        }
+        return Ok(());
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {

@@ -332,6 +332,12 @@ impl MdlxData {
             return Ok(());
         }
 
+        if block.typ == "Camera" {
+            self.cameras.push(Camera::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.cameras.last()); //[test]
+            return Ok(());
+        }
+
         if block.typ == "PivotPoints" {
             for a in &block.fields {
                 self.pivot_points.push(PivotPoint::read_mdl(a)?);

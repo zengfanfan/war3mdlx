@@ -1,9 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    BlendTime 150,
-}
 Camera "default" {
 }
 Camera "values" {
