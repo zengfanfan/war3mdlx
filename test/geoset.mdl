@@ -2,6 +2,8 @@ Version {
     FormatVersion 800,
 }
 Geoset {
+}
+Geoset {
     Vertices 4 {
         { -50, 0, -50 },
         { 50, 0, -50 },

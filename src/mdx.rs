@@ -75,8 +75,8 @@ impl MdlxData {
     fn parse_mdx_chunk(&mut self, chunk: &MdxChunk) -> Result<(), MyError> {
         let mut cur = Cursor::new(&chunk.body);
         MdxReadChunkType1!(chunk, cur,
-            Version => self.version,
-            Model   => self.model,
+            Version         => self.version,
+            Model           => self.model,
         );
         MdxReadChunkType2!(chunk, cur,
             Sequence        => self.sequences,

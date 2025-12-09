@@ -6,9 +6,37 @@ use pest_derive::Parser;
 macro_rules! MdlReadBlockType1 {
     ($block:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $block.typ == stringify!($ty) {
-            $var = <$ty>::read_mdl(&$block)
-            .or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
-            log!("[MdlReadBlockType2] {}: {:#?}", TNAME!($ty), $var); //[test]
+            $var = <$ty>::read_mdl(&$block).or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
+            return Ok(());
+        })+
+    };
+}
+macro_rules! MdlReadBlockType2 {
+    ($block:expr, $( $ty:ty => $name:expr => $var:expr ),+ $(,)?) => {
+        $(if $block.typ == F!("{}s", stringify!($ty)) {
+            for a in &$block.blocks {
+                if a.typ == $name {
+                    $var.push(<$ty>::read_mdl(a).or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?);
+                }
+            }
+            return Ok(());
+        })+
+    };
+}
+macro_rules! MdlReadBlockType3 {
+    ($block:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
+        $(if $block.typ == stringify!($ty) {
+            $var.push(<$ty>::read_mdl(&$block).or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?);
+            return Ok(());
+        })+
+    };
+}
+macro_rules! MdlReadBlockType4 {
+    ($block:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
+        $(if $block.typ == F!("{}s", stringify!($ty)) {
+            for a in &$block.fields {
+                $var.push(<$ty>::read_mdl(a).or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?);
+            }
             return Ok(());
         })+
     };
@@ -220,28 +248,28 @@ impl MdlxData {
 
         MdlWriteType1!(lines, 0, self.version, self.model);
         MdlWriteType2!(lines, 0,
-            "Sequences" => self.sequences,
-            "GlobalSequences" => self.globalseqs,
-            "Textures" => self.textures,
-            "Materials" => self.materials,
-            "TextureAnims" => self.texanims,
+            "Sequences"         => self.sequences,
+            "GlobalSequences"   => self.globalseqs,
+            "Textures"          => self.textures,
+            "Materials"         => self.materials,
+            "TextureAnims"      => self.texanims,
+            "PivotPoints"       => self.pivot_points,
         );
         MdlWriteType3!(lines, 0,
-            "Geoset" => self.geosets,
-            "GeosetAnim" => self.geoanims,
+            "Geoset"            => self.geosets,
+            "GeosetAnim"        => self.geoanims,
         );
         MdlWriteType4!(lines, 0, base.name,
-            "Bone" => self.bones,
-            "Light" => self.lights,
-            "Helper" => self.helpers,
-            "Attachment" => self.attachments,
-            "ParticleEmitter" => self.particle_emitters,
-            "ParticleEmitter2" => self.particle_emitters2,
-            "RibbonEmitter" => self.ribbon_emitters,
-            "EventObject" => self.eventobjs,
-            "CollisionShape" => self.collisions,
+            "Bone"              => self.bones,
+            "Light"             => self.lights,
+            "Helper"            => self.helpers,
+            "Attachment"        => self.attachments,
+            "ParticleEmitter"   => self.particle_emitters,
+            "ParticleEmitter2"  => self.particle_emitters2,
+            "RibbonEmitter"     => self.ribbon_emitters,
+            "EventObject"       => self.eventobjs,
+            "CollisionShape"    => self.collisions,
         );
-        MdlWriteType2!(lines, 0, "PivotPoints" => self.pivot_points );
         MdlWriteType4!(lines, 0, name, "Camera" => self.cameras );
 
         let text = lines.join("\n") + "\n";
@@ -268,140 +296,33 @@ impl MdlxData {
 
     fn parse_mdl_block(&mut self, block: MdlBlock) -> Result<(), MyError> {
         MdlReadBlockType1!(block,
-            Version => self.version,
-            Model   => self.model,
+            Version     => self.version,
+            Model       => self.model,
         );
-
-        if block.typ == "Sequences" {
-            for a in &block.blocks {
-                if a.typ == "Anim" {
-                    self.sequences.push(Sequence::read_mdl(a)?);
-                }
-            }
-            log!("[MdlReadBlockType2] {:#?}", self.sequences); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "GlobalSequences" {
-            for a in &block.fields {
-                self.globalseqs.push(GlobalSequence::read_mdl(a)?);
-            }
-            log!("[MdlReadBlockType2] {:#?}", self.globalseqs); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "Textures" {
-            for a in &block.blocks {
-                if a.typ == "Bitmap" {
-                    self.textures.push(Texture::read_mdl(a)?);
-                }
-            }
-            log!("[MdlReadBlockType2] {:#?}", self.textures); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "TextureAnims" {
-            for a in &block.blocks {
-                if a.typ == "TVertexAnim" {
-                    self.texanims.push(TextureAnim::read_mdl(a)?);
-                }
-            }
-            log!("[MdlReadBlockType2] {:#?}", self.texanims); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "Materials" {
-            for a in &block.blocks {
-                if a.typ == "Material" {
-                    self.materials.push(Material::read_mdl(a)?);
-                }
-            }
-            log!("[MdlReadBlockType2] {:#?}", self.materials); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "Geoset" {
-            self.geosets.push(Geoset::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.geosets.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "GeosetAnim" {
-            self.geoanims.push(GeosetAnim::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.geoanims.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "Bone" {
-            self.bones.push(Bone::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.bones.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "Light" {
-            self.lights.push(Light::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.lights.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "Helper" {
-            self.helpers.push(Helper::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.helpers.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "Attachment" {
-            self.attachments.push(Attachment::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.attachments.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "ParticleEmitter" {
-            self.particle_emitters.push(ParticleEmitter::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.particle_emitters.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "ParticleEmitter2" {
-            self.particle_emitters2.push(ParticleEmitter2::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.particle_emitters2.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "RibbonEmitter" {
-            self.ribbon_emitters.push(RibbonEmitter::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.ribbon_emitters.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "EventObject" {
-            self.eventobjs.push(EventObject::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.eventobjs.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "CollisionShape" {
-            self.collisions.push(CollisionShape::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.collisions.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "Camera" {
-            self.cameras.push(Camera::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.cameras.last()); //[test]
-            return Ok(());
-        }
-
-        if block.typ == "PivotPoints" {
-            for a in &block.fields {
-                self.pivot_points.push(PivotPoint::read_mdl(a)?);
-            }
-            log!("[MdlReadBlockType2] {:#?}", self.pivot_points); //[test]
-            return Ok(());
-        }
-
-        log!(" *** ??? *** {}: {:#?}", block.typ, block);
-
+        MdlReadBlockType2!(block,
+            Sequence    => "Anim"       => self.sequences,
+            Texture     => "Bitmap"     => self.textures,
+            TextureAnim => "TVertexAnim"=> self.texanims,
+            Material    => "Material"   => self.materials,
+        );
+        MdlReadBlockType3!(block,
+            Geoset          => self.geosets,
+            GeosetAnim      => self.geoanims,
+            Bone            => self.bones,
+            Light           => self.lights,
+            Helper          => self.helpers,
+            Attachment      => self.attachments,
+            ParticleEmitter => self.particle_emitters,
+            ParticleEmitter2=> self.particle_emitters2,
+            RibbonEmitter   => self.ribbon_emitters,
+            EventObject     => self.eventobjs,
+            CollisionShape  => self.collisions,
+            Camera          => self.cameras,
+        );
+        MdlReadBlockType4!(block,
+            GlobalSequence  => self.globalseqs,
+            PivotPoint      => self.pivot_points,
+        );
         return Ok(());
     }
 }

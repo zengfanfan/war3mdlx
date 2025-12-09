@@ -11,7 +11,7 @@ pub struct RibbonEmitter {
     pub color: Vec3,
     pub lifespan: f32,
     #[dbg(skip)]
-    pub _unknown: i32, //[todo] TextureSlot ?
+    pub _unknown: i32,
     pub emit_rate: i32,
     pub rows: i32,
     pub columns: i32,
@@ -75,7 +75,7 @@ impl RibbonEmitter {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.base = Node::read_mdl(block)?;
-        this.base.flags.insert(NodeFlags::ParticleEmitter);
+        this.base.flags.insert(NodeFlags::RibbonEmitter);
 
         this.alpha = 1.0;
         this.color = Vec3::ONE;

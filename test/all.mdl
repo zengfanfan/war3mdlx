@@ -118,6 +118,19 @@ TextureAnims 2 {
 	TVertexAnim {
 	}
 }
+PivotPoints 11 {
+	{ 0, 0, 0 },
+	{ 123, 456, 789 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+	{ 0, 0, 0 },
+}
 Geoset {
 	Vertices 14 {
 		{ -20, 20, 40 },
@@ -364,11 +377,11 @@ Helper "HELP" {
 }
 Attachment "ATAH" {
 	ObjectId 4,
+	Path "path",
 	Visibility 1 {
 		Linear,
 		0: 1,
 	}
-	Path "path",
 }
 ParticleEmitter "PERM" {
 	ObjectId 5,
@@ -614,19 +627,6 @@ CollisionShape "SPRE" {
 		{ 66, 77, 88 },
 	}
 	BoundsRadius 999,
-}
-PivotPoints 11 {
-	{ 0, 0, 0 },
-	{ 123, 456, 789 },
-	{ 0, 0, 0 },
-	{ 0, 0, 0 },
-	{ 0, 0, 0 },
-	{ 0, 0, 0 },
-	{ 0, 0, 0 },
-	{ 0, 0, 0 },
-	{ 0, 0, 0 },
-	{ 0, 0, 0 },
-	{ 0, 0, 0 },
 }
 Camera "Camera01" {
 	Position { 141.421005, 455.100006, 426.183014 },
