@@ -356,12 +356,6 @@ impl MdlxData {
             return Ok(());
         }
 
-        if block.typ == "EventObject" {
-            self.eventobjs.push(EventObject::read_mdl(&block)?);
-            log!("[MdlReadBlockType3] {:#?}", self.eventobjs.last()); //[test]
-            return Ok(());
-        }
-
         if block.typ == "ParticleEmitter" {
             self.particle_emitters.push(ParticleEmitter::read_mdl(&block)?);
             log!("[MdlReadBlockType3] {:#?}", self.particle_emitters.last()); //[test]
@@ -371,6 +365,18 @@ impl MdlxData {
         if block.typ == "ParticleEmitter2" {
             self.particle_emitters2.push(ParticleEmitter2::read_mdl(&block)?);
             log!("[MdlReadBlockType3] {:#?}", self.particle_emitters2.last()); //[test]
+            return Ok(());
+        }
+
+        if block.typ == "RibbonEmitter" {
+            self.ribbon_emitters.push(RibbonEmitter::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.ribbon_emitters.last()); //[test]
+            return Ok(());
+        }
+
+        if block.typ == "EventObject" {
+            self.eventobjs.push(EventObject::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.eventobjs.last()); //[test]
             return Ok(());
         }
 

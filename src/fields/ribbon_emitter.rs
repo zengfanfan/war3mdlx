@@ -11,7 +11,7 @@ pub struct RibbonEmitter {
     pub color: Vec3,
     pub lifespan: f32,
     #[dbg(skip)]
-    pub _unknown: i32,
+    pub _unknown: i32, //[todo] TextureSlot ?
     pub emit_rate: i32,
     pub rows: i32,
     pub columns: i32,
@@ -68,6 +68,49 @@ impl RibbonEmitter {
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
+
+        return Ok(this);
+    }
+
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.base = Node::read_mdl(block)?;
+        this.base.flags.insert(NodeFlags::ParticleEmitter);
+
+        this.alpha = 1.0;
+        this.color = Vec3::ONE;
+        this.material_id = -1;
+
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "HeightAbove" => this.height_above = f.value.to(),
+                "HeightBelow" => this.height_below = f.value.to(),
+                "Alpha" => this.alpha = f.value.to(),
+                "Color" => this.color = f.value.to(),
+                "EmissionRate" => this.emit_rate = f.value.to(),
+                "LifeSpan" => this.lifespan = f.value.to(),
+                "Gravity" => this.gravity = f.value.to(),
+                "Rows" => this.rows = f.value.to(),
+                "Columns" => this.columns = f.value.to(),
+                "MaterialID" => this.material_id = f.value.to(),
+                _other => (),
+            );
+        }
+
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "HeightAbove" => this.height_above_anim = Some(Animation::read_mdl(b)?),
+                "HeightBelow" => this.height_below_anim = Some(Animation::read_mdl(b)?),
+                "Alpha" => this.alpha_anim = Some(Animation::read_mdl(b)?),
+                "Color" => this.color_anim = Some(Animation::read_mdl(b)?),
+                "TextureSlot" => this.texslot_anim = Some(Animation::read_mdl(b)?),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
+                _other => (),
+            );
+        }
+
+        this.color = this.color.reverse();
+        this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
 
         return Ok(this);
     }
