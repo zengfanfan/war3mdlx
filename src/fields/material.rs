@@ -220,17 +220,17 @@ impl FilterMode {
             x => Self::Error(x),
         }
     }
-    fn from_str(s: &str) -> FilterMode {
+    fn from_str(s: &str) -> Self {
         match_istr!(s,
-            "None" => FilterMode::None,
-            "Transparent" => FilterMode::Transparent,
-            "Blend" => FilterMode::Blend,
-            "Additive" => FilterMode::Additive,
-            "AddAlpha" => FilterMode::AddAlpha,
-            "Modulate" => FilterMode::Modulate,
-            "Modulate2x" => FilterMode::Modulate2x,
-            "AlphaKey" => FilterMode::AlphaKey,
-            _err => FilterMode::Error(-1),
+            "None" => Self::None,
+            "Transparent" => Self::Transparent,
+            "Blend" => Self::Blend,
+            "Additive" => Self::Additive,
+            "AddAlpha" => Self::AddAlpha,
+            "Modulate" => Self::Modulate,
+            "Modulate2x" => Self::Modulate2x,
+            "AlphaKey" => Self::AlphaKey,
+            _err => Self::Error(-1),
         )
     }
 }

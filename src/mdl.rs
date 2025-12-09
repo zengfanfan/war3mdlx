@@ -338,6 +338,18 @@ impl MdlxData {
             return Ok(());
         }
 
+        if block.typ == "Light" {
+            self.lights.push(Light::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.lights.last()); //[test]
+            return Ok(());
+        }
+
+        if block.typ == "Helper" {
+            self.helpers.push(Helper::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.helpers.last()); //[test]
+            return Ok(());
+        }
+
         if block.typ == "Camera" {
             self.cameras.push(Camera::read_mdl(&block)?);
             log!("[MdlReadBlockType3] {:#?}", self.cameras.last()); //[test]

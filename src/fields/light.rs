@@ -3,7 +3,8 @@ use crate::*;
 #[derive(Dbg, Default)]
 pub struct Light {
     pub base: Node,
-    
+
+    #[dbg(fmt = "{:?}")]
     pub typ: LightType,
     pub attenuate_start: f32,
     pub attenuate_end: f32,
@@ -72,6 +73,39 @@ impl Light {
         return Ok(this);
     }
 
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.base = Node::read_mdl(block)?;
+        this.color = Vec3::ONE;
+        this.intensity = 1.0;
+        this.ambient_intensity = 1.0;
+        this.ambient_color = Vec3::ONE;
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "AttenuationStart" => this.attenuate_start = f.value.to(),
+                "AttenuationEnd" => this.attenuate_end = f.value.to(),
+                "Color" => this.color = f.value.to(),
+                "Intensity" => this.intensity = f.value.to(),
+                "AmbColor" => this.ambient_color = f.value.to(),
+                "AmbIntensity" => this.ambient_intensity = f.value.to(),
+                _other => this.typ = LightType::from_str(_other),
+            );
+        }
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "AttenuationStart" => this.attenuate_start_anim = Some(Animation::read_mdl(b)?),
+                "AttenuationEnd" => this.attenuate_end_anim = Some(Animation::read_mdl(b)?),
+                "Color" => this.color_anim = Some(Animation::read_mdl(b)?),
+                "Intensity" => this.intensity_anim = Some(Animation::read_mdl(b)?),
+                "AmbColor" => this.ambient_color_anim = Some(Animation::read_mdl(b)?),
+                "AmbIntensity" => this.ambient_intensity_anim = Some(Animation::read_mdl(b)?),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
+                _other => (),
+            );
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];
@@ -113,5 +147,13 @@ impl LightType {
             2 => Self::Ambient,
             _ => Self::Error(v),
         }
+    }
+    fn from_str(s: &str) -> Self {
+        match_istr!(s,
+            "Omnidirectional" => Self::Omnidirectional,
+            "Directional" => Self::Directional,
+            "Ambient" => Self::Ambient,
+            _err => Self::Error(-1),
+        )
     }
 }

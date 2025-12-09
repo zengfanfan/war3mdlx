@@ -1,10 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    NumBones 3,
-    BlendTime 150,
-}
 Helper "default" {
     ObjectId 0,
 }
@@ -51,9 +47,4 @@ Helper "anims" {
             InTan  { 0,0,0 },
             OutTan { 0,0,0 },
     }
-}
-PivotPoints 3 {
-    { 0,0,0 },
-    { 0,0,0 },
-    { 0,0,0 },
 }

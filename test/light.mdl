@@ -1,10 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    NumLights 3,
-    BlendTime 150,
-}
 Light "L.0" {
     ObjectId 0,
     Omnidirectional,
@@ -65,9 +61,4 @@ Light "L.2" {
         71: 1,
         72: 2,
     }
-}
-PivotPoints 3 {
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
 }
