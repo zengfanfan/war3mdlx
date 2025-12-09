@@ -39,7 +39,7 @@ pub struct Worker {
     ok: i32,
     skip: i32,
     fail: i32,
-    handles: Vec<thread::JoinHandle<()>>,
+    workers: Vec<thread::JoinHandle<()>>,
     jobtx: Option<Sender<Job>>,
     resrx: Option<Receiver<JobResult>>,
 }
@@ -60,18 +60,18 @@ impl Worker {
             skip: 0,
             fail: 0,
             total: 0,
-            handles: vec![],
+            workers: vec![],
             start_time: timestamp_ms() as i128,
         };
         let stop_signal = StopSignal { signal: Arc::new(AtomicBool::new(false)) };
 
-        let ncpus = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
+        let ncpus = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1).max(1);
         for id in 0..ncpus {
             let jobrx = Arc::clone(&jobrx);
             let restx = restx.clone();
             let stop_signal = stop_signal.clone();
             let handle = thread::spawn(move || Self::thread(id, jobrx, restx, stop_signal));
-            this.handles.push(handle);
+            this.workers.push(handle);
         }
 
         return this;
@@ -131,7 +131,7 @@ impl Worker {
         self.handle(); // ?: do not return error, just log and keep going
         self.resrx = None; // close the receiver
 
-        for h in self.handles {
+        for h in self.workers {
             // ?: do not return error, just log and keep going
             h.join().unwrap_or_else(|e| elog!("Failed to join thread: {:?}", e));
         }

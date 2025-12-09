@@ -1,14 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    NumEvents 2,
-    BlendTime 150,
-}
-PivotPoints 2 {
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-}
 EventObject "UNNAMED" {
     ObjectId 0,
 }

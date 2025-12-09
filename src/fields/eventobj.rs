@@ -23,6 +23,18 @@ impl EventObject {
         return Ok(this);
     }
 
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.base = Node::read_mdl(block)?;
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "EventTrack" => this.track = EventTrack::read_mdl(b)?,
+                _other => (),
+            );
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let mut lines: Vec<String> = vec![];
         lines.append(&mut self.base.write_mdl(depth)?);
@@ -33,7 +45,8 @@ impl EventObject {
 
 #[derive(Dbg, Default)]
 pub struct EventTrack {
-    pub global_seq_id: i32,
+    #[dbg(skip)]
+    pub _unknown: i32,
     pub frames: Vec<i32>,
 }
 
@@ -44,18 +57,27 @@ impl EventTrack {
         let mut this = Self::default();
 
         let n = cur.readx::<u32>()?;
-        this.global_seq_id = cur.readx()?;
+        this._unknown = cur.readx()?;
         for _ in 0..n {
             this.frames.push(cur.readx()?);
         }
 
-        yesno!(this.global_seq_id == -1, Ok(this), ERR!("OMG! [EventObject.GlobalSequenceId] != -1 ?"))
+        return Ok(this);
+    }
+
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        for f in &block.fields {
+            if let MdlValue::Integer(i) = f.value {
+                this.frames.push(i);
+            }
+        }
+        return Ok(this);
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
-        lines.push_if_nneg1(&F!("{indent}GlobalSeqId"), &self.global_seq_id);
         if !self.frames.is_empty() {
             lines.push(F!("{indent}EventTrack {} {{", self.frames.len()));
             for f in &self.frames {
