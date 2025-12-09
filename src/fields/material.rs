@@ -3,6 +3,7 @@ use crate::*;
 #[derive(Dbg, Default)]
 pub struct Material {
     pub priority_plane: i32,
+    #[dbg(fmt = "{:?}")]
     pub flags: MaterialFlags,
     pub layers: Vec<Layer>,
 }
@@ -18,6 +19,7 @@ bitflags! {
 #[derive(Dbg, Default)]
 pub struct Layer {
     pub filter_mode: FilterMode,
+    #[dbg(fmt = "{:?}")]
     pub flags: LayerFlags,
     pub texture_id: i32,
     pub texture_anim_id: i32,
@@ -58,6 +60,26 @@ impl Material {
             }
         }
 
+        return Ok(this);
+    }
+
+    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        for f in block.fields {
+            match f.name.as_str() {
+                "PriorityPlane" => this.priority_plane = f.value.into(),
+                "ConstantColor" => this.flags.insert(MaterialFlags::ConstantColor),
+                "SortPrimsFarZ" => this.flags.insert(MaterialFlags::SortPrimsFarZ),
+                "FullResolution" => this.flags.insert(MaterialFlags::FullResolution),
+                _other => (),
+            }
+        }
+        for f in block.blocks {
+            match f.typ.as_str() {
+                "Layer" => this.layers.push(Layer::read_mdl(f)?),
+                _other => (),
+            }
+        }
         return Ok(this);
     }
 
@@ -111,6 +133,37 @@ impl Layer {
         return Ok(this);
     }
 
+    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.texture_id = -1;
+        this.texture_anim_id = -1;
+        this.alpha = 1.0;
+        for f in block.fields {
+            match f.name.as_str() {
+                "FilterMode" => this.filter_mode = FilterMode::from_str(f.value.as_str()),
+                "Unshaded" => this.flags.insert(LayerFlags::Unshaded),
+                "SphereEnvMap" => this.flags.insert(LayerFlags::SphereEnvMap),
+                "TwoSided" => this.flags.insert(LayerFlags::TwoSided),
+                "Unfogged" => this.flags.insert(LayerFlags::Unfogged),
+                "NoDepthTest" => this.flags.insert(LayerFlags::NoDepthTest),
+                "NoDepthSet" => this.flags.insert(LayerFlags::NoDepthSet),
+                "TextureID" => this.texture_id = f.value.into(),
+                "TVertexAnimId" => this.texture_anim_id = f.value.into(),
+                "CoordId" => this.coordid = f.value.into(),
+                "Alpha" => this.alpha = f.value.into(),
+                _other => (),
+            }
+        }
+        for f in block.blocks {
+            match f.typ.as_str() {
+                "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
+                "TextureID" => this.texid_anim = Some(Animation::read_mdl(f)?),
+                _other => (),
+            }
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
@@ -161,6 +214,19 @@ impl FilterMode {
             6 => Self::Modulate2x,
             7 => Self::AlphaKey,
             x => Self::Error(x),
+        }
+    }
+    fn from_str(s: &str) -> FilterMode {
+        match s {
+            "None" => FilterMode::None,
+            "Transparent" => FilterMode::Transparent,
+            "Blend" => FilterMode::Blend,
+            "Additive" => FilterMode::Additive,
+            "AddAlpha" => FilterMode::AddAlpha,
+            "Modulate" => FilterMode::Modulate,
+            "Modulate2x" => FilterMode::Modulate2x,
+            "AlphaKey" => FilterMode::AlphaKey,
+            _ => FilterMode::Error(-1),
         }
     }
 }

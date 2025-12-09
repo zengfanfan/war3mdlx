@@ -1,9 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    BlendTime 150,
-}
 Materials 2 {
     Material {
         PriorityPlane 66,
@@ -13,7 +10,8 @@ Materials 2 {
         Layer {
             FilterMode None,
             TVertexAnimId 999,
-            static TextureID 0,
+            static TextureID -1890,
+            CoordId -123,
         }
     }
     Material {

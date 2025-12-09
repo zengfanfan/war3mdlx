@@ -100,9 +100,17 @@ impl MdlField {
     pub fn from(pair: Pair<'_, Rule>) -> Result<Self, MyError> {
         let mut this = Self::default();
         let inner = pair.into_inner();
+        let mut first_ident = true;
         for p in inner {
             match p.as_rule() {
-                Rule::identifier => this.name = p.as_str().to_string(),
+                Rule::identifier => {
+                    if first_ident {
+                        this.name = p.as_str().to_string();
+                        first_ident = false;
+                    } else {
+                        this.value = MdlValue::from(p)?;
+                    }
+                },
                 _value => this.value = MdlValue::from(p)?,
             }
         }
@@ -192,6 +200,14 @@ impl MdlValue {
     pub fn unwrap_string(s: &str) -> String {
         let s = &s[1..s.len() - 1];
         s.to_string()
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            MdlValue::String(s) => s,
+            MdlValue::Flag(s) => s,
+            _ => "",
+        }
     }
 }
 
@@ -289,6 +305,16 @@ impl MdlxData {
                 }
             }
             log!("[MdlReadBlockType2] {:#?}", self.texanims); //[test]
+            return Ok(());
+        }
+
+        if block.typ == "Materials" {
+            for a in block.blocks {
+                if a.typ == "Material" {
+                    self.materials.push(Material::read_mdl(a)?);
+                }
+            }
+            log!("[MdlReadBlockType2] {:#?}", self.materials); //[test]
             return Ok(());
         }
 
