@@ -11,22 +11,22 @@ use std::fs;
 use std::io::{Cursor, Error as ioError, Read};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-
 use walkdir::WalkDir;
+
 mod cli;
+mod data;
 mod extends;
 mod fields;
 mod mdl;
 mod mdx;
-mod parser;
 mod utils;
 mod worker;
 
 use cli::*;
+use data::*;
 use extends::*;
 use fields::*;
 use mdl::*;
-use parser::*;
 use utils::*;
 use worker::*;
 
