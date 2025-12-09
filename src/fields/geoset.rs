@@ -349,6 +349,7 @@ impl GeosetAnim {
         this.alpha = 1.0;
         this.color = Vec3::ONE;
         this.geoset_id = -1;
+
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "Alpha" => this.alpha = f.value.to(),
@@ -362,13 +363,21 @@ impl GeosetAnim {
                 _other => (),
             );
         }
+
         for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
-                "Color" => this.color_anim = Some(Animation::read_mdl(f)?),
+                "Color" => {
+                    this.color_anim = Some(Animation::read_mdl(f)?);
+                    this.flags.insert(GeosetAnimFlags::UseColor);
+                },
                 _other => (),
             );
         }
+
+        this.color = this.color.reverse();
+        this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
+
         return Ok(this);
     }
 

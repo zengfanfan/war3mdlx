@@ -1,15 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    NumParticleEmitters2 3,
-    BlendTime 150,
-}
-PivotPoints 3 {
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-    { 0, 0, 0 },
-}
 ParticleEmitter2 "" {
     ObjectId 0,
 }
@@ -25,9 +16,9 @@ ParticleEmitter2 "values" {
     static Length 666.666,
     static Visibility 0.55,
     SegmentColor {
-        Color { 0, 0, 1 },
-        Color { 0, 1, 0 },
-        Color { 1, 0, 0 },
+        Color { 11, 12, 13 },
+        Color { 21, 22, 23 },
+        Color { 31, 32, 33 },
     },
     Alpha { 1, 222, 33 },
     ParticleScaling { 1.1, 2.2, 3.3 },

@@ -126,6 +126,79 @@ impl ParticleEmitter2 {
         return Ok(this);
     }
 
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.base = Node::read_mdl(block)?;
+        this.base.flags.insert(NodeFlags::ParticleEmitter);
+
+        this.segment_alpha = vec![255; 3];
+        this.segment_scaling = vec![1.0; 3];
+        this.segment_color = vec![Vec3::ONE; 3];
+        this.texture_id = -1;
+        let (mut head, mut tail) = (false, false);
+
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "Speed" => this.speed = f.value.to(),
+                "Variation" => this.variation = f.value.to(),
+                "Latitude" => this.latitude = f.value.to(),
+                "Gravity" => this.gravity = f.value.to(),
+                "LifeSpan" => this.lifespan = f.value.to(),
+                "EmissionRate" => this.emit_rate = f.value.to(),
+                "Length" => this.length = f.value.to(),
+                "Width" => this.width = f.value.to(),
+
+                "Alpha" => this.segment_alpha = f.value.to(),
+                "ParticleScaling" => this.segment_scaling = f.value.to(),
+                "LifeSpanUVAnim" => this.head_life = PE2UVAnim::read_mdl(&f.value),
+                "DecayUVAnim" => this.head_decay = PE2UVAnim::read_mdl(&f.value),
+                "TailUVAnim" => this.tail_life = PE2UVAnim::read_mdl(&f.value),
+                "TailDecayUVAnim" => this.tail_decay = PE2UVAnim::read_mdl(&f.value),
+
+                "Rows" => this.rows = f.value.to(),
+                "Columns" => this.columns = f.value.to(),
+                "TailLength" => this.tail_length = f.value.to(),
+                "Time" => this.time = f.value.to(),
+
+                "TextureID" => this.texture_id = f.value.to(),
+                "PriorityPlane" => this.priority_plane = f.value.to(),
+                "ReplaceableId" => this.replace_id = f.value.to(),
+
+                "Squirt" => this.squirt = true,
+                "Head" => head = true,
+                "Tail" => tail = true,
+                "Both" => (head, tail) = (true, true),
+                "SortPrimsFarZ" => this.base.flags.insert(NodeFlags::PE2SortPrimFarZ),
+                "LineEmitter" => this.base.flags.insert(NodeFlags::LineEmitter),
+                "ModelSpace" => this.base.flags.insert(NodeFlags::ModelSpace),
+                "Unshaded" => this.base.flags.insert(NodeFlags::PE2Unshaded),
+                "Unfogged" => this.base.flags.insert(NodeFlags::Unfogged),
+                "XYQuad" => this.base.flags.insert(NodeFlags::XYQuad),
+                _other => this.filter_mode = PE2FilterMode::from_str(f.name.as_str(), this.filter_mode),
+            );
+        }
+
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "SegmentColor" => this.segment_color = b.fields.to(),
+                "Speed" => this.speed_anim = Some(Animation::read_mdl(b)?),
+                "Variation" => this.variation_anim = Some(Animation::read_mdl(b)?),
+                "Latitude" => this.latitude_anim = Some(Animation::read_mdl(b)?),
+                "Gravity" => this.gravity_anim = Some(Animation::read_mdl(b)?),
+                "EmissionRate" => this.emit_rate_anim = Some(Animation::read_mdl(b)?),
+                "Length" => this.length_anim = Some(Animation::read_mdl(b)?),
+                "Width" => this.width_anim = Some(Animation::read_mdl(b)?),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
+                _other => (),
+            );
+        }
+
+        this.head_or_tail = yesno!(head && tail, HeadOrTail::Both, yesno!(tail, HeadOrTail::Tail, HeadOrTail::Head));
+        this.segment_color = this.segment_color.convert(|a| a.reverse());
+
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
@@ -193,6 +266,17 @@ pub struct PE2UVAnim {
     pub start: i32,
     pub end: i32,
     pub repeat: i32,
+}
+impl PE2UVAnim {
+    pub fn read_mdl(value: &MdlValue) -> Self {
+        let mut this = Self { start: 0, end: 0, repeat: 1 };
+        if let MdlValue::IntegerArray(iv) = value {
+            yes!(iv.len() > 0, this.start = iv[0]);
+            yes!(iv.len() > 1, this.end = iv[1]);
+            yes!(iv.len() > 2, this.repeat = iv[2]);
+        }
+        return this;
+    }
 }
 
 impl stdDebug for PE2UVAnim {
@@ -265,6 +349,15 @@ impl PE2FilterMode {
             4 => Self::AlphaKey,
             x => Self::Error(x),
         }
+    }
+    fn from_str(s: &str, def: Self) -> Self {
+        match_istr!(s,
+            "Blend" => Self::Blend,
+            "Additive" => Self::Additive,
+            "Modulate" => Self::Modulate,
+            "AlphaKey" => Self::AlphaKey,
+            _err => def,
+        )
     }
 }
 

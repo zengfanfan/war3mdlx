@@ -81,6 +81,7 @@ impl Light {
         this.intensity = 1.0;
         this.ambient_intensity = 1.0;
         this.ambient_color = Vec3::ONE;
+
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "AttenuationStart" => this.attenuate_start = f.value.to(),
@@ -89,9 +90,10 @@ impl Light {
                 "Intensity" => this.intensity = f.value.to(),
                 "AmbColor" => this.ambient_color = f.value.to(),
                 "AmbIntensity" => this.ambient_intensity = f.value.to(),
-                _other => this.typ = LightType::from_str(_other),
+                _other => this.typ = LightType::from_str(_other, this.typ),
             );
         }
+
         for b in &block.blocks {
             match_istr!(b.typ.as_str(),
                 "AttenuationStart" => this.attenuate_start_anim = Some(Animation::read_mdl(b)?),
@@ -104,6 +106,12 @@ impl Light {
                 _other => (),
             );
         }
+
+        this.color = this.color.reverse();
+        this.ambient_color = this.ambient_color.reverse();
+        this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
+        this.ambient_color_anim = this.ambient_color_anim.map(|a| a.convert(|v| v.reverse()));
+
         return Ok(this);
     }
 
@@ -149,12 +157,12 @@ impl LightType {
             _ => Self::Error(v),
         }
     }
-    fn from_str(s: &str) -> Self {
+    fn from_str(s: &str, def: Self) -> Self {
         match_istr!(s,
             "Omnidirectional" => Self::Omnidirectional,
             "Directional" => Self::Directional,
             "Ambient" => Self::Ambient,
-            _err => Self::Error(-1),
+            _err => def,
         )
     }
 }

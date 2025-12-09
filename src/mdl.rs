@@ -368,6 +368,12 @@ impl MdlxData {
             return Ok(());
         }
 
+        if block.typ == "ParticleEmitter2" {
+            self.particle_emitters2.push(ParticleEmitter2::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.particle_emitters2.last()); //[test]
+            return Ok(());
+        }
+
         if block.typ == "CollisionShape" {
             self.collisions.push(CollisionShape::read_mdl(&block)?);
             log!("[MdlReadBlockType3] {:#?}", self.collisions.last()); //[test]
@@ -422,6 +428,27 @@ impl FromMdlValue for Vec<u32> {
         } else {
             Self::default()
         }
+    }
+}
+
+impl FromMdlValue for i8 {
+    fn from(v: &MdlValue) -> Self {
+        if let MdlValue::Integer(i) = v { *i as i8 } else { Self::default() }
+    }
+}
+impl FromMdlValue for u8 {
+    fn from(v: &MdlValue) -> Self {
+        if let MdlValue::Integer(iv) = v { yesno!(*iv < 0, 0u8, *iv as u8) } else { Self::default() }
+    }
+}
+impl FromMdlValue for Vec<i8> {
+    fn from(v: &MdlValue) -> Self {
+        if let MdlValue::IntegerArray(iv) = v { iv.convert(|v| *v as i8) } else { Self::default() }
+    }
+}
+impl FromMdlValue for Vec<u8> {
+    fn from(v: &MdlValue) -> Self {
+        if let MdlValue::IntegerArray(iv) = v { iv.convert(|v| yesno!(*v < 0, 0u8, *v as u8)) } else { Self::default() }
     }
 }
 

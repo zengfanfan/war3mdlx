@@ -42,7 +42,7 @@ impl CollisionShape {
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "BoundsRadius" => this.bounds_radius = f.value.to(),
-                _other => this.shape = CollisionType::from_str(_other),
+                _other => this.shape = CollisionType::from_str(_other, this.shape),
             );
         }
         for b in &block.blocks {
@@ -84,13 +84,13 @@ impl CollisionType {
             _ => Self::Error(v),
         }
     }
-    fn from_str(s: &str) -> Self {
+    fn from_str(s: &str, def: Self) -> Self {
         match_istr!(s,
             "Box" => Self::Box,
             "Plane" => Self::Plane,
             "Sphere" => Self::Sphere,
             "Cylinder" => Self::Cylinder,
-            _err => Self::Error(-1),
+            _err => def,
         )
     }
 }

@@ -53,7 +53,7 @@ impl<T: TAnimation> Animation<T> {
         this.global_seq_id = -1;
         for f in &block.fields {
             if let MdlValue::None = f.value {
-                this.interp_type = InterpolationType::from_str(f.name.as_str());
+                this.interp_type = InterpolationType::from_str(f.name.as_str(), this.interp_type);
             } else if f.name == "GlobalSeqId" {
                 this.global_seq_id = f.value.to();
             }
@@ -171,13 +171,13 @@ impl InterpolationType {
             x => Self::Error(x),
         }
     }
-    fn from_str(s: &str) -> Self {
+    fn from_str(s: &str, def: Self) -> Self {
         match_istr!(s,
             "DontInterp" => Self::DontInterp,
             "Linear" => Self::Linear,
             "Hermite" => Self::Hermite,
             "Bezier" => Self::Bezier,
-            _err => Self::Error(-1),
+            _err => def,
         )
     }
     fn has_tans(&self) -> bool {
