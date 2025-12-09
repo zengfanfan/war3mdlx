@@ -5,9 +5,14 @@ pub struct Node {
     pub name: String,
     pub object_id: i32,
     pub parent_id: i32,
+    #[dbg(fmt = "{:?}")]
     pub flags: NodeFlags, // see NodeFlags
+
+    #[dbg(formatter = "fmtxx")]
     pub translation: Option<Animation<Vec3>>,
+    #[dbg(formatter = "fmtxx")]
     pub rotation: Option<Animation<Vec4>>,
+    #[dbg(formatter = "fmtxx")]
     pub scaling: Option<Animation<Vec3>>,
 }
 

@@ -6,6 +6,7 @@ pub struct Texture {
     pub path: String,
     #[dbg(skip)]
     pub _unknown: i32,
+    #[dbg(fmt = "{:?}")]
     pub flags: TextureFlags,
 }
 bitflags! {
@@ -32,13 +33,13 @@ impl Texture {
     pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         for f in block.fields {
-            match f.name.as_str() {
+            match_istr!(f.name.as_str(),
                 "ReplaceableId" => this.replace_id = f.value.into(),
                 "Image" => this.path = f.value.into(),
                 "WrapWidth" => this.flags.insert(TextureFlags::WrapWidth),
                 "WrapHeight" => this.flags.insert(TextureFlags::WrapHeight),
                 _other => (),
-            }
+            );
         }
         return Ok(this);
     }
@@ -58,8 +59,11 @@ impl Texture {
 
 #[derive(Dbg, Default)]
 pub struct TextureAnim {
+    #[dbg(formatter = "fmtxx")]
     pub translation: Option<Animation<Vec3>>,
+    #[dbg(formatter = "fmtxx")]
     pub rotation: Option<Animation<Vec4>>,
+    #[dbg(formatter = "fmtxx")]
     pub scaling: Option<Animation<Vec3>>,
 }
 
@@ -85,12 +89,12 @@ impl TextureAnim {
     pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         for f in block.blocks {
-            match f.typ.as_str() {
+            match_istr!(f.typ.as_str(),
                 "Translation" => this.translation = Some(Animation::read_mdl(f)?),
                 "Rotation" => this.rotation = Some(Animation::read_mdl(f)?),
                 "Scaling" => this.scaling = Some(Animation::read_mdl(f)?),
                 _other => (),
-            }
+            );
         }
         return Ok(this);
     }

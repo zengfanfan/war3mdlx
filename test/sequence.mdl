@@ -5,7 +5,7 @@ Sequences 2 {
     Anim "" {
     }
     Anim "Stand - 1" {
-        Interval { 0, 1000 },
+        Interval { 2, 1000 },
         MoveSpeed 230.66,
         NonLooping,
         Rarity 2,

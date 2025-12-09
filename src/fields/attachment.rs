@@ -3,11 +3,14 @@ use crate::*;
 #[derive(Dbg, Default)]
 pub struct Attachment {
     pub base: Node,
+
     pub path: String,
     #[dbg(skip)]
     pub _unknown: i32,
     pub attachment_id: i32,
     pub aindex: i32, // the order appears in the file
+    
+    #[dbg(formatter = "fmtxx")]
     pub visibility: Option<Animation<f32>>,
 }
 

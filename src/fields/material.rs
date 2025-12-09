@@ -18,6 +18,7 @@ bitflags! {
 
 #[derive(Dbg, Default)]
 pub struct Layer {
+    #[dbg(fmt = "{:?}")]
     pub filter_mode: FilterMode,
     #[dbg(fmt = "{:?}")]
     pub flags: LayerFlags,
@@ -25,7 +26,10 @@ pub struct Layer {
     pub texture_anim_id: i32,
     pub coordid: i32,
     pub alpha: f32,
+
+    #[dbg(formatter = "fmtxx")]
     pub alpha_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub texid_anim: Option<Animation<i32>>,
 }
 bitflags! {
@@ -66,19 +70,19 @@ impl Material {
     pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         for f in block.fields {
-            match f.name.as_str() {
+            match_istr!(f.name.as_str(),
                 "PriorityPlane" => this.priority_plane = f.value.into(),
                 "ConstantColor" => this.flags.insert(MaterialFlags::ConstantColor),
                 "SortPrimsFarZ" => this.flags.insert(MaterialFlags::SortPrimsFarZ),
                 "FullResolution" => this.flags.insert(MaterialFlags::FullResolution),
                 _other => (),
-            }
+            );
         }
         for f in block.blocks {
-            match f.typ.as_str() {
+            match_istr!(f.typ.as_str(),
                 "Layer" => this.layers.push(Layer::read_mdl(f)?),
                 _other => (),
-            }
+            );
         }
         return Ok(this);
     }
@@ -139,7 +143,7 @@ impl Layer {
         this.texture_anim_id = -1;
         this.alpha = 1.0;
         for f in block.fields {
-            match f.name.as_str() {
+            match_istr!(f.name.as_str(),
                 "FilterMode" => this.filter_mode = FilterMode::from_str(f.value.as_str()),
                 "Unshaded" => this.flags.insert(LayerFlags::Unshaded),
                 "SphereEnvMap" => this.flags.insert(LayerFlags::SphereEnvMap),
@@ -152,14 +156,14 @@ impl Layer {
                 "CoordId" => this.coordid = f.value.into(),
                 "Alpha" => this.alpha = f.value.into(),
                 _other => (),
-            }
+            );
         }
         for f in block.blocks {
-            match f.typ.as_str() {
+            match_istr!(f.typ.as_str(),
                 "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
                 "TextureID" => this.texid_anim = Some(Animation::read_mdl(f)?),
                 _other => (),
-            }
+            );
         }
         return Ok(this);
     }

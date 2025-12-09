@@ -38,13 +38,21 @@ pub struct ParticleEmitter2 {
     pub priority_plane: i32,
     pub replace_id: i32,
 
+    #[dbg(formatter = "fmtxx")]
     pub speed_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub variation_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub latitude_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub gravity_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub emit_rate_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub length_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub width_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub visibility: Option<Animation<f32>>,
 }
 

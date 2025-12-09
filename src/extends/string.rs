@@ -1,8 +1,14 @@
 use crate::*;
 
-pub trait _ExtendString {}
+pub trait _ExtendString {
+    fn eq_icase(&self, s: &str) -> bool;
+}
 
-impl _ExtendString for String {}
+impl _ExtendString for String {
+    fn eq_icase(&self, s: &str) -> bool {
+        self.eq_ignore_ascii_case(s)
+    }
+}
 
 #[allow(dead_code)]
 pub trait _ExtendStringArray {

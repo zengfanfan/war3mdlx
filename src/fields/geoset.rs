@@ -215,11 +215,15 @@ impl Geoset {
 #[derive(Dbg, Default)]
 pub struct GeosetAnim {
     pub alpha: f32,
+    #[dbg(fmt = "{:?}")]
     pub flags: GeosetAnimFlags,
     #[dbg(formatter = "fmtx")]
     pub color: Vec3,
     pub geoset_id: i32,
+
+    #[dbg(formatter = "fmtxx")]
     pub alpha_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub color_anim: Option<Animation<Vec3>>,
 }
 bitflags! {

@@ -14,12 +14,19 @@ pub struct ParticleEmitter {
     pub lifespan: f32,
     pub speed: f32,
 
+    #[dbg(formatter = "fmtxx")]
     pub visibility: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub emit_rate_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub gravity_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub longitude_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub latitude_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub lifespan_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub speed_anim: Option<Animation<f32>>,
 }
 

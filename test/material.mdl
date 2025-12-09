@@ -8,7 +8,7 @@ Materials 2 {
         SortPrimsFarZ,
         FullResolution,
         Layer {
-            FilterMode None,
+            FilterMode AddAlpha,
             TVertexAnimId 999,
             static TextureID -1890,
             CoordId -123,

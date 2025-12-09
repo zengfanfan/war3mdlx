@@ -32,13 +32,13 @@ impl Model {
         let mut this = Self::default();
         this.name = block.name;
         for f in block.fields {
-            match f.name.as_str() {
+            match_istr!(f.name.as_str(),
                 "BoundsRadius" => this.bounds_radius = f.value.into(),
                 "MinimumExtent" => this.min_extent = f.value.into(),
                 "MaximumExtent" => this.max_extent = f.value.into(),
                 "BlendTime" => this.blend_time = f.value.into(),
                 _other => (),
-            }
+            );
         }
         return Ok(this);
     }

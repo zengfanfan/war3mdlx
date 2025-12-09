@@ -16,7 +16,7 @@ impl Version {
     pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         for f in block.fields {
-            if f.name == "FormatVersion" {
+            if f.name.eq_icase("FormatVersion") {
                 this.format_version = f.value.into();
                 break; // only 1 field
             }

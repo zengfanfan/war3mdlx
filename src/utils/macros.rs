@@ -4,12 +4,8 @@
 macro_rules! yesno {
     ($cond:expr, $y:expr, $n:expr) => {{ if $cond { $y } else { $n } }};
     ($cond:expr, $y:stmt, $n:stmt) => {{ if $cond { $y } else { $n } }};
-    ($var:ident = $expr:expr, $y:expr, $n:expr) => {{
-        if let $var = $expr { $y } else { $n }
-    }};
-    ($var:ident = $expr:expr, $y:stmt, $n:stmt) => {{
-        if let $var = $expr { $y } else { $n }
-    }};
+    ($var:ident = $expr:expr, $y:expr, $n:expr) => {{ if let $var = $expr { $y } else { $n } }};
+    ($var:ident = $expr:expr, $y:stmt, $n:stmt) => {{ if let $var = $expr { $y } else { $n } }};
     ($var:ident = $expr:expr, $cond:expr, $y:stmt, $n:stmt) => {{
         let $var = $expr;
         if $cond { $y } else { $n }
@@ -18,7 +14,9 @@ macro_rules! yesno {
 
 #[macro_export]
 macro_rules! yes {
-    ($cond:expr, $y:stmt) => {{ if $cond { $y } }};
+    ($cond:expr, $y:stmt) => {{
+        if $cond { $y }
+    }};
     ($var:ident = $expr:expr, $cond:expr, $y:stmt) => {{
         let $var = $expr;
         if $cond { $y }
@@ -27,11 +25,28 @@ macro_rules! yes {
 
 #[macro_export]
 macro_rules! no {
-    ($cond:expr, $y:stmt) => {{ if !($cond) { $y } }};
+    ($cond:expr, $y:stmt) => {{
+        if !($cond) { $y }
+    }};
     ($var:ident = $expr:expr, $cond:expr, $y:stmt) => {{
         let $var = $expr;
         if !($cond) { $y }
     }};
+}
+
+//#endregion
+//#region match
+
+#[macro_export]
+macro_rules! match_istr {
+    ($s:expr, $( $left:literal => $right:expr ),+ $(, $_def:ident => $def:expr )? $(,)?) => {
+        match $s {
+            $(
+                s if s.eq_ignore_ascii_case($left) => $right,
+            )+
+            $( $_def => $def )?
+        }
+    }
 }
 
 //#endregion

@@ -3,6 +3,7 @@ use crate::*;
 #[derive(Dbg, Default)]
 pub struct Light {
     pub base: Node,
+    
     pub typ: LightType,
     pub attenuate_start: f32,
     pub attenuate_end: f32,
@@ -12,12 +13,20 @@ pub struct Light {
     #[dbg(formatter = "fmtx")]
     pub ambient_color: Vec3,
     pub ambient_intensity: f32,
+
+    #[dbg(formatter = "fmtxx")]
     pub visibility: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub attenuate_start_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub attenuate_end_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub color_anim: Option<Animation<Vec3>>,
+    #[dbg(formatter = "fmtxx")]
     pub intensity_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub ambient_color_anim: Option<Animation<Vec3>>,
+    #[dbg(formatter = "fmtxx")]
     pub ambient_intensity_anim: Option<Animation<f32>>,
 }
 

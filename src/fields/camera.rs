@@ -10,8 +10,12 @@ pub struct Camera {
     pub near_clip: f32,
     #[dbg(formatter = "fmtx")]
     pub target: Vec3,
+    
+    #[dbg(formatter = "fmtxx")]
     pub translation: Option<Animation<Vec3>>,
+    #[dbg(formatter = "fmtxx")]
     pub rotation: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
     pub target_translation: Option<Animation<Vec3>>,
 }
 

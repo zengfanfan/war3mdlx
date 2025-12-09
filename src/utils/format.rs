@@ -5,7 +5,7 @@ macro_rules! F {
     () => {{
         String::new()
     }};
-    ($($arg:tt)+) => {{
+    ($($arg:tt)*) => {{
         format!($($arg)*)
     }};
     ($var:expr) => {{
@@ -15,6 +15,9 @@ macro_rules! F {
 
 pub fn fmtx<T: Formatter>(v: &T) -> String {
     v.fmt()
+}
+pub fn fmtxx<T: FormatterXX>(v: &T) -> String {
+    v.fmtxx()
 }
 
 fn trim_float_str(s: &str) -> String {
@@ -99,6 +102,9 @@ pub fn tname_last_seg_trim<T>(n: u32) -> String {
 pub trait Formatter {
     fn fmt(&self) -> String;
 }
+pub trait FormatterXX {
+    fn fmtxx(&self) -> String;
+}
 
 macro_rules! impl_Formatter {
     ($($t:ty),*) => {
@@ -149,6 +155,23 @@ impl Formatter for f32 {
 impl Formatter for String {
     fn fmt(&self) -> String {
         F!("\"{self}\"")
+    }
+}
+
+impl<T: stdDebug> Formatter for Option<T> {
+    fn fmt(&self) -> String {
+        match self {
+            Some(v) => F!("{:?}", v),
+            None => "None".to_string(),
+        }
+    }
+}
+impl<T: stdDebug> FormatterXX for Option<T> {
+    fn fmtxx(&self) -> String {
+        match self {
+            Some(v) => F!("{:#?}", v),
+            None => "None".to_string(),
+        }
     }
 }
 

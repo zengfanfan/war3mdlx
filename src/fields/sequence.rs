@@ -41,7 +41,7 @@ impl Sequence {
         this.name = block.name;
         this.looping = true;
         for f in block.fields {
-            match f.name.as_str() {
+            match_istr!(f.name.as_str(),
                 "MoveSpeed" => this.move_speed = f.value.into(),
                 "NonLooping" => this.looping = false,
                 "Rarity" => this.rarity = f.value.into(),
@@ -49,13 +49,12 @@ impl Sequence {
                 "MinimumExtent" => this.min_extent = f.value.into(),
                 "MaximumExtent" => this.max_extent = f.value.into(),
                 "Interval" => {
-                    log!("Interval: {:#?}", f.value);
                     let interval: Vec<i32> = f.value.into();
                     this.start_frame = interval.get(0).cloned().unwrap_or(0);
                     this.end_frame = interval.get(1).cloned().unwrap_or(0);
                 },
                 _other => (),
-            }
+            );
         }
         return Ok(this);
     }
