@@ -11,6 +11,7 @@ pub struct CollisionShape {
 
 impl CollisionShape {
     pub const ID: u32 = MdlxMagic::CLID as u32;
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Self::default();
 
@@ -31,6 +32,24 @@ impl CollisionShape {
             CollisionType::Error(v) => return ERR!("Unknown collision type: {}", v),
         }
 
+        return Ok(this);
+    }
+
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.base = Node::read_mdl(block)?;
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "BoundsRadius" => this.bounds_radius = f.value.to(),
+                _other => this.shape = CollisionType::from_str(_other),
+            );
+        }
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "Vertices" => this.vertices = b.fields.to(),
+                _other => (),
+            );
+        }
         return Ok(this);
     }
 
@@ -63,5 +82,14 @@ impl CollisionType {
             3 => Self::Cylinder,
             _ => Self::Error(v),
         }
+    }
+    fn from_str(s: &str) -> Self {
+        match_istr!(s,
+            "Box" => Self::Box,
+            "Plane" => Self::Plane,
+            "Sphere" => Self::Sphere,
+            "Cylinder" => Self::Cylinder,
+            _err => Self::Error(-1),
+        )
     }
 }

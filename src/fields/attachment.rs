@@ -7,9 +7,10 @@ pub struct Attachment {
     pub path: String,
     #[dbg(skip)]
     pub _unknown: i32,
-    pub attachment_id: i32,
+    #[dbg(fmt = "{:?}")]
+    pub attachment_id: Option<i32>,
     pub aindex: i32, // the order appears in the file
-    
+
     #[dbg(formatter = "fmtxx")]
     pub visibility: Option<Animation<f32>>,
 }
@@ -25,7 +26,7 @@ impl Attachment {
         this.base = Node::read_mdx(cur)?;
         this.path = cur.read_string(Self::PATH_SIZE)?;
         this._unknown = cur.readx()?;
-        this.attachment_id = cur.readx()?;
+        this.attachment_id = Some(cur.readx()?);
 
         while cur.left() >= 16 {
             match cur.read_be()? {
@@ -37,11 +38,32 @@ impl Attachment {
         return Ok(this);
     }
 
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.base = Node::read_mdl(block)?;
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "Path" => this.path = f.value.to(),
+                "AttachmentID" => this.attachment_id = Some(f.value.to()),
+                _other => (),
+            );
+        }
+        for b in &block.blocks {
+            match_istr!(b.typ.as_str(),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
+                _other => (),
+            );
+        }
+        return Ok(this);
+    }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];
         lines.append(&mut self.base.write_mdl(depth)?);
-        lines.push_if(self.attachment_id != self.aindex, F!("{indent}AttachmentID {},", self.attachment_id));
+        if let Some(aid) = self.attachment_id {
+            lines.push_if(aid != self.aindex, F!("{indent}AttachmentID {},", aid));
+        }
         lines.pushx_if_n0(&F!("{indent}Path"), &self.path);
         MdlWriteAnim!(lines, depth, "Visibility" => self.visibility);
         return Ok(lines);

@@ -350,6 +350,18 @@ impl MdlxData {
             return Ok(());
         }
 
+        if block.typ == "Attachment" {
+            self.attachments.push(Attachment::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.attachments.last()); //[test]
+            return Ok(());
+        }
+
+        if block.typ == "CollisionShape" {
+            self.collisions.push(CollisionShape::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.collisions.last()); //[test]
+            return Ok(());
+        }
+
         if block.typ == "Camera" {
             self.cameras.push(Camera::read_mdl(&block)?);
             log!("[MdlReadBlockType3] {:#?}", self.cameras.last()); //[test]

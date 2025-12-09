@@ -1,9 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "Name" {
-    BlendTime 150,
-}
 Attachment "values" {
     ObjectId 1,
     Parent 0,
@@ -19,8 +16,4 @@ Attachment "anims" {
         2: 0.5,
         3: 1,
     }
-}
-PivotPoints 2 {
-    { 0, 0, 0 },
-    { 0, 0, 0 },
 }
