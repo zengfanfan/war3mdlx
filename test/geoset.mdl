@@ -1,9 +1,6 @@
 Version {
     FormatVersion 800,
 }
-Model "test" {
-    BlendTime 150,
-}
 Geoset {
     Vertices 4 {
         { -50, 0, -50 },
@@ -38,13 +35,18 @@ Geoset {
         Matrices { 9 },
         Matrices { 1, 2, 3 },
     }
+    BoundsRadius 66.66,
     MinimumExtent { 10, 20, 30 },
     MaximumExtent { 10.1, 20.2, 30.3 },
-    BoundsRadius 66.66,
     Anim {
+        BoundsRadius 64.071404,
         MinimumExtent { -1.894270, -41.042801, 58.943699 },
         MaximumExtent { 101.208000, 44.168301, 143.406998 },
-        BoundsRadius 64.071404,
+    }
+    Anim {
+        BoundsRadius 158.824997,
+        MinimumExtent { -103.760002, -95.293098, -19.218500 },
+        MaximumExtent { 108.474998, 127.380997, 170.612000 },
     }
     MaterialID 111,
     SelectionGroup 99,

@@ -10,20 +10,22 @@ pub struct Geoset {
     pub normals: Vec<Vec3>,
     #[dbg(formatter = "fmtx")]
     pub uvss: Vec<Vec<Vec2>>,
+    #[dbg(fmt = "{:?}")]
     pub face_types: Vec<FaceType>,
     #[dbg(formatter = "fmtx")]
     pub face_vtxcnts: Vec<i32>,
     #[dbg(formatter = "fmtx")]
-    pub face_vertices: Vec<i16>,
+    pub face_vertices: Vec<u16>,
     #[dbg(formatter = "fmtx")]
     pub vtxgrps: Vec<u8>,
     #[dbg(formatter = "fmtx")]
-    pub mtxgrpcnts: Vec<u32>,
+    pub mtxgrpcnts: Vec<i32>,
     #[dbg(formatter = "fmtx")]
-    pub mtx_indices: Vec<u32>,
+    pub mtx_indices: Vec<i32>,
+
     pub material_id: i32,
-    pub sel_group: u32,
-    pub sel_type: u32, // 0=None, 4=Unselectable
+    pub sel_group: i32,
+    pub sel_type: i32, // 0=None, 4=Unselectable
     pub extent: BoundExtent,
     pub anim_extents: Vec<BoundExtent>,
 }
@@ -40,6 +42,18 @@ pub struct BoundExtent {
 impl BoundExtent {
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(BoundExtent { bound_radius: cur.readx()?, min_extent: cur.readx()?, max_extent: cur.readx()? })
+    }
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "BoundsRadius" => this.bound_radius = f.value.to(),
+                "MinimumExtent" => this.min_extent = f.value.to(),
+                "MaximumExtent" => this.max_extent = f.value.to(),
+                _other => (),
+            );
+        }
+        return Ok(this);
     }
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         Ok(vec![
@@ -81,6 +95,21 @@ impl FaceType {
             x => Self::Error(x),
         }
     }
+    fn from_str(s: &str) -> Self {
+        match s {
+            "Points" => Self::Points,
+            "Lines" => Self::Lines,
+            "LineLoop" => Self::LineLoop,
+            "LineStrip" => Self::LineStrip,
+            "Triangles" => Self::Triangles,
+            "TriangleStrip" => Self::TriangleStrip,
+            "TriangleFan" => Self::TriangleFan,
+            "Quads" => Self::Quads,
+            "QuadStrip" => Self::QuadStrip,
+            "Polygons" => Self::Polygons,
+            _err => Self::Error(-1),
+        }
+    }
     fn to(&self) -> i32 {
         match self {
             Self::Points => 0,
@@ -110,7 +139,7 @@ impl Geoset {
             match id {
                 MdlxMagic::VRTX => this.vertices = cur.read_array(n)?,
                 MdlxMagic::NRMS => this.normals = cur.read_array(n)?,
-                MdlxMagic::PTYP => this.face_types = cur.read_array::<i32>(n)?.convert(|a| FaceType::from(a)),
+                MdlxMagic::PTYP => this.face_types = cur.read_array::<i32>(n)?.convert(|a| FaceType::from(*a)),
                 MdlxMagic::PCNT => this.face_vtxcnts = cur.read_array(n)?,
                 MdlxMagic::PVTX => this.face_vertices = cur.read_array(n)?,
                 MdlxMagic::GNDX => this.vtxgrps = cur.read_array(n)?,
@@ -120,7 +149,7 @@ impl Geoset {
                 MdlxMagic::UVBS => this.uvss.push(cur.read_array(n)?),
                 id => {
                     this.material_id = id.swap_bytes() as i32;
-                    this.sel_group = n;
+                    this.sel_group = n as i32;
                     this.sel_type = cur.readx()?;
                     this.extent = BoundExtent::read_mdx(cur)?;
                     let en = cur.readx()?;
@@ -145,6 +174,63 @@ impl Geoset {
         }
 
         return Ok(this);
+    }
+
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        let mut this = Self::default();
+        this.material_id = -1;
+        this.sel_group = -1;
+        this.extent = BoundExtent::read_mdl(&block)?;
+        for f in &block.fields {
+            match_istr!(f.name.as_str(),
+                "MaterialID" => this.material_id = f.value.to(),
+                "SelectionGroup" => this.sel_group = f.value.to(),
+                "Unselectable" => this.sel_type = 4,
+                _other => (),
+            );
+        }
+        for a in &block.blocks {
+            match_istr!(a.typ.as_str(),
+                "Vertices" => this.vertices = a.fields.to(),
+                "Normals" => this.normals = a.fields.to(),
+                "TVertices" => this.uvss.push(a.fields.to()),
+                "VertexGroup" => this.vtxgrps = a.fields.to(),
+                "Faces" => for b in &a.blocks { this.read_mdl_face(b); },
+                "Groups" => for f in &a.fields { this.read_mdl_matrices(f); },
+                "Anim" => this.anim_extents.push(BoundExtent::read_mdl(&a)?),
+                _other => (),
+            );
+        }
+        return Ok(this);
+    }
+    fn read_mdl_face(&mut self, block: &MdlBlock) {
+        let t = FaceType::from_str(block.typ.as_str());
+        if let FaceType::Error(_) = t {
+            log!("OMG! unknown face type: {}", block.typ);
+            return;
+        }
+
+        no!(t == FaceType::Triangles, log!("OMG! unexpected face type: {:?} ({})", t, block.typ));
+        for f in &block.fields {
+            no!(f.name == "", continue);
+            if let MdlValue::IntegerArray(iv) = &f.value {
+                self.face_types.push(t);
+                self.face_vtxcnts.push(iv.len() as i32);
+                let mut miv = iv.convert(|v| *v as u16);
+                self.face_vertices.append(&mut miv);
+            }
+        }
+    }
+    fn read_mdl_matrices(&mut self, field: &MdlField) {
+        if !field.name.eq_icase("Matrices") {
+            log!("OMG! unknown group type: {} (expected 'Matrices')", field.name);
+            return;
+        }
+        if let MdlValue::IntegerArray(iv) = &field.value {
+            self.mtxgrpcnts.push(iv.len() as i32);
+            let mut miv = iv.convert(|v| *v as i32);
+            self.mtx_indices.append(&mut miv);
+        }
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
@@ -258,25 +344,25 @@ impl GeosetAnim {
         return Ok(this);
     }
 
-    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.alpha = 1.0;
         this.color = Vec3::ONE;
         this.geoset_id = -1;
-        for f in block.fields {
+        for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "Alpha" => this.alpha = f.value.into(),
+                "Alpha" => this.alpha = f.value.to(),
                 "UseColor" => this.flags.insert(GeosetAnimFlags::UseColor),
                 "DropShadow" => this.flags.insert(GeosetAnimFlags::DropShadow),
                 "Color" => {
-                    this.color = f.value.into();
+                    this.color = f.value.to();
                     this.flags.insert(GeosetAnimFlags::UseColor);
                 },
-                "GeosetID" => this.geoset_id = f.value.into(),
+                "GeosetID" => this.geoset_id = f.value.to(),
                 _other => (),
             );
         }
-        for f in block.blocks {
+        for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
                 "Color" => this.color_anim = Some(Animation::read_mdl(f)?),

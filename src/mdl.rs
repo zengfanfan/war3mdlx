@@ -6,7 +6,7 @@ use pest_derive::Parser;
 macro_rules! MdlReadBlockType1 {
     ($block:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $block.typ == stringify!($ty) {
-            $var = <$ty>::read_mdl($block)
+            $var = <$ty>::read_mdl(&$block)
             .or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
             log!("[MdlReadBlockType2] {}: {:#?}", TNAME!($ty), $var); //[test]
             return Ok(());
@@ -194,8 +194,8 @@ impl MdlValue {
         }
     }
 
-    pub fn into<T: FromMdlValue>(self) -> T {
-        T::from(self)
+    pub fn to<T: FromMdlValue>(&self) -> T {
+        T::from(&self)
     }
 
     pub fn unwrap_string(s: &str) -> String {
@@ -273,7 +273,7 @@ impl MdlxData {
         );
 
         if block.typ == "Sequences" {
-            for a in block.blocks {
+            for a in &block.blocks {
                 if a.typ == "Anim" {
                     self.sequences.push(Sequence::read_mdl(a)?);
                 }
@@ -282,7 +282,7 @@ impl MdlxData {
             return Ok(());
         }
         if block.typ == "GlobalSequences" {
-            for a in block.fields {
+            for a in &block.fields {
                 self.globalseqs.push(GlobalSequence::read_mdl(a)?);
             }
             log!("[MdlReadBlockType2] {:#?}", self.globalseqs); //[test]
@@ -290,7 +290,7 @@ impl MdlxData {
         }
 
         if block.typ == "Textures" {
-            for a in block.blocks {
+            for a in &block.blocks {
                 if a.typ == "Bitmap" {
                     self.textures.push(Texture::read_mdl(a)?);
                 }
@@ -300,7 +300,7 @@ impl MdlxData {
         }
 
         if block.typ == "TextureAnims" {
-            for a in block.blocks {
+            for a in &block.blocks {
                 if a.typ == "TVertexAnim" {
                     self.texanims.push(TextureAnim::read_mdl(a)?);
                 }
@@ -310,7 +310,7 @@ impl MdlxData {
         }
 
         if block.typ == "Materials" {
-            for a in block.blocks {
+            for a in &block.blocks {
                 if a.typ == "Material" {
                     self.materials.push(Material::read_mdl(a)?);
                 }
@@ -319,8 +319,14 @@ impl MdlxData {
             return Ok(());
         }
 
+        if block.typ == "Geoset" {
+            self.geosets.push(Geoset::read_mdl(&block)?);
+            log!("[MdlReadBlockType3] {:#?}", self.geosets.last()); //[test]
+            return Ok(());
+        }
+
         if block.typ == "GeosetAnim" {
-            self.geoanims.push(GeosetAnim::read_mdl(block)?);
+            self.geoanims.push(GeosetAnim::read_mdl(&block)?);
             log!("[MdlReadBlockType3] {:#?}", self.geoanims.last()); //[test]
             return Ok(());
         }
@@ -334,88 +340,169 @@ impl MdlxData {
 //#region trait: FromMdlValue
 
 pub trait FromMdlValue {
-    fn from(v: MdlValue) -> Self;
+    fn from(v: &MdlValue) -> Self;
 }
 
 impl FromMdlValue for i32 {
-    fn from(v: MdlValue) -> Self {
-        if let MdlValue::Integer(i) = v { i } else { Self::default() }
+    fn from(v: &MdlValue) -> Self {
+        if let MdlValue::Integer(i) = v { *i } else { Self::default() }
     }
 }
 impl FromMdlValue for u32 {
-    fn from(v: MdlValue) -> Self {
-        if let MdlValue::Integer(iv) = v { yesno!(iv < 0, 0u32, iv as u32) } else { Self::default() }
+    fn from(v: &MdlValue) -> Self {
+        if let MdlValue::Integer(iv) = v { yesno!(*iv < 0, 0u32, *iv as u32) } else { Self::default() }
     }
 }
 impl FromMdlValue for Vec<i32> {
-    fn from(v: MdlValue) -> Self {
-        if let MdlValue::IntegerArray(iv) = v { iv } else { Self::default() }
+    fn from(v: &MdlValue) -> Self {
+        if let MdlValue::IntegerArray(iv) = v { iv.clone() } else { Self::default() }
     }
 }
 impl FromMdlValue for Vec<u32> {
-    fn from(v: MdlValue) -> Self {
-        if let MdlValue::IntegerArray(iv) = v { iv.convert(|v| yesno!(v < 0, 0u32, v as u32)) } else { Self::default() }
+    fn from(v: &MdlValue) -> Self {
+        if let MdlValue::IntegerArray(iv) = v {
+            iv.convert(|v| yesno!(*v < 0, 0u32, *v as u32))
+        } else {
+            Self::default()
+        }
     }
 }
 
 impl FromMdlValue for f32 {
-    fn from(v: MdlValue) -> Self {
+    fn from(v: &MdlValue) -> Self {
         match v {
-            MdlValue::Float(f) => f,
-            MdlValue::Integer(i) => i as f32,
+            MdlValue::Float(f) => *f,
+            MdlValue::Integer(i) => *i as f32,
             _ => Self::default(),
         }
     }
 }
 impl FromMdlValue for Vec<f32> {
-    fn from(v: MdlValue) -> Self {
+    fn from(v: &MdlValue) -> Self {
         match v {
-            MdlValue::FloatArray(fv) => fv,
-            MdlValue::IntegerArray(iv) => iv.convert(|v| v as f32),
+            MdlValue::FloatArray(fv) => fv.clone(),
+            MdlValue::IntegerArray(iv) => iv.convert(|v| *v as f32),
             _ => Self::default(),
         }
     }
 }
 impl FromMdlValue for Vec2 {
-    fn from(v: MdlValue) -> Self {
+    fn from(v: &MdlValue) -> Self {
         match v {
             MdlValue::FloatArray(fv) => Self::from_slice(fv.as_slice()),
-            MdlValue::IntegerArray(iv) => Self::from_slice(iv.convert(|v| v as f32).as_slice()),
+            MdlValue::IntegerArray(iv) => Self::from_slice(iv.convert(|v| *v as f32).as_slice()),
             _ => Self::default(),
         }
     }
 }
 impl FromMdlValue for Vec3 {
-    fn from(v: MdlValue) -> Self {
+    fn from(v: &MdlValue) -> Self {
         match v {
             MdlValue::FloatArray(fv) => Self::from_slice(fv.as_slice()),
-            MdlValue::IntegerArray(iv) => Self::from_slice(iv.convert(|v| v as f32).as_slice()),
+            MdlValue::IntegerArray(iv) => Self::from_slice(iv.convert(|v| *v as f32).as_slice()),
             _ => Self::default(),
         }
     }
 }
 impl FromMdlValue for Vec4 {
-    fn from(v: MdlValue) -> Self {
+    fn from(v: &MdlValue) -> Self {
         match v {
             MdlValue::FloatArray(fv) => Self::from_slice(fv.as_slice()),
-            MdlValue::IntegerArray(iv) => Self::from_slice(iv.convert(|v| v as f32).as_slice()),
+            MdlValue::IntegerArray(iv) => Self::from_slice(iv.convert(|v| *v as f32).as_slice()),
             _ => Self::default(),
         }
     }
 }
 
 impl FromMdlValue for String {
-    fn from(v: MdlValue) -> Self {
+    fn from(v: &MdlValue) -> Self {
         match v {
-            MdlValue::String(s) => s,
-            MdlValue::Flag(s) => s,
+            MdlValue::String(s) => s.clone(),
+            MdlValue::Flag(s) => s.clone(),
             _ => String::default(),
         }
     }
 }
 impl FromMdlValue for Vec<String> {
-    fn from(v: MdlValue) -> Self {
-        if let MdlValue::FlagArray(sv) = v { sv } else { Self::default() }
+    fn from(v: &MdlValue) -> Self {
+        if let MdlValue::FlagArray(sv) = v { sv.clone() } else { Self::default() }
+    }
+}
+
+pub trait _ExtendMdlFieldArray {
+    fn to<T: FromMdlFieldArray>(&self) -> T;
+}
+impl _ExtendMdlFieldArray for Vec<MdlField> {
+    fn to<T: FromMdlFieldArray>(&self) -> T {
+        T::from(&self)
+    }
+}
+
+//#endregion
+//#region trait: FromMdlFieldArray
+
+pub trait FromMdlFieldArray {
+    fn from(v: &Vec<MdlField>) -> Self;
+}
+
+impl FromMdlFieldArray for Vec<i32> {
+    fn from(v: &Vec<MdlField>) -> Self {
+        v.convert(|f| FromMdlValue::from(&f.value))
+    }
+}
+impl FromMdlFieldArray for Vec<u32> {
+    fn from(v: &Vec<MdlField>) -> Self {
+        v.convert(|f| FromMdlValue::from(&f.value))
+    }
+}
+
+impl FromMdlFieldArray for Vec<i8> {
+    fn from(v: &Vec<MdlField>) -> Self {
+        v.convert(|f| {
+            let i: i32 = FromMdlValue::from(&f.value);
+            i as i8
+        })
+    }
+}
+impl FromMdlFieldArray for Vec<u8> {
+    fn from(v: &Vec<MdlField>) -> Self {
+        v.convert(|f| {
+            let i: i32 = FromMdlValue::from(&f.value);
+            i as u8
+        })
+    }
+}
+
+impl FromMdlFieldArray for Vec<i16> {
+    fn from(v: &Vec<MdlField>) -> Self {
+        v.convert(|f| {
+            let i: i32 = FromMdlValue::from(&f.value);
+            i as i16
+        })
+    }
+}
+impl FromMdlFieldArray for Vec<u16> {
+    fn from(v: &Vec<MdlField>) -> Self {
+        v.convert(|f| {
+            let i: i32 = FromMdlValue::from(&f.value);
+            i as u16
+        })
+    }
+}
+
+impl FromMdlFieldArray for Vec<Vec2> {
+    fn from(v: &Vec<MdlField>) -> Self {
+        v.convert(|f| FromMdlValue::from(&f.value))
+    }
+}
+impl FromMdlFieldArray for Vec<Vec3> {
+    fn from(v: &Vec<MdlField>) -> Self {
+        v.convert(|f| FromMdlValue::from(&f.value))
+    }
+}
+impl FromMdlFieldArray for Vec<Vec4> {
+    fn from(v: &Vec<MdlField>) -> Self {
+        v.convert(|f| FromMdlValue::from(&f.value))
     }
 }
 

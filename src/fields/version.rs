@@ -13,11 +13,11 @@ impl Version {
         Ok(Self { format_version: cur.readx()? })
     }
 
-    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
-        for f in block.fields {
+        for f in &block.fields {
             if f.name.eq_icase("FormatVersion") {
-                this.format_version = f.value.into();
+                this.format_version = f.value.to();
                 break; // only 1 field
             }
         }

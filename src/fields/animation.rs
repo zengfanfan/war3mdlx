@@ -48,22 +48,22 @@ impl<T: TAnimation> Animation<T> {
         return Ok(this);
     }
 
-    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.global_seq_id = -1;
-        for f in block.fields {
+        for f in &block.fields {
             if let MdlValue::None = f.value {
                 this.interp_type = InterpolationType::from_str(f.name.as_str());
             } else if f.name == "GlobalSeqId" {
-                this.global_seq_id = f.value.into();
+                this.global_seq_id = f.value.to();
             }
         }
-        for f in block.frames {
+        for f in &block.frames {
             this.key_frames.push(KeyFrame {
                 frame: f.frame,
-                value: f.value.into(),
-                itan: f.intan.into(),
-                otan: f.outan.into(),
+                value: f.value.to(),
+                itan: f.intan.to(),
+                otan: f.outan.to(),
                 has_tans: this.interp_type.has_tans(),
             });
         }

@@ -30,12 +30,12 @@ impl Texture {
         })
     }
 
-    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
-        for f in block.fields {
+        for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "ReplaceableId" => this.replace_id = f.value.into(),
-                "Image" => this.path = f.value.into(),
+                "ReplaceableId" => this.replace_id = f.value.to(),
+                "Image" => this.path = f.value.to(),
                 "WrapWidth" => this.flags.insert(TextureFlags::WrapWidth),
                 "WrapHeight" => this.flags.insert(TextureFlags::WrapHeight),
                 _other => (),
@@ -86,9 +86,9 @@ impl TextureAnim {
         return Ok(this);
     }
 
-    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
-        for f in block.blocks {
+        for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Translation" => this.translation = Some(Animation::read_mdl(f)?),
                 "Rotation" => this.rotation = Some(Animation::read_mdl(f)?),

@@ -67,18 +67,18 @@ impl Material {
         return Ok(this);
     }
 
-    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
-        for f in block.fields {
+        for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "PriorityPlane" => this.priority_plane = f.value.into(),
+                "PriorityPlane" => this.priority_plane = f.value.to(),
                 "ConstantColor" => this.flags.insert(MaterialFlags::ConstantColor),
                 "SortPrimsFarZ" => this.flags.insert(MaterialFlags::SortPrimsFarZ),
                 "FullResolution" => this.flags.insert(MaterialFlags::FullResolution),
                 _other => (),
             );
         }
-        for f in block.blocks {
+        for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Layer" => this.layers.push(Layer::read_mdl(f)?),
                 _other => (),
@@ -137,12 +137,12 @@ impl Layer {
         return Ok(this);
     }
 
-    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.texture_id = -1;
         this.texture_anim_id = -1;
         this.alpha = 1.0;
-        for f in block.fields {
+        for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "FilterMode" => this.filter_mode = FilterMode::from_str(f.value.as_str()),
                 "Unshaded" => this.flags.insert(LayerFlags::Unshaded),
@@ -151,14 +151,14 @@ impl Layer {
                 "Unfogged" => this.flags.insert(LayerFlags::Unfogged),
                 "NoDepthTest" => this.flags.insert(LayerFlags::NoDepthTest),
                 "NoDepthSet" => this.flags.insert(LayerFlags::NoDepthSet),
-                "TextureID" => this.texture_id = f.value.into(),
-                "TVertexAnimId" => this.texture_anim_id = f.value.into(),
-                "CoordId" => this.coordid = f.value.into(),
-                "Alpha" => this.alpha = f.value.into(),
+                "TextureID" => this.texture_id = f.value.to(),
+                "TVertexAnimId" => this.texture_anim_id = f.value.to(),
+                "CoordId" => this.coordid = f.value.to(),
+                "Alpha" => this.alpha = f.value.to(),
                 _other => (),
             );
         }
-        for f in block.blocks {
+        for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
                 "TextureID" => this.texid_anim = Some(Animation::read_mdl(f)?),

@@ -36,20 +36,20 @@ impl Sequence {
         })
     }
 
-    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
-        this.name = block.name;
+        this.name = block.name.clone();
         this.looping = true;
-        for f in block.fields {
+        for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "MoveSpeed" => this.move_speed = f.value.into(),
+                "MoveSpeed" => this.move_speed = f.value.to(),
                 "NonLooping" => this.looping = false,
-                "Rarity" => this.rarity = f.value.into(),
-                "BoundsRadius" => this.bounds_radius = f.value.into(),
-                "MinimumExtent" => this.min_extent = f.value.into(),
-                "MaximumExtent" => this.max_extent = f.value.into(),
+                "Rarity" => this.rarity = f.value.to(),
+                "BoundsRadius" => this.bounds_radius = f.value.to(),
+                "MinimumExtent" => this.min_extent = f.value.to(),
+                "MaximumExtent" => this.max_extent = f.value.to(),
                 "Interval" => {
-                    let interval: Vec<i32> = f.value.into();
+                    let interval: Vec<i32> = f.value.to();
                     this.start_frame = interval.get(0).cloned().unwrap_or(0);
                     this.end_frame = interval.get(1).cloned().unwrap_or(0);
                 },

@@ -28,15 +28,15 @@ impl Model {
         })
     }
 
-    pub fn read_mdl(block: MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
-        this.name = block.name;
-        for f in block.fields {
+        this.name = block.name.clone();
+        for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "BoundsRadius" => this.bounds_radius = f.value.into(),
-                "MinimumExtent" => this.min_extent = f.value.into(),
-                "MaximumExtent" => this.max_extent = f.value.into(),
-                "BlendTime" => this.blend_time = f.value.into(),
+                "BoundsRadius" => this.bounds_radius = f.value.to(),
+                "MinimumExtent" => this.min_extent = f.value.to(),
+                "MaximumExtent" => this.max_extent = f.value.to(),
+                "BlendTime" => this.blend_time = f.value.to(),
                 _other => (),
             );
         }
