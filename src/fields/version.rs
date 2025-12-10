@@ -13,6 +13,13 @@ impl Version {
         Ok(Self { format_version: cur.readx()? })
     }
 
+    pub fn write_mdx(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
+        cur.write_be(&Self::ID)?;
+        cur.writex(&4)?;
+        cur.writex(&self.format_version)?;
+        return Ok(());
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         for f in &block.fields {

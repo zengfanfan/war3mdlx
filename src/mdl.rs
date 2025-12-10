@@ -3,7 +3,7 @@ use pest::Parser;
 use pest::iterators::Pair;
 use pest_derive::Parser;
 
-macro_rules! MdlReadBlockType1 {
+macro_rules! MdlReadType1 {
     ($block:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $block.typ == stringify!($ty) {
             $var = <$ty>::read_mdl(&$block).or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
@@ -11,7 +11,7 @@ macro_rules! MdlReadBlockType1 {
         })+
     };
 }
-macro_rules! MdlReadBlockType2 {
+macro_rules! MdlReadType2 {
     ($block:expr, $( $ty:ty => $name:expr => $var:expr ),+ $(,)?) => {
         $(if $block.typ == F!("{}s", stringify!($ty)) {
             for a in &$block.blocks {
@@ -23,7 +23,7 @@ macro_rules! MdlReadBlockType2 {
         })+
     };
 }
-macro_rules! MdlReadBlockType3 {
+macro_rules! MdlReadType3 {
     ($block:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $block.typ == stringify!($ty) {
             $var.push(<$ty>::read_mdl(&$block).or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?);
@@ -31,7 +31,7 @@ macro_rules! MdlReadBlockType3 {
         })+
     };
 }
-macro_rules! MdlReadBlockType4 {
+macro_rules! MdlReadType4 {
     ($block:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $block.typ == F!("{}s", stringify!($ty)) {
             for a in &$block.fields {
@@ -295,17 +295,17 @@ impl MdlxData {
     }
 
     fn parse_mdl_block(&mut self, block: MdlBlock) -> Result<(), MyError> {
-        MdlReadBlockType1!(block,
+        MdlReadType1!(block,
             Version     => self.version,
             Model       => self.model,
         );
-        MdlReadBlockType2!(block,
+        MdlReadType2!(block,
             Sequence    => "Anim"       => self.sequences,
             Texture     => "Bitmap"     => self.textures,
             TextureAnim => "TVertexAnim"=> self.texanims,
             Material    => "Material"   => self.materials,
         );
-        MdlReadBlockType3!(block,
+        MdlReadType3!(block,
             Geoset          => self.geosets,
             GeosetAnim      => self.geoanims,
             Bone            => self.bones,
@@ -319,7 +319,7 @@ impl MdlxData {
             CollisionShape  => self.collisions,
             Camera          => self.cameras,
         );
-        MdlReadBlockType4!(block,
+        MdlReadType4!(block,
             GlobalSequence  => self.globalseqs,
             PivotPoint      => self.pivot_points,
         );

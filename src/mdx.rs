@@ -1,6 +1,6 @@
 use crate::*;
 
-macro_rules! MdxReadChunkType1 {
+macro_rules! MdxReadType1 {
     ($chunk:expr, $cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $chunk.id == <$ty>::ID {
             $var = <$ty>::read_mdx(&mut $cur)
@@ -9,7 +9,7 @@ macro_rules! MdxReadChunkType1 {
         })+
     };
 }
-macro_rules! MdxReadChunkType2 {
+macro_rules! MdxReadType2 {
     ($chunk:expr, $cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $chunk.id == <$ty>::ID {
             while !$cur.eol() {
@@ -23,7 +23,7 @@ macro_rules! MdxReadChunkType2 {
         })+
     };
 }
-macro_rules! MdxReadChunkType3 {
+macro_rules! MdxReadType3 {
     ($chunk:expr, $cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $chunk.id == <$ty>::ID {
             while !$cur.eol() {
@@ -49,9 +49,36 @@ macro_rules! MdxReadChunkType3 {
     };
 }
 
+macro_rules! MdxWriteType1 {
+    ($cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
+        $(
+            $var.write_mdx(&mut $cur)
+            .or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
+        )+
+    };
+}
+
 impl MdlxData {
-    pub fn write_mdx(&self, _: &Path) -> Result<(), MyError> /* [todo] */ {
-        todo!();
+    pub fn write_mdx(&self, path: &Path) -> Result<(), MyError> /* [todo] */ {
+        let mut cur = Cursor::new(Vec::<u8>::with_capacity(0x40000_usize));
+
+        if let Err(e) = cur.write_be(&MdlxMagic::MDLX) {
+            EXIT1!("writing magic: {}", e);
+        }
+
+        MdxWriteType1!(cur,
+            Version         => self.version,
+            Model           => self.model,
+        );
+
+        if let Some(parent) = path.parent() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                EXIT1!("creating directory: {}", e);
+            }
+        }
+
+        std::fs::write(path, cur.into_inner())?;
+        EXIT!();
     }
 
     pub fn read_mdx(input: &Vec<u8>) -> Result<Self, MyError> {
@@ -74,11 +101,11 @@ impl MdlxData {
 
     fn parse_mdx_chunk(&mut self, chunk: &MdxChunk) -> Result<(), MyError> {
         let mut cur = Cursor::new(&chunk.body);
-        MdxReadChunkType1!(chunk, cur,
+        MdxReadType1!(chunk, cur,
             Version         => self.version,
             Model           => self.model,
         );
-        MdxReadChunkType2!(chunk, cur,
+        MdxReadType2!(chunk, cur,
             Sequence        => self.sequences,
             GlobalSequence  => self.globalseqs,
             Texture         => self.textures,
@@ -88,7 +115,7 @@ impl MdlxData {
             CollisionShape  => self.collisions,
             PivotPoint      => self.pivot_points,
         );
-        MdxReadChunkType3!(chunk, cur,
+        MdxReadType3!(chunk, cur,
             TextureAnim     => self.texanims,
             Material        => self.materials,
             Geoset          => self.geosets,

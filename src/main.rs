@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
+use byteorder::{BigEndian, LittleEndian, ReadBytesExt, WriteBytesExt};
 use derive_debug::Dbg;
 use glam::{Vec2, Vec3, Vec4};
 use paste::paste;
@@ -8,7 +8,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::fmt::{Debug as stdDebug, Display, Formatter as stdFormatter, Result as stdResult};
 use std::fs;
-use std::io::{Cursor, Error as ioError, Read};
+use std::io::{Cursor, Error as ioError, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use walkdir::WalkDir;
