@@ -28,10 +28,7 @@ impl MdxChunk {
     }
 
     pub fn new(id: u32) -> Self {
-        let mut this = Self::default();
-        this.cursor = Some(Cursor::new(vec![]));
-        this.id = id;
-        return this;
+        Build! { id:id, cursor: Some(Cursor::new(vec![])) }
     }
 
     pub fn write<T: WriteToCursor>(&mut self, v: &T) -> Result<(), MyError> {

@@ -31,6 +31,18 @@ impl CollisionShape {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        self.base.write_mdx(chunk)?;
+        chunk.write(&self.shape.to())?;
+        chunk.write(&self.vertices)?;
+        match &self.shape {
+            CollisionType::Sphere => chunk.write(&self.bounds_radius)?,
+            CollisionType::Cylinder => chunk.write(&self.bounds_radius)?,
+            _other => (),
+        }
+        return Ok(());
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::CollisionShape);
@@ -46,6 +58,7 @@ impl CollisionShape {
                 _other => (),
             );
         }
+        this.vertices.resize(yesno!(this.shape == CollisionType::Box, 2, 1), Vec3::ZERO);
         return Ok(this);
     }
 
@@ -60,7 +73,9 @@ impl CollisionShape {
     }
 }
 
-#[derive(Debug, Default)]
+//#region CollisionType
+
+#[derive(Debug, Default, PartialEq, Eq)]
 pub enum CollisionType {
     #[default]
     Box,
@@ -88,4 +103,16 @@ impl CollisionType {
             _err => def,
         )
     }
+
+    fn to(&self) -> i32 {
+        match self {
+            Self::Box => 0,
+            Self::Plane => 1,
+            Self::Sphere => 2,
+            Self::Cylinder => 3,
+            Self::Error(x) => *x,
+        }
+    }
 }
+
+//#endregion

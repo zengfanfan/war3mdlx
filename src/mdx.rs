@@ -90,7 +90,7 @@ impl MdlxData {
             Bone            => self.bones,
             Helper          => self.helpers,
             EventObject     => self.eventobjs,
-            // CollisionShape  => self.collisions,
+            CollisionShape  => self.collisions,
             PivotPoint      => self.pivot_points,
         );
 

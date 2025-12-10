@@ -103,7 +103,7 @@ pub struct MdlBlock {
 }
 impl MdlBlock {
     pub fn from(pair: Pair<'_, Rule>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
         let inner = pair.into_inner();
         for p in inner {
             match p.as_rule() {
@@ -127,7 +127,7 @@ pub struct MdlField {
 }
 impl MdlField {
     pub fn from(pair: Pair<'_, Rule>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
         let inner = pair.into_inner();
         let mut first_ident = true;
         for p in inner {
@@ -169,7 +169,7 @@ pub struct MdlFrame {
 }
 impl MdlFrame {
     pub fn from(pair: Pair<'_, Rule>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
         let mut inner = pair.into_inner();
         this.frame = inner.next().unwrap().as_str().parse().unwrap();
         this.value = MdlValue::from(inner.next().unwrap())?;

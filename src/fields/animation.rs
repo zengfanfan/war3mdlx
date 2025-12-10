@@ -23,7 +23,7 @@ pub struct Animation<T: TAnimation> {
 
 impl<T: TAnimation> Animation<T> {
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
 
         let kfn = cur.readx()?;
         this.interp_type = InterpolationType::from(cur.readx()?);

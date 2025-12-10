@@ -107,7 +107,7 @@ impl Layer {
     const ID_TEXID: u32 = MdlxMagic::KMTF as u32;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
 
         this.filter_mode = FilterMode::from(cur.readx()?);
         if let FilterMode::Error(v) = this.filter_mode {

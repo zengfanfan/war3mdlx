@@ -44,7 +44,7 @@ impl BoundExtent {
         Ok(BoundExtent { bound_radius: cur.readx()?, min_extent: cur.readx()?, max_extent: cur.readx()? })
     }
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "BoundsRadius" => this.bound_radius = f.value.to(),
