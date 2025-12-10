@@ -30,6 +30,14 @@ impl Texture {
         })
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.replace_id)?;
+        chunk.write_string(&self.path, Self::PATH_SIZE)?;
+        chunk.write(&self._unknown)?;
+        chunk.write(&self.flags.bits())?;
+        return Ok(());
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         for f in &block.fields {
@@ -103,7 +111,7 @@ impl TextureAnim {
         let indent = indent!(depth);
         let mut lines: Vec<String> = vec![];
         lines.push(F!("{indent}TVertexAnim {{"));
-        MdlWriteAnim!(lines, 2,
+        MdlWriteAnimIfSome!(lines, 2,
             "Translation" => self.translation,
             "Rotation" => self.rotation,
             "Scaling" => self.scaling,

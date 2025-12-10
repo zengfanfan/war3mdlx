@@ -66,7 +66,7 @@ impl Attachment {
             lines.push_if(aid != self.aindex, F!("{indent}AttachmentID {},", aid));
         }
         lines.pushx_if_n0(&F!("{indent}Path"), &self.path);
-        MdlWriteAnim!(lines, depth, "Visibility" => self.visibility);
+        MdlWriteAnimIfSome!(lines, depth, "Visibility" => self.visibility);
         return Ok(lines);
     }
 }

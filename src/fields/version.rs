@@ -14,10 +14,9 @@ impl Version {
     }
 
     pub fn write_mdx(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
-        cur.write_be(&Self::ID)?;
-        cur.writex(&4)?;
-        cur.writex(&self.format_version)?;
-        return Ok(());
+        let mut chunk = MdxChunk::new(Self::ID);
+        chunk.write(&self.format_version)?;
+        return chunk.flush_to(cur);
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {

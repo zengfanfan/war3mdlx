@@ -14,9 +14,7 @@ macro_rules! yesno {
 
 #[macro_export]
 macro_rules! yes {
-    ($cond:expr, $y:stmt) => {{
-        if $cond { $y }
-    }};
+    ($cond:expr, $y:stmt) => {{ if $cond { $y } }};
     ($var:ident = $expr:expr, $cond:expr, $y:stmt) => {{
         let $var = $expr;
         if $cond { $y }
@@ -25,9 +23,7 @@ macro_rules! yes {
 
 #[macro_export]
 macro_rules! no {
-    ($cond:expr, $y:stmt) => {{
-        if !($cond) { $y }
-    }};
+    ($cond:expr, $y:stmt) => {{ if !($cond) { $y } }};
     ($var:ident = $expr:expr, $cond:expr, $y:stmt) => {{
         let $var = $expr;
         if !($cond) { $y }

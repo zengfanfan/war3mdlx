@@ -94,7 +94,7 @@ impl Camera {
         lines.pushx_if_n0(&F!("{indent}FieldOfView"), &self.field_of_view);
         lines.pushx_if_n0(&F!("{indent}FarClip"), &self.far_clip);
         lines.pushx_if_n0(&F!("{indent}NearClip"), &self.near_clip);
-        MdlWriteAnim!(lines, depth,
+        MdlWriteAnimIfSome!(lines, depth,
             "Translation" => self.translation,
             "Rotation" => self.rotation,
         );
@@ -102,7 +102,7 @@ impl Camera {
         {
             let mut tines: Vec<String> = vec![];
             tines.pushx_if_n0(&F!("{indent2}Position"), &self.target);
-            MdlWriteAnim!(tines, depth + 1, "Translation" => self.target_translation);
+            MdlWriteAnimIfSome!(tines, depth + 1, "Translation" => self.target_translation);
             if !tines.is_empty() {
                 lines.push(F!("{indent}Target {{"));
                 lines.append(&mut tines);

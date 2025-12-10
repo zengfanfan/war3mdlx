@@ -253,7 +253,7 @@ impl ParticleEmitter2 {
             "Length" => self.length_anim => 0.0 => self.length,
             "Width" => self.width_anim => 0.0 => self.width,
         );
-        MdlWriteAnim!(lines, depth, "Visibility" => self.visibility);
+        MdlWriteAnimIfSome!(lines, depth, "Visibility" => self.visibility);
 
         return Ok(lines);
     }

@@ -14,6 +14,13 @@ impl Bone {
         Ok(Self { base: Node::read_mdx(cur)?, geoset_id: cur.readx()?, geoanim_id: cur.readx()? })
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        self.base.write_mdx(chunk)?;
+        chunk.write(&self.geoset_id)?;
+        chunk.write(&self.geoanim_id)?;
+        return Ok(());
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.base = Node::read_mdl(block)?;

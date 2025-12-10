@@ -36,6 +36,20 @@ impl Sequence {
         })
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write_string(&self.name, Self::NAME_SIZE)?;
+        chunk.write(&self.start_frame)?;
+        chunk.write(&self.end_frame)?;
+        chunk.write(&self.move_speed)?;
+        chunk.write(yesno!(self.looping, &0u32, &1u32))?;
+        chunk.write(&self.rarity)?;
+        chunk.write(&self._unknown)?;
+        chunk.write(&self.bounds_radius)?;
+        chunk.write(&self.min_extent)?;
+        chunk.write(&self.max_extent)?;
+        return Ok(());
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.name = block.name.clone();

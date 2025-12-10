@@ -47,6 +47,28 @@ impl Node {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        chunk.write_string(&self.name, Self::NAME_SIZE)?;
+        chunk.write(&self.object_id)?;
+        chunk.write(&self.parent_id)?;
+        chunk.write(&self.flags.bits())?;
+        MdxWriteAnim!(chunk,
+            Self::ID_T => self.translation,
+            Self::ID_R => self.rotation,
+            Self::ID_S => self.scaling,
+        );
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 4;
+        sz += Self::NAME_SIZE + 12; // sz + name + object_id + parent_id + flags
+        sz += self.translation.calc_mdx_size();
+        sz += self.rotation.calc_mdx_size();
+        sz += self.scaling.calc_mdx_size();
+        return sz;
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Self::default();
         this.name = block.name.clone();
@@ -102,10 +124,10 @@ impl Node {
         lines.push_if(self.flags.contains(NodeFlags::BillboardedLockZ), F!("{indent}BillboardedLockZ,"));
         lines.push_if(self.flags.contains(NodeFlags::CameraAnchored), F!("{indent}CameraAnchored,"));
 
-        MdlWriteAnim!(lines, depth,
-            "Translation" => self.translation,
-            "Rotation" => self.rotation,
-            "Scaling" => self.scaling,
+        MdlWriteAnimIfSome!(lines, depth,
+            "Translation"   => self.translation,
+            "Rotation"      => self.rotation,
+            "Scaling"       => self.scaling,
         );
 
         return Ok(lines);

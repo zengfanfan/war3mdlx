@@ -137,7 +137,7 @@ impl RibbonEmitter {
             "Alpha" => self.alpha_anim => 1.0 => self.alpha,
             "Color" => bgr_anim => Vec3::ONE => bgr,
         );
-        MdlWriteAnim!(lines, depth,
+        MdlWriteAnimIfSome!(lines, depth,
             "TextureSlot" => self.texslot_anim,
             "Visibility" => self.visibility,
         );

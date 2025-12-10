@@ -1,8 +1,13 @@
 use crate::*;
 
+#[derive(Dbg, Default)]
 pub struct MdxChunk {
+    // read
     pub id: u32,
     pub body: Vec<u8>,
+    // write
+    #[dbg(skip)]
+    cursor: Option<Cursor<Vec<u8>>>,
 }
 
 impl MdxChunk {
@@ -19,6 +24,57 @@ impl MdxChunk {
         let body = cur.read_bytes(sz).or_else(|e| ERR!("{} body({}B): {}", estr, sz, e))?;
         vvvlog!("{}", pretty_hex(&body).replace("\n", "\n\t"));
 
-        return Ok(MdxChunk { id, body });
+        return Ok(MdxChunk { id, body, cursor: None });
+    }
+
+    pub fn new(id: u32) -> Self {
+        let mut this = Self::default();
+        this.cursor = Some(Cursor::new(vec![]));
+        this.id = id;
+        return this;
+    }
+
+    pub fn write<T: WriteToCursor>(&mut self, v: &T) -> Result<(), MyError> {
+        if let Some(cur) = &mut self.cursor {
+            v.write_to(cur)?;
+        }
+        return Ok(());
+    }
+    pub fn write_be<T: WriteToCursor>(&mut self, v: &T) -> Result<(), MyError> {
+        if let Some(cur) = &mut self.cursor {
+            v.write_to_be(cur)?;
+        }
+        return Ok(());
+    }
+
+    pub fn write_if<T: WriteToCursor>(&mut self, cond: bool, v: &T) -> Result<(), MyError> {
+        if cond { self.write(v) } else { Ok(()) }
+    }
+
+    pub fn write_bytes<T: WriteToCursor>(&mut self, v: &Vec<u8>) -> Result<(), MyError> {
+        if let Some(cur) = &mut self.cursor {
+            cur.write_all(v.as_slice())?;
+        }
+        return Ok(());
+    }
+
+    pub fn write_string(&mut self, s: &str, n: u32) -> Result<(), MyError> {
+        if let Some(cur) = &mut self.cursor {
+            cur.write_string(s, n)?;
+        }
+        return Ok(());
+    }
+
+    pub fn flush_to(&mut self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
+        cur.write_be(&self.id)?;
+        if let Some(body_cur) = &mut self.cursor {
+            cur.writex(&body_cur.len())?;
+            cur.write_all(body_cur.get_ref())?;
+            body_cur.clear();
+        } else {
+            cur.write_all(&self.body)?;
+            self.body.clear();
+        }
+        return Ok(());
     }
 }

@@ -14,6 +14,10 @@ impl GlobalSequence {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.duration)
+    }
+
     pub fn read_mdl(field: &MdlField) -> Result<Self, MyError> {
         Ok(Self { duration: yesno!(field.name.eq_icase("Duration"), field.value.to(), 0) })
     }

@@ -134,7 +134,7 @@ impl Light {
             "AmbColor" => bgr2_anim => Vec3::ONE => bgr2,
             "AmbIntensity" => self.ambient_intensity_anim => 0.0 => self.ambient_intensity,
         );
-        MdlWriteAnim!(lines, depth, "Visibility" => self.visibility);
+        MdlWriteAnimIfSome!(lines, depth, "Visibility" => self.visibility);
 
         return Ok(lines);
     }

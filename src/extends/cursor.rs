@@ -1,37 +1,45 @@
 use crate::*;
 
 pub trait _ExtendCursor {
-    fn pos(&mut self) -> u32;
-    fn len(&mut self) -> u32;
-    fn left(&mut self) -> u32;
-    fn eol(&mut self) -> bool;
+    fn pos(&self) -> u32;
+    fn len(&self) -> u32;
+    fn left(&self) -> u32;
+    fn eol(&self) -> bool;
+    fn clear(&mut self);
 }
 impl _ExtendCursor for Cursor<&Vec<u8>> {
-    fn pos(&mut self) -> u32 {
+    fn pos(&self) -> u32 {
         self.position() as u32
     }
-    fn len(&mut self) -> u32 {
+    fn len(&self) -> u32 {
         self.get_ref().len() as u32
     }
-    fn left(&mut self) -> u32 {
+    fn left(&self) -> u32 {
         self.len() - self.pos()
     }
-    fn eol(&mut self) -> bool {
+    fn eol(&self) -> bool {
         self.position() >= self.get_ref().len() as u64
+    }
+    fn clear(&mut self) {
+        panic!("DON'T DO THIS!");
     }
 }
 impl _ExtendCursor for Cursor<Vec<u8>> {
-    fn pos(&mut self) -> u32 {
+    fn pos(&self) -> u32 {
         self.position() as u32
     }
-    fn len(&mut self) -> u32 {
+    fn len(&self) -> u32 {
         self.get_ref().len() as u32
     }
-    fn left(&mut self) -> u32 {
+    fn left(&self) -> u32 {
         self.len() - self.pos()
     }
-    fn eol(&mut self) -> bool {
+    fn eol(&self) -> bool {
         self.position() >= self.get_ref().len() as u64
+    }
+    fn clear(&mut self) {
+        self.set_position(0);
+        self.get_mut().clear();
     }
 }
 
@@ -173,8 +181,16 @@ impl ReadFromCursor for u8 {
     fn read_from(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(cur.read_u8()?)
     }
+    fn read_from_be(_: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+        ERR!("DON'T DO THIS!")
+    }
+}
+impl ReadFromCursor for usize {
+    fn read_from(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
+        Ok(cur.read_u32::<LittleEndian>()? as Self)
+    }
     fn read_from_be(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        Ok(cur.read_u8()?)
+        Ok(cur.read_u32::<BigEndian>()? as Self)
     }
 }
 
@@ -184,6 +200,7 @@ impl ReadFromCursor for u8 {
 pub trait WriteToCursor: Sized {
     fn write_to(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError>;
     fn write_to_be(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError>;
+    fn size() -> u32;
 }
 
 macro_rules! impl_WriteToCursor {
@@ -195,6 +212,9 @@ macro_rules! impl_WriteToCursor {
                 }
                 fn write_to_be(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
                     Ok(cur.[<write_ $a>]::<BigEndian>(*self)?)
+                }
+                fn size() -> u32 {
+                    std::mem::size_of::<Self>() as u32
                 }
             }
         })+
@@ -210,6 +230,9 @@ macro_rules! impl_WriteToCursor_VecN {
                 fn write_to_be(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
                     self.to_array().to_vec().write_to(cur)
                 }
+                fn size() -> u32 {
+                    4u32 * $a
+                }
             }
         })+
     };
@@ -222,8 +245,22 @@ impl WriteToCursor for u8 {
     fn write_to(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
         Ok(cur.write_u8(*self)?)
     }
+    fn write_to_be(&self, _: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
+        ERR!("DON'T DO THIS!")
+    }
+    fn size() -> u32 {
+        1
+    }
+}
+impl WriteToCursor for usize {
+    fn write_to(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
+        Ok(cur.write_u32::<LittleEndian>(*self as u32)?)
+    }
     fn write_to_be(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
-        Ok(cur.write_u8(*self)?)
+        Ok(cur.write_u32::<BigEndian>(*self as u32)?)
+    }
+    fn size() -> u32 {
+        4
     }
 }
 
@@ -239,6 +276,9 @@ impl<T: WriteToCursor> WriteToCursor for Vec<T> {
             v.write_to_be(cur)?;
         }
         return Ok(());
+    }
+    fn size() -> u32 {
+        panic!("DON'T DO THIS!"); // [instead] T::size() * self.len()
     }
 }
 

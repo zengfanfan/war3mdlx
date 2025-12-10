@@ -29,15 +29,16 @@ impl Model {
     }
 
     pub fn write_mdx(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
-        cur.write_be(&Self::ID)?;
-        cur.writex(&(Self::NAME_SIZE + 36))?; // [todo] auto calc chunk size
-        cur.write_string(&self.name, Self::NAME_SIZE)?;
-        cur.writex(&self._unknown)?;
-        cur.writex(&self.bounds_radius)?;
-        cur.writex(&self.min_extent)?;
-        cur.writex(&self.max_extent)?;
-        cur.writex(&self.blend_time)?;
-        return Ok(());
+        let mut chunk = MdxChunk::new(Self::ID);
+
+        chunk.write_string(&self.name, Self::NAME_SIZE)?;
+        chunk.write(&self._unknown)?;
+        chunk.write(&self.bounds_radius)?;
+        chunk.write(&self.min_extent)?;
+        chunk.write(&self.max_extent)?;
+        chunk.write(&self.blend_time)?;
+
+        return chunk.flush_to(cur);
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {

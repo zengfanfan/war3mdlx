@@ -110,6 +110,7 @@ impl FaceType {
             _err => Self::Error(-1),
         )
     }
+
     fn to(&self) -> i32 {
         match self {
             Self::Points => 0,
@@ -392,10 +393,10 @@ impl GeosetAnim {
         if self.flags.contains(GeosetAnimFlags::UseColor) {
             if let Some(anim) = &self.color_anim {
                 let bgr = anim.convert(|v| v.reverse());
-                _MdlWriteAnim!(lines, depth, "Color" => bgr);
+                MdlWriteAnim!(lines, depth, "Color" => bgr);
             } else if self.color != Vec3::ONE {
                 let bgr = self.color.reverse();
-                _MdlWriteAnimStatic!(lines, depth, "Color" => bgr);
+                MdlWriteAnimStatic!(lines, depth, "Color" => bgr);
             }
         }
 

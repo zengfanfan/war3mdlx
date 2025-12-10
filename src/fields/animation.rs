@@ -1,7 +1,7 @@
 use crate::*;
 
-pub trait TAnimation: ReadFromCursor + FromMdlValue + std::fmt::Debug + Default + Formatter {}
-impl<T> TAnimation for T where T: ReadFromCursor + FromMdlValue + std::fmt::Debug + Default + Formatter {}
+pub trait TAnimation: ReadFromCursor + WriteToCursor + FromMdlValue + std::fmt::Debug + Default + Formatter {}
+impl<T> TAnimation for T where T: ReadFromCursor + WriteToCursor + FromMdlValue + std::fmt::Debug + Default + Formatter {}
 
 #[derive(Dbg, Default)]
 pub struct KeyFrame<T: TAnimation> {
@@ -46,6 +46,32 @@ impl<T: TAnimation> Animation<T> {
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdx(&self, chunk: &mut MdxChunk, id: &u32) -> Result<(), MyError> {
+        chunk.write_be(id)?;
+        chunk.write(&self.key_frames.len())?;
+        chunk.write(&self.interp_type.to())?;
+        chunk.write(&self.global_seq_id)?;
+        for kf in &self.key_frames {
+            chunk.write(&kf.frame)?;
+            chunk.write(&kf.value)?;
+            if kf.has_tans {
+                chunk.write(&kf.itan)?;
+                chunk.write(&kf.otan)?;
+            }
+        }
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz = 16; // id + kfn + interp_type + global_seq_id
+        for kf in &self.key_frames {
+            sz += 4 + T::size(); // frame + value
+            if kf.has_tans {
+                sz += T::size() * 2; // intan + outan
+            }
+        }
+        return sz;
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
@@ -103,7 +129,7 @@ impl<T: TAnimation> Animation<T> {
 }
 
 #[macro_export]
-macro_rules! _MdlWriteAnim {
+macro_rules! MdlWriteAnim {
     ($lines:ident, $depth:expr, $( $name:expr => $avar:expr ),+ $(,)?) => {
         $(
             let indent = indent!(&$depth);
@@ -114,16 +140,16 @@ macro_rules! _MdlWriteAnim {
     };
 }
 #[macro_export]
-macro_rules! MdlWriteAnim {
+macro_rules! MdlWriteAnimIfSome {
     ($lines:ident, $depth:expr, $( $name:expr => $avar:expr ),+ $(,)?) => {
         $(if let Some(item) = &$avar {
-            _MdlWriteAnim!($lines, $depth, $name => item);
+            MdlWriteAnim!($lines, $depth, $name => item);
         })+
     };
 }
 
 #[macro_export]
-macro_rules! _MdlWriteAnimStatic {
+macro_rules! MdlWriteAnimStatic {
     ($lines:ident, $depth:expr, $( $name:expr => $svar:expr ),+ $(,)?) => {
         $(
             let indent = indent!($depth);
@@ -132,10 +158,10 @@ macro_rules! _MdlWriteAnimStatic {
     };
 }
 #[macro_export]
-macro_rules! MdlWriteAnimStatic {
+macro_rules! MdlWriteAnimStaticIfNone {
     ($lines:ident, $depth:expr, $( $name:expr => $avar:expr => $def:expr => $svar:expr ),+ $(,)?) => {
         $(if let None = &$avar && $svar != $def {
-            _MdlWriteAnimStatic!($lines, $depth, $name => $svar);
+            MdlWriteAnimStatic!($lines, $depth, $name => $svar);
         })+
     };
 }
@@ -143,15 +169,25 @@ macro_rules! MdlWriteAnimStatic {
 macro_rules! MdlWriteAnimBoth {
     ($lines:ident, $depth:expr, $( $name:expr => $avar:expr => $def:expr => $svar:expr ),+ $(,)?) => {
         $(if let Some(item) = &$avar {
-            _MdlWriteAnim!($lines, $depth, $name => item);
+            MdlWriteAnim!($lines, $depth, $name => item);
         } else if $svar != $def {
-            _MdlWriteAnimStatic!($lines, $depth, $name => $svar);
+            MdlWriteAnimStatic!($lines, $depth, $name => $svar);
         })+
+    };
+}
+
+#[macro_export]
+macro_rules! MdxWriteAnim {
+    ($chunk:ident, $( $id:expr => $avar:expr ),+ $(,)?) => {
+        $(
+            $avar.write_mdx($chunk, &$id)?;
+        )+
     };
 }
 
 //#region InterpolationType
 
+#[repr(i32)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum InterpolationType {
     #[default]
@@ -161,6 +197,7 @@ pub enum InterpolationType {
     Bezier,
     Error(i32),
 }
+
 impl InterpolationType {
     fn from(v: i32) -> Self {
         match v {
@@ -171,6 +208,7 @@ impl InterpolationType {
             x => Self::Error(x),
         }
     }
+
     fn from_str(s: &str, def: Self) -> Self {
         match_istr!(s,
             "DontInterp" => Self::DontInterp,
@@ -180,6 +218,17 @@ impl InterpolationType {
             _err => def,
         )
     }
+
+    fn to(&self) -> i32 {
+        match self {
+            Self::DontInterp => 0,
+            Self::Linear => 1,
+            Self::Hermite => 2,
+            Self::Bezier => 3,
+            Self::Error(x) => *x,
+        }
+    }
+
     fn has_tans(&self) -> bool {
         matches!(self, Self::Hermite | Self::Bezier)
     }
@@ -205,6 +254,30 @@ impl<T: TAnimation> Formatter for Vec<KeyFrame<T>> {
             list.push(fmtx(kf));
         }
         return F!("[\n    {}\n]", list.join("\n    "));
+    }
+}
+
+//#endregion
+//#region _ExtendSomeAnimation
+
+pub trait _ExtendSomeAnimation {
+    fn calc_mdx_size(&self) -> u32;
+    fn write_mdx(&self, chunk: &mut MdxChunk, id: &u32) -> Result<(), MyError>;
+}
+
+impl<T: TAnimation> _ExtendSomeAnimation for Option<Animation<T>> {
+    fn calc_mdx_size(&self) -> u32 {
+        match self {
+            Some(a) => a.calc_mdx_size(),
+            None => 0,
+        }
+    }
+
+    fn write_mdx(&self, chunk: &mut MdxChunk, id: &u32) -> Result<(), MyError> {
+        match self {
+            Some(a) => a.write_mdx(chunk, id),
+            None => Ok(()),
+        }
     }
 }
 

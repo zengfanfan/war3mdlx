@@ -57,6 +57,17 @@ macro_rules! MdxWriteType1 {
         )+
     };
 }
+macro_rules! MdxWriteType2 {
+    ($cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
+        $(if !$var.is_empty() {
+            let mut chunk = MdxChunk::new(<$ty>::ID);
+            for a in $var.iter() {
+                a.write_mdx(&mut chunk).or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
+            }
+            chunk.flush_to(&mut $cur)?;
+        })+
+    };
+}
 
 impl MdlxData {
     pub fn write_mdx(&self, path: &Path) -> Result<(), MyError> /* [todo] */ {
@@ -69,6 +80,16 @@ impl MdlxData {
         MdxWriteType1!(cur,
             Version         => self.version,
             Model           => self.model,
+        );
+        MdxWriteType2!(cur,
+            Sequence        => self.sequences,
+            GlobalSequence  => self.globalseqs,
+            Texture         => self.textures,
+            Bone            => self.bones,
+            // Helper          => self.helpers,
+            // EventObject     => self.eventobjs,
+            // CollisionShape  => self.collisions,
+            // PivotPoint      => self.pivot_points,
         );
 
         if let Some(parent) = path.parent() {
