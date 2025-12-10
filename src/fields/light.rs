@@ -42,9 +42,8 @@ impl Light {
     const ID_AI: u32 = MdlxMagic::KLBI as u32; /* Ambient intensity */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build! { base: Node::read_mdx(cur)? };
 
-        this.base = Node::read_mdx(cur)?;
         this.typ = LightType::from(cur.readx()?);
         if let LightType::Error(v) = this.typ {
             return ERR!("Unknown light type: {}", v);
@@ -74,13 +73,9 @@ impl Light {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build! { color:Vec3::ONE, intensity:1.0, ambient_color:Vec3::ONE, ambient_intensity:1.0 };
         this.base = Node::read_mdl(block)?;
         this.base.flags.insert(NodeFlags::Light);
-        this.color = Vec3::ONE;
-        this.intensity = 1.0;
-        this.ambient_intensity = 1.0;
-        this.ambient_color = Vec3::ONE;
 
         for f in &block.fields {
             match_istr!(f.name.as_str(),

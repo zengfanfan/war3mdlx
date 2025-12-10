@@ -132,7 +132,7 @@ impl Geoset {
     pub const ID: u32 = MdlxMagic::GEOS;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
 
         let mut uvsn = 0_usize;
         while cur.left() >= 16 {
@@ -178,9 +178,7 @@ impl Geoset {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.material_id = -1;
-        this.sel_group = -1;
+        let mut this = Build! { material_id:-1, sel_group:-1 };
         this.extent = BoundExtent::read_mdl(&block)?;
         for f in &block.fields {
             match_istr!(f.name.as_str(),
@@ -327,7 +325,7 @@ impl GeosetAnim {
     const ID_COLOR: u32 = MdlxMagic::KGAC as u32;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
 
         this.alpha = cur.readx()?;
         this.flags = GeosetAnimFlags::from_bits_retain(cur.readx()?);
@@ -346,10 +344,7 @@ impl GeosetAnim {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.alpha = 1.0;
-        this.color = Vec3::ONE;
-        this.geoset_id = -1;
+        let mut this = Build! { alpha:1.0, color:Vec3::ONE, geoset_id:-1 };
 
         for f in &block.fields {
             match_istr!(f.name.as_str(),
@@ -378,7 +373,6 @@ impl GeosetAnim {
 
         this.color = this.color.reverse();
         this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
-
         return Ok(this);
     }
 

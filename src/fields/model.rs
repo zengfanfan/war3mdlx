@@ -28,22 +28,18 @@ impl Model {
         })
     }
 
-    pub fn write_mdx(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
-        let mut chunk = MdxChunk::new(Self::ID);
-
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
         chunk.write_string(&self.name, Self::NAME_SIZE)?;
         chunk.write(&self._unknown)?;
         chunk.write(&self.bounds_radius)?;
         chunk.write(&self.min_extent)?;
         chunk.write(&self.max_extent)?;
         chunk.write(&self.blend_time)?;
-
-        return chunk.flush_to(cur);
+        return Ok(());
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.name = block.name.clone();
+        let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "BoundsRadius" => this.bounds_radius = f.value.to(),

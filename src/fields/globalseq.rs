@@ -9,9 +9,7 @@ impl GlobalSequence {
     pub const ID: u32 = MdlxMagic::GLBS as u32;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.duration = cur.readx()?;
-        return Ok(this);
+        Ok(Build! { duration: cur.readx()? })
     }
 
     pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {

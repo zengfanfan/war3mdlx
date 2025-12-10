@@ -42,9 +42,8 @@ impl ParticleEmitter {
     const PATH_SIZE: u32 = 256;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!{ base: Node::read_mdx(cur)? };
 
-        this.base = Node::read_mdx(cur)?;
         this.emit_rate = cur.readx()?;
         this.gravity = cur.readx()?;
         this.longitude = cur.readx()?;
@@ -71,8 +70,7 @@ impl ParticleEmitter {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.base = Node::read_mdl(block)?;
+        let mut this = Build!{ base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::ParticleEmitter);
         for f in &block.fields {
             match_istr!(f.name.as_str(),

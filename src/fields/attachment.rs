@@ -21,12 +21,12 @@ impl Attachment {
     const PATH_SIZE: u32 = 256;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
-
-        this.base = Node::read_mdx(cur)?;
-        this.path = cur.read_string(Self::PATH_SIZE)?;
-        this._unknown = cur.readx()?;
-        this.attachment_id = Some(cur.readx()?);
+        let mut this = Build! {
+            base: Node::read_mdx(cur)?,
+            path: cur.read_string(Self::PATH_SIZE)?,
+            _unknown: cur.readx()?,
+            attachment_id: Some(cur.readx()?),
+        };
 
         while cur.left() >= 16 {
             match cur.read_be()? {
@@ -39,8 +39,7 @@ impl Attachment {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.base = Node::read_mdl(block)?;
+        let mut this = Build!{ base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::Attachment);
         for f in &block.fields {
             match_istr!(f.name.as_str(),

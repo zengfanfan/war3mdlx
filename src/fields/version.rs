@@ -13,14 +13,12 @@ impl Version {
         Ok(Self { format_version: cur.readx()? })
     }
 
-    pub fn write_mdx(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
-        let mut chunk = MdxChunk::new(Self::ID);
-        chunk.write(&self.format_version)?;
-        return chunk.flush_to(cur);
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.format_version)
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
         for f in &block.fields {
             if f.name.eq_icase("FormatVersion") {
                 this.format_version = f.value.to();

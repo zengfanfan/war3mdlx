@@ -23,7 +23,7 @@ impl Node {
     const ID_S: u32 = MdlxMagic::KGSC as u32; /* Scaling */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
 
         let sz = cur.readx::<u32>()?;
         yes!(sz < 4, EXIT1!("{} node size: {} (need >= 4)", TNAME!(), sz));
@@ -70,10 +70,7 @@ impl Node {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.name = block.name.clone();
-        this.object_id = -1;
-        this.parent_id = -1;
+        let mut this = Build! { name: block.name.clone(), object_id:-1, parent_id:-1 };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "ObjectId" => this.object_id = f.value.to(),

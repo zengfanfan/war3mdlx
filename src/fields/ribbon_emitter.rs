@@ -42,9 +42,8 @@ impl RibbonEmitter {
     const ID_TS: u32 = MdlxMagic::KRTX as u32; /* TextureSlot */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build! { base: Node::read_mdx(cur)? };
 
-        this.base = Node::read_mdx(cur)?;
         this.height_above = cur.readx()?;
         this.height_below = cur.readx()?;
         this.alpha = cur.readx()?;
@@ -73,14 +72,9 @@ impl RibbonEmitter {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build! { alpha:1.0, color:Vec3::ONE, material_id:-1 };
         this.base = Node::read_mdl(block)?;
         this.base.flags.insert(NodeFlags::RibbonEmitter);
-
-        this.alpha = 1.0;
-        this.color = Vec3::ONE;
-        this.material_id = -1;
-
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "HeightAbove" => this.height_above = f.value.to(),
@@ -96,7 +90,6 @@ impl RibbonEmitter {
                 _other => (),
             );
         }
-
         for b in &block.blocks {
             match_istr!(b.typ.as_str(),
                 "HeightAbove" => this.height_above_anim = Some(Animation::read_mdl(b)?),
@@ -108,10 +101,8 @@ impl RibbonEmitter {
                 _other => (),
             );
         }
-
         this.color = this.color.reverse();
         this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
-
         return Ok(this);
     }
 

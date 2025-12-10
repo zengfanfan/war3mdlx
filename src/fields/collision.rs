@@ -13,11 +13,8 @@ impl CollisionShape {
     pub const ID: u32 = MdlxMagic::CLID as u32;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
-
-        this.base = Node::read_mdx(cur)?;
+        let mut this = Build! { base: Node::read_mdx(cur)? };
         this.shape = CollisionType::from(cur.readx()?);
-
         match this.shape {
             CollisionType::Box => this.vertices = cur.read_array(2)?,
             CollisionType::Plane => this.vertices = cur.read_array(1)?,
@@ -31,13 +28,11 @@ impl CollisionShape {
             },
             CollisionType::Error(v) => return ERR!("Unknown collision type: {}", v),
         }
-
         return Ok(this);
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.base = Node::read_mdl(block)?;
+        let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::CollisionShape);
         for f in &block.fields {
             match_istr!(f.name.as_str(),

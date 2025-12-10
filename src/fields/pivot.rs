@@ -10,9 +10,7 @@ impl PivotPoint {
     pub const ID: u32 = MdlxMagic::PIVT as u32;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.position = cur.readx()?;
-        return Ok(this);
+        Ok(Self { position: cur.readx()? })
     }
 
     pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {

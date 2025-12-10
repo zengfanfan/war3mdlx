@@ -51,9 +51,7 @@ impl Sequence {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.name = block.name.clone();
-        this.looping = true;
+        let mut this = Build! { name: block.name.clone(), looping:true };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "MoveSpeed" => this.move_speed = f.value.to(),

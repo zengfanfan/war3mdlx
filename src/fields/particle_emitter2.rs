@@ -68,9 +68,7 @@ impl ParticleEmitter2 {
     const ID_G: u32 = MdlxMagic::KP2G as u32; /* Gravity */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
-
-        this.base = Node::read_mdx(cur)?;
+        let mut this = Build!{ base: Node::read_mdx(cur)? };
 
         this.speed = cur.readx()?;
         this.variation = cur.readx()?;
@@ -127,8 +125,7 @@ impl ParticleEmitter2 {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.base = Node::read_mdl(block)?;
+        let mut this = Build!{ base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::ParticleEmitter);
 
         this.segment_alpha = vec![255; 3];

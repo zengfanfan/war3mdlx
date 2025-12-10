@@ -10,23 +10,26 @@ impl EventObject {
     pub const ID: u32 = MdlxMagic::EVTS as u32;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
-
-        this.base = Node::read_mdx(cur)?;
+        let mut this = Build! { base: Node::read_mdx(cur)? };
         if cur.left() >= 8 {
             match cur.read_be()? {
                 EventTrack::ID => this.track = EventTrack::read_mdx(cur)?,
                 id => return ERR!("Unknown chunk in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
-
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        self.base.write_mdx(chunk)?;
+        self.track.write_mdx(chunk)?;
+        return Ok(());
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.base = Node::read_mdl(block)?;
+        let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::EventObject);
+        this.track._unknown = -1; // in case there is no track
         for b in &block.blocks {
             match_istr!(b.typ.as_str(),
                 "EventTrack" => this.track = EventTrack::read_mdl(b)?,
@@ -46,7 +49,7 @@ impl EventObject {
 
 #[derive(Dbg, Default)]
 pub struct EventTrack {
-    #[dbg(skip)]
+    // #[dbg(skip)]
     pub _unknown: i32,
     pub frames: Vec<i32>,
 }
@@ -55,7 +58,7 @@ impl EventTrack {
     pub const ID: u32 = MdlxMagic::KEVT as u32;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
 
         let n = cur.readx::<u32>()?;
         this._unknown = cur.readx()?;
@@ -66,8 +69,16 @@ impl EventTrack {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write_be(&Self::ID)?;
+        chunk.write(&self.frames.len())?;
+        chunk.write(&self._unknown)?;
+        chunk.write(&self.frames)?;
+        return Ok(());
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build! { _unknown: -1 };
         for f in &block.fields {
             if let MdlValue::Integer(i) = f.value {
                 this.frames.push(i);

@@ -27,14 +27,14 @@ impl Camera {
     const NAME_SIZE: u32 = 80;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
-
-        this.name = cur.read_string(Self::NAME_SIZE)?;
-        this.position = cur.readx()?;
-        this.field_of_view = cur.readx()?;
-        this.far_clip = cur.readx()?;
-        this.near_clip = cur.readx()?;
-        this.target = cur.readx()?;
+        let mut this = Build! {
+            name: cur.read_string(Self::NAME_SIZE)?,
+            position: cur.readx()?,
+            field_of_view: cur.readx()?,
+            far_clip: cur.readx()?,
+            near_clip: cur.readx()?,
+            target: cur.readx()?,
+        };
 
         while cur.left() >= 16 {
             match cur.read_be()? {
@@ -49,8 +49,7 @@ impl Camera {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.name = block.name.clone();
+        let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "Position" => this.position = f.value.to(),

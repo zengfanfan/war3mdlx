@@ -46,3 +46,28 @@ macro_rules! match_istr {
 }
 
 //#endregion
+//#region build default struct
+
+#[macro_export]
+macro_rules! Build {
+    (Self $(, $field:ident : $value:expr )* $(,)?) => {
+        Self {
+            $($field: $value,)*
+            ..Default::default()
+        }
+    };
+    ( $($field:ident : $value:expr),* $(,)? ) => { // omit Self
+        Self {
+            $( $field: $value, )*
+            ..Default::default()
+        }
+    };
+    ($ty:path $(, $field:ident : $value:expr )* $(,)?) => {
+        $ty {
+            $($field: $value,)*
+            ..Default::default()
+        }
+    };
+}
+
+//#endregion

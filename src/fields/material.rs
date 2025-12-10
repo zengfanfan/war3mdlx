@@ -48,11 +48,8 @@ impl Material {
     pub const ID: u32 = MdlxMagic::MTLS as u32;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Self::default();
-
-        this.priority_plane = cur.readx()?;
+        let mut this = Build! { priority_plane: cur.readx()? };
         this.flags = MaterialFlags::from_bits_retain(cur.readx()?);
-
         if cur.left() > 8 && cur.read_be::<u32>()? == Layer::ID {
             let count: i32 = cur.readx()?;
             for _ in 0..count {
@@ -63,12 +60,11 @@ impl Material {
                 this.layers.push(Layer::read_mdx(&mut cur2)?);
             }
         }
-
         return Ok(this);
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
+        let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "PriorityPlane" => this.priority_plane = f.value.to(),
@@ -138,10 +134,7 @@ impl Layer {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.texture_id = -1;
-        this.texture_anim_id = -1;
-        this.alpha = 1.0;
+        let mut this = Build! { texture_id:-1, texture_anim_id:-1, alpha:1.0 };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "FilterMode" => this.filter_mode = FilterMode::from_str(f.value.as_str()),

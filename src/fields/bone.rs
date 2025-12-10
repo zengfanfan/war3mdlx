@@ -22,11 +22,9 @@ impl Bone {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Self::default();
-        this.base = Node::read_mdl(block)?;
+        let mut this = Build! { base: Node::read_mdl(block)? , geoset_id:-1, geoanim_id:-1};
         this.base.flags.insert(NodeFlags::Bone);
-        this.geoset_id = -1;
-        this.geoanim_id = -1;
+
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "GeosetId" => this.geoset_id = f.value.to(),

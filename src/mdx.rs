@@ -52,8 +52,10 @@ macro_rules! MdxReadType3 {
 macro_rules! MdxWriteType1 {
     ($cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(
-            $var.write_mdx(&mut $cur)
+            let mut chunk = MdxChunk::new(<$ty>::ID);
+            $var.write_mdx(&mut chunk)
             .or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
+            chunk.flush_to(&mut $cur)?;
         )+
     };
 }
@@ -87,7 +89,7 @@ impl MdlxData {
             Texture         => self.textures,
             Bone            => self.bones,
             Helper          => self.helpers,
-            // EventObject     => self.eventobjs,
+            EventObject     => self.eventobjs,
             // CollisionShape  => self.collisions,
             PivotPoint      => self.pivot_points,
         );
