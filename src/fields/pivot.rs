@@ -15,6 +15,10 @@ impl PivotPoint {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.position)
+    }
+
     pub fn read_mdl(field: &MdlField) -> Result<Self, MyError> {
         Ok(Self { position: field.value.to() })
     }

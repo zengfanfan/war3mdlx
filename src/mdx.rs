@@ -86,10 +86,10 @@ impl MdlxData {
             GlobalSequence  => self.globalseqs,
             Texture         => self.textures,
             Bone            => self.bones,
-            // Helper          => self.helpers,
+            Helper          => self.helpers,
             // EventObject     => self.eventobjs,
             // CollisionShape  => self.collisions,
-            // PivotPoint      => self.pivot_points,
+            PivotPoint      => self.pivot_points,
         );
 
         if let Some(parent) = path.parent() {

@@ -12,6 +12,10 @@ impl Helper {
         Ok(Self { base: Node::read_mdx(cur)? })
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        self.base.write_mdx(chunk)
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut base: Node = Node::read_mdl(block)?;
         base.flags.insert(NodeFlags::Helper);
