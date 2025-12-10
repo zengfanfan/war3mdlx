@@ -44,17 +44,6 @@ impl MdxChunk {
         return Ok(());
     }
 
-    pub fn write_if<T: WriteToCursor>(&mut self, cond: bool, v: &T) -> Result<(), MyError> {
-        if cond { self.write(v) } else { Ok(()) }
-    }
-
-    pub fn write_bytes<T: WriteToCursor>(&mut self, v: &Vec<u8>) -> Result<(), MyError> {
-        if let Some(cur) = &mut self.cursor {
-            cur.write_all(v.as_slice())?;
-        }
-        return Ok(());
-    }
-
     pub fn write_string(&mut self, s: &str, n: u32) -> Result<(), MyError> {
         if let Some(cur) = &mut self.cursor {
             cur.write_string(s, n)?;

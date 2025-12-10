@@ -61,8 +61,7 @@ impl Node {
         return Ok(());
     }
     pub fn calc_mdx_size(&self) -> u32 {
-        let mut sz: u32 = 4;
-        sz += Self::NAME_SIZE + 12; // sz + name + object_id + parent_id + flags
+        let mut sz: u32 = Self::NAME_SIZE + 16; // sz + name + object_id + parent_id + flags
         sz += self.translation.calc_mdx_size();
         sz += self.rotation.calc_mdx_size();
         sz += self.scaling.calc_mdx_size();
@@ -70,7 +69,7 @@ impl Node {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { name: block.name.clone(), object_id:-1, parent_id:-1 };
+        let mut this = Build! { name: block.name.clone(), parent_id:-1 };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "ObjectId" => this.object_id = f.value.to(),

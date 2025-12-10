@@ -1,7 +1,13 @@
 Version {
     FormatVersion 800,
 }
-TextureAnims 1 {
+TextureAnims 2 {
+    TVertexAnim {
+        Scaling 1 {
+            DontInterp,
+            0: { 1, 1, 1 },
+        }
+    }
     TVertexAnim {
         Translation 3 {
             DontInterp,

@@ -94,6 +94,23 @@ impl TextureAnim {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        MdxWriteAnim!(chunk,
+            Self::ID_T => self.translation,
+            Self::ID_R => self.rotation,
+            Self::ID_S => self.scaling,
+        );
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 4;
+        sz += self.translation.calc_mdx_size();
+        sz += self.rotation.calc_mdx_size();
+        sz += self.scaling.calc_mdx_size();
+        return sz;
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build!();
         for f in &block.blocks {

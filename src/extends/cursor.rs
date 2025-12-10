@@ -47,7 +47,6 @@ pub trait _ExtendCursorRead {
     fn readx<T: ReadFromCursor>(&mut self) -> Result<T, MyError>;
     fn read_le<T: ReadFromCursor>(&mut self) -> Result<T, MyError>;
     fn read_be<T: ReadFromCursor>(&mut self) -> Result<T, MyError>;
-    fn read_if<T: ReadFromCursor>(&mut self, cond: bool, def: T) -> Result<T, MyError>;
     fn read_bytes(&mut self, n: u32) -> Result<Vec<u8>, MyError>;
     fn read_array<T: ReadFromCursor>(&mut self, n: u32) -> Result<Vec<T>, MyError>;
     fn read_array_be<T: ReadFromCursor>(&mut self, n: u32) -> Result<Vec<T>, MyError>;
@@ -62,10 +61,6 @@ impl _ExtendCursorRead for Cursor<&Vec<u8>> {
     }
     fn read_be<T: ReadFromCursor>(&mut self) -> Result<T, MyError> {
         T::read_from_be(self)
-    }
-
-    fn read_if<T: ReadFromCursor>(&mut self, cond: bool, def: T) -> Result<T, MyError> {
-        if cond { Ok(self.readx()?) } else { Ok(def) }
     }
 
     fn read_bytes(&mut self, n: u32) -> Result<Vec<u8>, MyError> {
@@ -101,8 +96,6 @@ pub trait _ExtendCursorWrite {
     fn writex<T: WriteToCursor>(&mut self, v: &T) -> Result<(), MyError>;
     fn write_le<T: WriteToCursor>(&mut self, v: &T) -> Result<(), MyError>;
     fn write_be<T: WriteToCursor>(&mut self, v: &T) -> Result<(), MyError>;
-    fn write_if<T: WriteToCursor>(&mut self, cond: bool, v: &T) -> Result<(), MyError>;
-    fn write_bytes(&mut self, v: &Vec<u8>) -> Result<(), MyError>;
     fn write_string(&mut self, s: &str, n: u32) -> Result<(), MyError>;
 }
 impl _ExtendCursorWrite for Cursor<Vec<u8>> {
@@ -114,14 +107,6 @@ impl _ExtendCursorWrite for Cursor<Vec<u8>> {
     }
     fn write_be<T: WriteToCursor>(&mut self, v: &T) -> Result<(), MyError> {
         v.write_to_be(self)
-    }
-
-    fn write_if<T: WriteToCursor>(&mut self, cond: bool, v: &T) -> Result<(), MyError> {
-        if cond { self.writex(v) } else { Ok(()) }
-    }
-
-    fn write_bytes(&mut self, v: &Vec<u8>) -> Result<(), MyError> {
-        Ok(self.write_all(v.as_slice())?)
     }
 
     fn write_string(&mut self, s: &str, n: u32) -> Result<(), MyError> {

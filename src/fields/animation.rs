@@ -39,8 +39,8 @@ impl<T: TAnimation> Animation<T> {
             this.key_frames.push(KeyFrame {
                 frame: cur.readx()?,
                 value: cur.readx()?,
-                itan: cur.read_if(has_tans, T::default())?,
-                otan: cur.read_if(has_tans, T::default())?,
+                itan: yesno!(has_tans, cur.readx()?, T::default()),
+                otan: yesno!(has_tans, cur.readx()?, T::default()),
                 has_tans,
             });
         }

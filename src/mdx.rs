@@ -70,6 +70,17 @@ macro_rules! MdxWriteType2 {
         })+
     };
 }
+macro_rules! MdxWriteType3 {
+    ($cur:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
+        $(if !$var.is_empty() {
+            let mut chunk = MdxChunk::new(<$ty>::ID);
+            for a in $var.iter() {
+                a.write_mdx(&mut chunk).or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?;
+            }
+            chunk.flush_to(&mut $cur)?;
+        })+
+    };
+}
 
 impl MdlxData {
     pub fn write_mdx(&self, path: &Path) -> Result<(), MyError> /* [todo] */ {
@@ -92,6 +103,16 @@ impl MdlxData {
             EventObject     => self.eventobjs,
             CollisionShape  => self.collisions,
             PivotPoint      => self.pivot_points,
+            TextureAnim     => self.texanims,
+            // Material        => self.materials,
+            // Geoset          => self.geosets,
+            // GeosetAnim      => self.geoanims,
+            Attachment      => self.attachments,
+            // Light           => self.lights,
+            // ParticleEmitter => self.particle_emitters,
+            // ParticleEmitter2=> self.particle_emitters2,
+            // RibbonEmitter   => self.ribbon_emitters,
+            // Camera          => self.cameras,
         );
 
         if let Some(parent) = path.parent() {

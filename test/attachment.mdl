@@ -1,6 +1,8 @@
 Version {
     FormatVersion 800,
 }
+Attachment "" {
+}
 Attachment "values" {
     ObjectId 1,
     Parent 0,
