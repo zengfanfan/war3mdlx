@@ -206,16 +206,17 @@ impl Geoset {
         }
 
         let (nnorm, nvert) = (this.normals.len(), this.vertices.len());
-        yes!(nnorm != nvert, log!("OMG! {} #[normals] {} != {} #[vertices] ?", TNAME!(), nnorm, nvert));
+        yes!(nnorm != nvert, elog!("OMG! {} #[normals] {} != {} #[vertices] ?", TNAME!(), nnorm, nvert));
 
-        yes!(uvsn != this.uvss.len(), log!("OMG! {} [number for UVs] {uvsn} != {} ?", TNAME!(), this.uvss.len()));
+        yes!(uvsn != this.uvss.len(), elog!("OMG! {} [number for UVs] {uvsn} != {} ?", TNAME!(), this.uvss.len()));
+
         let n = this.face_vtxcnts.len();
-        yes!(n > 1, log!("OMG! {} #[face_vtxcnts] {n} > 1 ?", TNAME!()));
+        yes!(n > 1, elog!("OMG! {} #[face_vtxcnts] {n} > 1 ?", TNAME!()));
 
         let n = this.face_types.len();
-        yes!(n > 1, log!("OMG! {} #[face_types] {n} > 1 ?", TNAME!()));
+        yes!(n > 1, elog!("OMG! {} #[face_types] {n} > 1 ?", TNAME!()));
         if this.face_types.iter().any(|&x| x != FaceType::Triangles) {
-            log!("OMG! face type other than triangle({}): {:?}", FaceType::Triangles.to(), this.face_types);
+            elog!("OMG! face type other than triangle({}): {:?}", FaceType::Triangles.to(), this.face_types);
         }
 
         return Ok(this);
@@ -309,11 +310,11 @@ impl Geoset {
     fn read_mdl_face(&mut self, block: &MdlBlock) {
         let t = FaceType::from_str(block.typ.as_str());
         if let FaceType::Error(_) = t {
-            log!("OMG! unknown face type: {}", block.typ);
+            elog!("OMG! unknown face type: {}", block.typ);
             return;
         }
 
-        no!(t == FaceType::Triangles, log!("OMG! unexpected face type: {:?} ({})", t, block.typ));
+        no!(t == FaceType::Triangles, elog!("OMG! unexpected face type: {:?} ({})", t, block.typ));
         for f in &block.fields {
             no!(f.name == "", continue);
             if let MdlValue::IntegerArray(iv) = &f.value {
@@ -326,7 +327,7 @@ impl Geoset {
     }
     fn read_mdl_matrices(&mut self, field: &MdlField) {
         if !field.name.eq_icase("Matrices") {
-            log!("OMG! unknown group type: {} (expected 'Matrices')", field.name);
+            elog!("OMG! unknown group type: {} (expected 'Matrices')", field.name);
             return;
         }
         if let MdlValue::IntegerArray(iv) = &field.value {

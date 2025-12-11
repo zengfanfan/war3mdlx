@@ -5,11 +5,11 @@ macro_rules! F {
     () => {{
         String::new()
     }};
+    ($var:ident) => {{
+        $var.to_string()
+    }};
     ($($arg:tt)*) => {{
         format!($($arg)*)
-    }};
-    ($var:expr) => {{
-        $var.to_string()
     }};
 }
 
