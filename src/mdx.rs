@@ -99,7 +99,7 @@ impl MdlxData {
             Attachment      => self.attachments,
             Light           => self.lights,
             ParticleEmitter => self.particle_emitters,
-            // ParticleEmitter2=> self.particle_emitters2,
+            ParticleEmitter2=> self.particle_emitters2,
             // RibbonEmitter   => self.ribbon_emitters,
             Camera          => self.cameras,
         );

@@ -83,13 +83,13 @@ impl ParticleEmitter {
         chunk.write(&self.speed)?;
 
         MdxWriteAnim!(chunk,
-            Self::ID_ER  => self.emit_rate_anim,
-            Self::ID_G   => self.gravity_anim,
-            Self::ID_LO  => self.longitude_anim,
-            Self::ID_LA  => self.latitude_anim,
-            Self::ID_LS  => self.lifespan_anim,
-            Self::ID_SPD => self.speed_anim,
-            Self::ID_V   => self.visibility,
+            Self::ID_ER => self.emit_rate_anim,
+            Self::ID_G  => self.gravity_anim,
+            Self::ID_LO => self.longitude_anim,
+            Self::ID_LA => self.latitude_anim,
+            Self::ID_LS => self.lifespan_anim,
+            Self::ID_SPD=> self.speed_anim,
+            Self::ID_V  => self.visibility,
         );
         return Ok(());
     }

@@ -58,7 +58,6 @@ pub struct ParticleEmitter2 {
 
 impl ParticleEmitter2 {
     pub const ID: u32 = MdlxMagic::PRE2 as u32;
-    const ID_V: u32 = MdlxMagic::KP2V as u32; /* Visibility */
     const ID_ER: u32 = MdlxMagic::KP2E as u32; /* Emission Rate */
     const ID_W: u32 = MdlxMagic::KP2W as u32; /* Width */
     const ID_L: u32 = MdlxMagic::KP2N as u32; /* Length */
@@ -66,9 +65,10 @@ impl ParticleEmitter2 {
     const ID_LA: u32 = MdlxMagic::KP2L as u32; /* Latitude */
     const ID_VA: u32 = MdlxMagic::KP2R as u32; /* Variation */
     const ID_G: u32 = MdlxMagic::KP2G as u32; /* Gravity */
+    const ID_V: u32 = MdlxMagic::KP2V as u32; /* Visibility */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Build!{ base: Node::read_mdx(cur)? };
+        let mut this = Build! { base: Node::read_mdx(cur)? };
 
         this.speed = cur.readx()?;
         this.variation = cur.readx()?;
@@ -109,14 +109,14 @@ impl ParticleEmitter2 {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
-                Self::ID_ER => this.emit_rate_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_W => this.width_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_L => this.length_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_SPD => this.speed_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_LA => this.latitude_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_VA => this.variation_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_LA => this.latitude_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_G => this.gravity_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_ER => this.emit_rate_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_L => this.length_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_W => this.width_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
@@ -124,13 +124,75 @@ impl ParticleEmitter2 {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        self.base.write_mdx(chunk)?;
+
+        chunk.write(&self.speed)?;
+        chunk.write(&self.variation)?;
+        chunk.write(&self.latitude)?;
+        chunk.write(&self.gravity)?;
+        chunk.write(&self.lifespan)?;
+        chunk.write(&self.emit_rate)?;
+        chunk.write(&self.length)?;
+        chunk.write(&self.width)?;
+
+        chunk.write(&self.filter_mode.to())?;
+        chunk.write(&self.rows)?;
+        chunk.write(&self.columns)?;
+        chunk.write(&self.head_or_tail.to())?;
+
+        chunk.write(&self.tail_length)?;
+        chunk.write(&self.time)?;
+
+        chunk.write(&self.segment_color)?;
+        chunk.write(&self.segment_alpha)?;
+        chunk.write(&self.segment_scaling)?;
+
+        self.head_life.write_mdx(chunk)?;
+        self.head_decay.write_mdx(chunk)?;
+        self.tail_life.write_mdx(chunk)?;
+        self.tail_decay.write_mdx(chunk)?;
+
+        chunk.write(&self.texture_id)?;
+        chunk.write(&yesno!(self.squirt, 1, 0))?;
+        chunk.write(&self.priority_plane)?;
+        chunk.write(&self.replace_id)?;
+
+        MdxWriteAnim!(chunk,
+            Self::ID_SPD=> self.speed_anim,
+            Self::ID_VA => self.variation_anim,
+            Self::ID_LA => self.latitude_anim,
+            Self::ID_G  => self.gravity_anim,
+            Self::ID_ER => self.emit_rate_anim,
+            Self::ID_L  => self.length_anim,
+            Self::ID_W  => self.width_anim,
+            Self::ID_V  => self.visibility,
+        );
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 36; // sz + spd + va + la + g + lifespan + er + len + width
+        sz += 24; // filter_mode + row + cols + head_or_tail + tail_len + time
+        sz += 51; // seg_color(36) + seg_alpha(3) + seg_scale(12)
+        sz += PE2UVAnim::size() * 4;
+        sz += 16; // texture_id + squirt + priority_plane + replace_id
+        sz += self.base.calc_mdx_size();
+        sz += self.emit_rate_anim.calc_mdx_size();
+        sz += self.width_anim.calc_mdx_size();
+        sz += self.length_anim.calc_mdx_size();
+        sz += self.speed_anim.calc_mdx_size();
+        sz += self.latitude_anim.calc_mdx_size();
+        sz += self.variation_anim.calc_mdx_size();
+        sz += self.gravity_anim.calc_mdx_size();
+        sz += self.visibility.calc_mdx_size();
+        return sz;
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build!{ base: Node::read_mdl(block)? };
+        let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::ParticleEmitter);
 
-        this.segment_alpha = vec![255; 3];
-        this.segment_scaling = vec![1.0; 3];
-        this.segment_color = vec![Vec3::ONE; 3];
         let (mut head, mut tail) = (false, false);
 
         for f in &block.fields {
@@ -188,6 +250,10 @@ impl ParticleEmitter2 {
                 _other => (),
             );
         }
+
+        this.segment_alpha.resize(3, 255);
+        this.segment_scaling.resize(3, 1.0);
+        this.segment_color.resize(3, Vec3::ONE);
 
         this.head_or_tail = yesno!(head && tail, HeadOrTail::Both, yesno!(tail, HeadOrTail::Tail, HeadOrTail::Head));
         this.segment_color = this.segment_color.convert(|a| a.reverse());
@@ -263,6 +329,7 @@ pub struct PE2UVAnim {
     pub end: i32,
     pub repeat: i32,
 }
+
 impl PE2UVAnim {
     pub fn read_mdl(value: &MdlValue) -> Self {
         let mut this = Self { start: 0, end: 0, repeat: 1 };
@@ -272,6 +339,16 @@ impl PE2UVAnim {
             yes!(iv.len() > 2, this.repeat = iv[2]);
         }
         return this;
+    }
+
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.start)?;
+        chunk.write(&self.end)?;
+        chunk.write(&self.repeat)?;
+        return Ok(());
+    }
+    pub fn size() -> u32 {
+        12
     }
 }
 
@@ -310,16 +387,27 @@ pub enum HeadOrTail {
     Both,
     Error(i32),
 }
+
 impl HeadOrTail {
     fn is_valid(&self) -> bool {
         matches!(self, Self::Head | Self::Tail | Self::Both)
     }
+
     fn from(v: i32) -> Self {
         match v {
             0 => Self::Head,
             1 => Self::Tail,
             2 => Self::Both,
             x => Self::Error(x),
+        }
+    }
+
+    fn to(&self) -> i32 {
+        match self {
+            Self::Head => 0,
+            Self::Tail => 1,
+            Self::Both => 2,
+            Self::Error(x) => *x,
         }
     }
 }
@@ -336,6 +424,7 @@ pub enum PE2FilterMode {
     AlphaKey,
     Error(i32),
 }
+
 impl PE2FilterMode {
     fn from(v: i32) -> Self {
         match v {
@@ -346,6 +435,7 @@ impl PE2FilterMode {
             x => Self::Error(x),
         }
     }
+
     fn from_str(s: &str, def: Self) -> Self {
         match_istr!(s,
             "Blend" => Self::Blend,
@@ -354,6 +444,16 @@ impl PE2FilterMode {
             "AlphaKey" => Self::AlphaKey,
             _err => def,
         )
+    }
+
+    fn to(&self) -> i32 {
+        match self {
+            Self::Blend => 0,
+            Self::Additive => 1,
+            Self::Modulate => 2,
+            Self::AlphaKey => 4,
+            Self::Error(v) => *v,
+        }
     }
 }
 
