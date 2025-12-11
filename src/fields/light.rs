@@ -33,13 +33,13 @@ pub struct Light {
 
 impl Light {
     pub const ID: u32 = MdlxMagic::LITE as u32;
-    const ID_V: u32 = MdlxMagic::KLAV as u32; /* Visibility */
     const ID_AS: u32 = MdlxMagic::KLAS as u32; /* Attenuate start */
     const ID_AE: u32 = MdlxMagic::KLAE as u32; /* Attenuate end */
     const ID_C: u32 = MdlxMagic::KLAC as u32; /* Color */
     const ID_I: u32 = MdlxMagic::KLAI as u32; /* Intensity */
     const ID_AC: u32 = MdlxMagic::KLBC as u32; /* Ambient color */
     const ID_AI: u32 = MdlxMagic::KLBI as u32; /* Ambient intensity */
+    const ID_V: u32 = MdlxMagic::KLAV as u32; /* Visibility */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdx(cur)? };
@@ -58,13 +58,13 @@ impl Light {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
                 Self::ID_AS => this.attenuate_start_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_AE => this.attenuate_end_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_I => this.intensity_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_AC => this.ambient_color_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_AI => this.ambient_intensity_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
@@ -72,9 +72,44 @@ impl Light {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        self.base.write_mdx(chunk)?;
+
+        chunk.write(&self.typ.to())?;
+        chunk.write(&self.attenuate_start)?;
+        chunk.write(&self.attenuate_end)?;
+        chunk.write(&self.color)?;
+        chunk.write(&self.intensity)?;
+        chunk.write(&self.ambient_color)?;
+        chunk.write(&self.ambient_intensity)?;
+
+        MdxWriteAnim!(chunk,
+            Self::ID_AS => self.attenuate_start_anim,
+            Self::ID_AE => self.attenuate_end_anim,
+            Self::ID_C  => self.color_anim,
+            Self::ID_I  => self.intensity_anim,
+            Self::ID_AC => self.ambient_color_anim,
+            Self::ID_AI => self.ambient_intensity_anim,
+            Self::ID_V  => self.visibility,
+        );
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 48; // sz + type + as + ae + color + intensity + amb_color + amb_intensity
+        sz += self.base.calc_mdx_size();
+        sz += self.attenuate_start_anim.calc_mdx_size();
+        sz += self.attenuate_end_anim.calc_mdx_size();
+        sz += self.color_anim.calc_mdx_size();
+        sz += self.intensity_anim.calc_mdx_size();
+        sz += self.ambient_color_anim.calc_mdx_size();
+        sz += self.ambient_intensity_anim.calc_mdx_size();
+        sz += self.visibility.calc_mdx_size();
+        return sz;
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { color:Vec3::ONE, intensity:1.0, ambient_color:Vec3::ONE, ambient_intensity:1.0 };
-        this.base = Node::read_mdl(block)?;
+        let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::Light);
 
         for f in &block.fields {
@@ -124,9 +159,9 @@ impl Light {
         MdlWriteAnimBoth!(lines, depth,
             "AttenuationStart" => self.attenuate_start_anim => 0.0 => self.attenuate_start,
             "AttenuationEnd" => self.attenuate_end_anim => 0.0 => self.attenuate_end,
-            "Color" => bgr_anim => Vec3::ONE => bgr,
+            "Color" => bgr_anim => Vec3::ZERO => bgr,
             "Intensity" => self.intensity_anim => 0.0 => self.intensity,
-            "AmbColor" => bgr2_anim => Vec3::ONE => bgr2,
+            "AmbColor" => bgr2_anim => Vec3::ZERO => bgr2,
             "AmbIntensity" => self.ambient_intensity_anim => 0.0 => self.ambient_intensity,
         );
         MdlWriteAnimIfSome!(lines, depth, "Visibility" => self.visibility);
@@ -134,6 +169,8 @@ impl Light {
         return Ok(lines);
     }
 }
+
+//#region LightType
 
 #[derive(Debug, Default)]
 pub enum LightType {
@@ -160,4 +197,15 @@ impl LightType {
             _err => def,
         )
     }
+
+    fn to(&self) -> i32 {
+        match self {
+            Self::Omnidirectional => 0,
+            Self::Directional => 1,
+            Self::Ambient => 2,
+            Self::Error(v) => *v,
+        }
+    }
 }
+
+//#endregion

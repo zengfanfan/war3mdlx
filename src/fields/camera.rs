@@ -48,6 +48,29 @@ impl Camera {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        chunk.write_string(&self.name, Self::NAME_SIZE)?;
+        chunk.write(&self.position)?;
+        chunk.write(&self.field_of_view)?;
+        chunk.write(&self.far_clip)?;
+        chunk.write(&self.near_clip)?;
+        chunk.write(&self.target)?;
+        MdxWriteAnim!(chunk,
+            Self::ID_T  => self.translation,
+            Self::ID_R  => self.rotation,
+            Self::ID_TT => self.target_translation,
+        );
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 40 + Self::NAME_SIZE; // sz + name + pos + fov + far + near + target
+        sz += self.translation.calc_mdx_size();
+        sz += self.rotation.calc_mdx_size();
+        sz += self.target_translation.calc_mdx_size();
+        return sz;
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
