@@ -34,12 +34,12 @@ pub struct RibbonEmitter {
 
 impl RibbonEmitter {
     pub const ID: u32 = MdlxMagic::RIBB as u32;
-    const ID_V: u32 = MdlxMagic::KRVS as u32; /* Visibility */
     const ID_HA: u32 = MdlxMagic::KRHA as u32; /* Height Above */
     const ID_HB: u32 = MdlxMagic::KRHB as u32; /* Height Below */
     const ID_A: u32 = MdlxMagic::KRAL as u32; /* Alpha */
     const ID_C: u32 = MdlxMagic::KRCO as u32; /* Color */
     const ID_TS: u32 = MdlxMagic::KRTX as u32; /* TextureSlot */
+    const ID_V: u32 = MdlxMagic::KRVS as u32; /* Visibility */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdx(cur)? };
@@ -58,17 +58,55 @@ impl RibbonEmitter {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
                 Self::ID_HA => this.height_above_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_HB => this.height_below_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_A => this.alpha_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_A  => this.alpha_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_C  => this.color_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_TS => this.texslot_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_V  => this.visibility = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
 
         return Ok(this);
+    }
+
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        self.base.write_mdx(chunk)?;
+
+        chunk.write(&self.height_above)?;
+        chunk.write(&self.height_below)?;
+        chunk.write(&self.alpha)?;
+        chunk.write(&self.color)?; //3*4
+        chunk.write(&self.lifespan)?;
+        chunk.write(&self._unknown)?;
+        chunk.write(&self.emit_rate)?;
+        chunk.write(&self.rows)?;
+        chunk.write(&self.columns)?;
+        chunk.write(&self.material_id)?;
+        chunk.write(&self.gravity)?;
+
+        MdxWriteAnim!(chunk,
+            Self::ID_HA => self.height_above_anim,
+            Self::ID_HB => self.height_below_anim,
+            Self::ID_A  => self.alpha_anim,
+            Self::ID_C  => self.color_anim,
+            Self::ID_TS => self.texslot_anim,
+            Self::ID_V  => self.visibility,
+        );
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 56; // sz + ha + hb + a + c + lifespan + _ + er + rows + cols + mat_id + g
+        sz += self.base.calc_mdx_size();
+        sz += self.height_above_anim.calc_mdx_size();
+        sz += self.height_below_anim.calc_mdx_size();
+        sz += self.alpha_anim.calc_mdx_size();
+        sz += self.color_anim.calc_mdx_size();
+        sz += self.texslot_anim.calc_mdx_size();
+        sz += self.visibility.calc_mdx_size();
+        return sz;
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {

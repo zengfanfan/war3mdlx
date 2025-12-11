@@ -1,7 +1,7 @@
 pub struct MdlxMagic;
 
 impl MdlxMagic {
-    pub const MDLX: u32 = 0x4D444C58; /* Magic: MDLX */
+    pub const MDLX: u32 = 0x4D444C58; /* Magic: "MDLX" */
     pub const VERS: u32 = 0x56455253; /* Version */
     pub const MODL: u32 = 0x4D4F444C; /* Model */
     pub const SEQS: u32 = 0x53455153; /* Sequences */
@@ -40,7 +40,7 @@ impl MdlxMagic {
     pub const KCRL: u32 = 0x4B43524C; /* - Rotation */
     pub const KTTR: u32 = 0x4B545452; /* - Target Translation */
 
-    //-----------------//* Node *//
+    //--------------------------------//* Node *//
     pub const KGTR: u32 = 0x4B475452; /* - Translation */
     pub const KGRT: u32 = 0x4B475254; /* - Rotation */
     pub const KGSC: u32 = 0x4B475343; /* - Scaling */

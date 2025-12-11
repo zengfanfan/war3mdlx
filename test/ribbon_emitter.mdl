@@ -4,7 +4,7 @@ Version {
 RibbonEmitter "" {
     ObjectId 0,
 }
-RibbonEmitter "v" {
+RibbonEmitter "[[[[v]]]]" {
     ObjectId 1,
     static HeightAbove 3.3,
     static HeightBelow 4.4,
@@ -19,7 +19,7 @@ RibbonEmitter "v" {
     Columns 7,
     MaterialID 89,
 }
-RibbonEmitter "a" {
+RibbonEmitter "[[[[a]]]]" {
     ObjectId 2,
     HeightAbove 2 {
         Linear,
