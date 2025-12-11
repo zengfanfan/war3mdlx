@@ -326,12 +326,10 @@ impl GeosetAnim {
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build!();
-
         this.alpha = cur.readx()?;
         this.flags = GeosetAnimFlags::from_bits_retain(cur.readx()?);
         this.color = cur.readx()?;
         this.geoset_id = cur.readx()?;
-
         while cur.left() >= 16 {
             match cur.read_be()? {
                 Self::ID_ALPHA => this.alpha_anim = Some(Animation::read_mdx(cur)?),
@@ -339,13 +337,30 @@ impl GeosetAnim {
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
-
         return Ok(this);
+    }
+
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        chunk.write(&self.alpha)?;
+        chunk.write(&self.flags.bits())?;
+        chunk.write(&self.color)?;
+        chunk.write(&self.geoset_id)?;
+        MdxWriteAnim!(chunk,
+            Self::ID_ALPHA => self.alpha_anim,
+            Self::ID_COLOR => self.color_anim,
+        );
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 28; // sz + alpha + flags + color + geoset_id
+        sz += self.alpha_anim.calc_mdx_size();
+        sz += self.color_anim.calc_mdx_size();
+        return sz;
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build! { alpha:1.0, color:Vec3::ONE, geoset_id:-1 };
-
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "Alpha" => this.alpha = f.value.to(),
@@ -359,7 +374,6 @@ impl GeosetAnim {
                 _other => (),
             );
         }
-
         for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
@@ -370,7 +384,6 @@ impl GeosetAnim {
                 _other => (),
             );
         }
-
         this.color = this.color.reverse();
         this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
         return Ok(this);

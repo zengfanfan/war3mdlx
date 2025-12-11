@@ -95,7 +95,7 @@ impl MdlxData {
             TextureAnim     => self.texanims,
             // Material        => self.materials,
             // Geoset          => self.geosets,
-            // GeosetAnim      => self.geoanims,
+            GeosetAnim      => self.geoanims,
             Attachment      => self.attachments,
             Light           => self.lights,
             // ParticleEmitter => self.particle_emitters,
