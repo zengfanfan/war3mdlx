@@ -1,7 +1,5 @@
 use crate::*;
 
-//#region Geoset
-
 #[derive(Dbg, Default)]
 pub struct Geoset {
     #[dbg(formatter = "fmtx")]
@@ -30,6 +28,8 @@ pub struct Geoset {
     pub anim_extents: Vec<BoundExtent>,
 }
 
+//#region BoundExtent
+
 #[derive(Dbg, Default)]
 pub struct BoundExtent {
     #[dbg(formatter = "fmtx")]
@@ -39,6 +39,7 @@ pub struct BoundExtent {
     #[dbg(formatter = "fmtx")]
     pub max_extent: Vec3,
 }
+
 impl BoundExtent {
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(BoundExtent { bound_radius: cur.readx()?, min_extent: cur.readx()?, max_extent: cur.readx()? })
@@ -64,6 +65,9 @@ impl BoundExtent {
     }
 }
 
+//#endregion
+//#region FaceType
+
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum FaceType {
     Points,
@@ -79,6 +83,7 @@ pub enum FaceType {
     Polygons,
     Error(i32),
 }
+
 impl FaceType {
     fn from(v: i32) -> Self {
         match v {
@@ -95,6 +100,7 @@ impl FaceType {
             x => Self::Error(x),
         }
     }
+
     fn from_str(s: &str) -> Self {
         match_istr!(s,
             "Points" => Self::Points,
@@ -127,6 +133,8 @@ impl FaceType {
         }
     }
 }
+
+//#endregion
 
 impl Geoset {
     pub const ID: u32 = MdlxMagic::GEOS;

@@ -93,7 +93,7 @@ impl MdlxData {
             CollisionShape  => self.collisions,
             PivotPoint      => self.pivot_points,
             TextureAnim     => self.texanims,
-            // Material        => self.materials,
+            Material        => self.materials,
             // Geoset          => self.geosets,
             GeosetAnim      => self.geoanims,
             Attachment      => self.attachments,

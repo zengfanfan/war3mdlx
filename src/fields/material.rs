@@ -63,6 +63,25 @@ impl Material {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        chunk.write(&self.priority_plane)?;
+        chunk.write(&self.flags.bits())?;
+        chunk.write_be(&Layer::ID)?;
+        chunk.write(&self.layers.len())?;
+        for a in &self.layers {
+            a.write_mdx(chunk)?;
+        }
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 20; // sz + priority_plane + flags + "LAYS" + layer_count
+        for a in &self.layers {
+            sz += a.calc_mdx_size();
+        }
+        return sz;
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build!();
         for f in &block.fields {
@@ -133,6 +152,27 @@ impl Layer {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        chunk.write(&self.filter_mode.to())?;
+        chunk.write(&self.flags.bits())?;
+        chunk.write(&self.texture_id)?;
+        chunk.write(&self.texture_anim_id)?;
+        chunk.write(&self.coordid)?;
+        chunk.write(&self.alpha)?;
+        MdxWriteAnim!(chunk,
+            Self::ID_ALPHA => self.alpha_anim,
+            Self::ID_TEXID => self.texid_anim,
+        );
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {//=4*7
+        let mut sz: u32 = 28; // sz + filter_mode + flags + texture_id + texanim_id + coordid + alpha
+        sz += self.alpha_anim.calc_mdx_size();
+        sz += self.texid_anim.calc_mdx_size();
+        return sz;
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build! { texture_id:-1, texture_anim_id:-1, alpha:1.0 };
         for f in &block.fields {
@@ -186,6 +226,8 @@ impl Layer {
     }
 }
 
+//#region FilterMode
+
 #[derive(Debug, Default)]
 pub enum FilterMode {
     #[default]
@@ -199,6 +241,7 @@ pub enum FilterMode {
     AlphaKey,
     Error(i32),
 }
+
 impl FilterMode {
     fn from(v: i32) -> Self {
         match v {
@@ -213,6 +256,7 @@ impl FilterMode {
             x => Self::Error(x),
         }
     }
+
     fn from_str(s: &str) -> Self {
         match_istr!(s,
             "None" => Self::None,
@@ -226,4 +270,20 @@ impl FilterMode {
             _err => Self::Error(-1),
         )
     }
+
+    fn to(&self) -> i32 {
+        match self {
+            Self::None => 0,
+            Self::Transparent => 1,
+            Self::Blend => 2,
+            Self::Additive => 3,
+            Self::AddAlpha => 4,
+            Self::Modulate => 5,
+            Self::Modulate2x => 6,
+            Self::AlphaKey => 7,
+            Self::Error(v) => *v,
+        }
+    }
 }
+
+//#endregion

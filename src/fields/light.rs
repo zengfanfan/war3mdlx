@@ -180,6 +180,7 @@ pub enum LightType {
     Ambient,
     Error(i32),
 }
+
 impl LightType {
     fn from(v: i32) -> Self {
         match v {
@@ -189,6 +190,7 @@ impl LightType {
             _ => Self::Error(v),
         }
     }
+
     fn from_str(s: &str, def: Self) -> Self {
         match_istr!(s,
             "Omnidirectional" => Self::Omnidirectional,

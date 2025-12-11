@@ -84,6 +84,7 @@ pub enum CollisionType {
     Cylinder,
     Error(i32),
 }
+
 impl CollisionType {
     fn from(v: i32) -> Self {
         match v {
@@ -94,6 +95,7 @@ impl CollisionType {
             _ => Self::Error(v),
         }
     }
+
     fn from_str(s: &str, def: Self) -> Self {
         match_istr!(s,
             "Box" => Self::Box,
