@@ -32,17 +32,17 @@ pub struct ParticleEmitter {
 
 impl ParticleEmitter {
     pub const ID: u32 = MdlxMagic::PREM as u32;
-    const ID_V: u32 = MdlxMagic::KPEV as u32; /* Visibility */
     const ID_ER: u32 = MdlxMagic::KPEE as u32; /* Emission rate */
     const ID_G: u32 = MdlxMagic::KPEG as u32; /* Gravity */
     const ID_LO: u32 = MdlxMagic::KPLN as u32; /* Longitude */
     const ID_LA: u32 = MdlxMagic::KPLT as u32; /* Latitude */
     const ID_LS: u32 = MdlxMagic::KPEL as u32; /* Life span */
     const ID_SPD: u32 = MdlxMagic::KPES as u32; /* Speed */
+    const ID_V: u32 = MdlxMagic::KPEV as u32; /* Visibility */
     const PATH_SIZE: u32 = 256;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        let mut this = Build!{ base: Node::read_mdx(cur)? };
+        let mut this = Build! { base: Node::read_mdx(cur)? };
 
         this.emit_rate = cur.readx()?;
         this.gravity = cur.readx()?;
@@ -55,13 +55,13 @@ impl ParticleEmitter {
 
         while cur.left() >= 16 {
             match cur.read_be()? {
-                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
                 Self::ID_ER => this.emit_rate_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_G => this.gravity_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_LO => this.longitude_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_LA => this.latitude_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_LS => this.lifespan_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_SPD => this.speed_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
@@ -69,8 +69,45 @@ impl ParticleEmitter {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+        self.base.write_mdx(chunk)?;
+
+        chunk.write(&self.emit_rate)?;
+        chunk.write(&self.gravity)?;
+        chunk.write(&self.longitude)?;
+        chunk.write(&self.latitude)?;
+        chunk.write_string(&self.path, Self::PATH_SIZE)?;
+        chunk.write(&self._unknown)?;
+        chunk.write(&self.lifespan)?;
+        chunk.write(&self.speed)?;
+
+        MdxWriteAnim!(chunk,
+            Self::ID_ER  => self.emit_rate_anim,
+            Self::ID_G   => self.gravity_anim,
+            Self::ID_LO  => self.longitude_anim,
+            Self::ID_LA  => self.latitude_anim,
+            Self::ID_LS  => self.lifespan_anim,
+            Self::ID_SPD => self.speed_anim,
+            Self::ID_V   => self.visibility,
+        );
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 32 + Self::PATH_SIZE; // sz + er + g + lo + la + path + unknown + lifespan + spd
+        sz += self.base.calc_mdx_size();
+        sz += self.emit_rate_anim.calc_mdx_size();
+        sz += self.gravity_anim.calc_mdx_size();
+        sz += self.longitude_anim.calc_mdx_size();
+        sz += self.latitude_anim.calc_mdx_size();
+        sz += self.lifespan_anim.calc_mdx_size();
+        sz += self.speed_anim.calc_mdx_size();
+        sz += self.visibility.calc_mdx_size();
+        return sz;
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build!{ base: Node::read_mdl(block)? };
+        let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::ParticleEmitter);
         for f in &block.fields {
             match_istr!(f.name.as_str(),

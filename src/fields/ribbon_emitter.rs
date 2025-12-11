@@ -72,7 +72,7 @@ impl RibbonEmitter {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { alpha:1.0, color:Vec3::ONE, material_id:-1 };
+        let mut this = Build! { alpha:1.0, color:Vec3::ONE };
         this.base = Node::read_mdl(block)?;
         this.base.flags.insert(NodeFlags::RibbonEmitter);
         for f in &block.fields {

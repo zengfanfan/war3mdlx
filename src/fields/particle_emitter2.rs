@@ -131,7 +131,6 @@ impl ParticleEmitter2 {
         this.segment_alpha = vec![255; 3];
         this.segment_scaling = vec![1.0; 3];
         this.segment_color = vec![Vec3::ONE; 3];
-        this.texture_id = -1;
         let (mut head, mut tail) = (false, false);
 
         for f in &block.fields {

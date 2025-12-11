@@ -174,7 +174,7 @@ impl Layer {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { texture_id:-1, texture_anim_id:-1, alpha:1.0 };
+        let mut this = Build! { texture_anim_id:-1, alpha:1.0 };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "FilterMode" => this.filter_mode = FilterMode::from_str(f.value.as_str()),

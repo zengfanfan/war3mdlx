@@ -49,7 +49,7 @@ impl EventObject {
 
 #[derive(Dbg, Default)]
 pub struct EventTrack {
-    // #[dbg(skip)]
+    #[dbg(skip)]
     pub _unknown: i32,
     pub frames: Vec<i32>,
 }
@@ -78,7 +78,7 @@ impl EventTrack {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { _unknown: -1 };
+        let mut this = Build! { _unknown:-1 };
         for f in &block.fields {
             if let MdlValue::Integer(i) = f.value {
                 this.frames.push(i);

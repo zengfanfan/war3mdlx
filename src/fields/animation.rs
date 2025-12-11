@@ -75,7 +75,7 @@ impl<T: TAnimation> Animation<T> {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { global_seq_id: -1 };
+        let mut this = Build! { global_seq_id:-1 };
         for f in &block.fields {
             if let MdlValue::None = f.value {
                 this.interp_type = InterpolationType::from_str(f.name.as_str(), this.interp_type);

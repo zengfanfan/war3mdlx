@@ -52,7 +52,7 @@ impl BoundExtent {
         return Ok(());
     }
     pub fn size() -> u32 {
-        return 28; // = 4 + 12 + 12
+        28 // = 4 + 12 + 12
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
@@ -398,7 +398,6 @@ impl Geoset {
     }
 }
 
-//#endregion
 //#region GeosetAnim
 
 #[derive(Dbg, Default)]
@@ -464,7 +463,7 @@ impl GeosetAnim {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { alpha:1.0, color:Vec3::ONE, geoset_id:-1 };
+        let mut this = Build! { alpha:1.0, color:Vec3::ONE };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "Alpha" => this.alpha = f.value.to(),
@@ -505,7 +504,7 @@ impl GeosetAnim {
             if let Some(anim) = &self.color_anim {
                 let bgr = anim.convert(|v| v.reverse());
                 MdlWriteAnim!(lines, depth, "Color" => bgr);
-            } else if self.color != Vec3::ONE {
+            } else {
                 let bgr = self.color.reverse();
                 MdlWriteAnimStatic!(lines, depth, "Color" => bgr);
             }
