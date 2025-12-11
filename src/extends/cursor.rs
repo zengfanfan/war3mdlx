@@ -186,6 +186,7 @@ pub trait WriteToCursor: Sized {
     fn write_to(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError>;
     fn write_to_be(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError>;
     fn size() -> u32;
+    fn calc_size(&self) -> u32;
 }
 
 macro_rules! impl_WriteToCursor {
@@ -200,6 +201,9 @@ macro_rules! impl_WriteToCursor {
                 }
                 fn size() -> u32 {
                     std::mem::size_of::<Self>() as u32
+                }
+                fn calc_size(&self) -> u32 {
+                    Self::size()
                 }
             }
         })+
@@ -217,6 +221,9 @@ macro_rules! impl_WriteToCursor_VecN {
                 }
                 fn size() -> u32 {
                     4u32 * $a
+                }
+                fn calc_size(&self) -> u32 {
+                    Self::size()
                 }
             }
         })+
@@ -236,6 +243,9 @@ impl WriteToCursor for u8 {
     fn size() -> u32 {
         1
     }
+    fn calc_size(&self) -> u32 {
+        Self::size()
+    }
 }
 impl WriteToCursor for usize {
     fn write_to(&self, cur: &mut Cursor<Vec<u8>>) -> Result<(), MyError> {
@@ -246,6 +256,9 @@ impl WriteToCursor for usize {
     }
     fn size() -> u32 {
         4
+    }
+    fn calc_size(&self) -> u32 {
+        Self::size()
     }
 }
 
@@ -264,6 +277,9 @@ impl<T: WriteToCursor> WriteToCursor for Vec<T> {
     }
     fn size() -> u32 {
         panic!("DON'T DO THIS!"); // [instead] T::size() * self.len()
+    }
+    fn calc_size(&self) -> u32 {
+        T::size() * self.len() as u32
     }
 }
 

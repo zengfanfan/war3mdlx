@@ -42,8 +42,19 @@ pub struct BoundExtent {
 
 impl BoundExtent {
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        Ok(BoundExtent { bound_radius: cur.readx()?, min_extent: cur.readx()?, max_extent: cur.readx()? })
+        Ok(Self { bound_radius: cur.readx()?, min_extent: cur.readx()?, max_extent: cur.readx()? })
     }
+
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.bound_radius)?;
+        chunk.write(&self.min_extent)?;
+        chunk.write(&self.max_extent)?;
+        return Ok(());
+    }
+    pub fn size() -> u32 {
+        return 28; // = 4 + 12 + 12
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build!();
         for f in &block.fields {
@@ -56,6 +67,7 @@ impl BoundExtent {
         }
         return Ok(this);
     }
+
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         Ok(vec![
             F!("{}BoundsRadius {},", indent!(depth), fmtx(&self.bound_radius)),
@@ -136,6 +148,30 @@ impl FaceType {
 
 //#endregion
 
+macro_rules! MdxWriteGeosetChunk {
+    ($chunk:expr, $( $id:expr => $var:expr ),+ $(,)?) => {
+        $(
+            let list = &$var;
+            $chunk.write_be(&$id)?;
+            $chunk.write(&list.len())?;
+            $chunk.write(list)?;
+        )+
+    };
+}
+macro_rules! MdxWriteGeosetChunk_CalcSize {
+    ($( $var:expr ),+ $(,)?) => {
+        {let mut size = 0;
+            $(
+                let list = &$var;
+                size += 8;
+                if list.len() > 0 {
+                    size += list[0].calc_size() * list.len() as u32;
+                }
+            )+
+        size}
+    };
+}
+
 impl Geoset {
     pub const ID: u32 = MdlxMagic::GEOS;
 
@@ -185,8 +221,68 @@ impl Geoset {
         return Ok(this);
     }
 
+    pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
+        chunk.write(&self.calc_mdx_size())?;
+
+        MdxWriteGeosetChunk!(chunk,
+            MdlxMagic::VRTX => self.vertices,
+            MdlxMagic::NRMS => self.normals,
+            MdlxMagic::PTYP => self.face_types.convert(|a| a.to()),
+            MdlxMagic::PCNT => self.face_vtxcnts,
+            MdlxMagic::PVTX => self.face_vertices,
+            MdlxMagic::GNDX => self.vtxgrps,
+            MdlxMagic::MTGC => self.mtxgrpcnts,
+            MdlxMagic::MATS => self.mtx_indices,
+        );
+
+        chunk.write(&self.material_id)?;
+        chunk.write(&self.sel_group)?;
+        chunk.write(&self.sel_type)?;
+        self.extent.write_mdx(chunk)?;
+        chunk.write(&self.anim_extents.len())?;
+        for a in self.anim_extents.iter() {
+            a.write_mdx(chunk)?;
+        }
+
+        chunk.write_be(&MdlxMagic::UVAS)?;
+        chunk.write(&self.uvss.len())?;
+        for a in self.uvss.iter() {
+            chunk.write_be(&MdlxMagic::UVBS)?;
+            chunk.write(&a.len())?;
+            chunk.write(a)?;
+        }
+
+        return Ok(());
+    }
+    pub fn calc_mdx_size(&self) -> u32 {
+        let mut sz: u32 = 4; // sz itself
+
+        sz += MdxWriteGeosetChunk_CalcSize!(
+            self.vertices,
+            self.normals,
+            self.face_types.convert(|a| a.to()),
+            self.face_vtxcnts,
+            self.face_vertices,
+            self.vtxgrps,
+            self.mtxgrpcnts,
+            self.mtx_indices,
+        );
+
+        sz += 12; // material_id + sel_group + sel_type
+        sz += BoundExtent::size(); // extent
+        sz += 4 + BoundExtent::size() * self.anim_extents.len() as u32; // anim_extents
+
+        sz += 8; // "UVAS" + len
+        for a in self.uvss.iter() {
+            sz += 8; // "UVBS" + len
+            sz += a.len() as u32 * Vec2::size();
+        }
+
+        return sz;
+    }
+
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { material_id:-1, sel_group:-1 };
+        let mut this = Build!();
         this.extent = BoundExtent::read_mdl(&block)?;
         for f in &block.fields {
             match_istr!(f.name.as_str(),

@@ -94,7 +94,7 @@ impl MdlxData {
             PivotPoint      => self.pivot_points,
             TextureAnim     => self.texanims,
             Material        => self.materials,
-            // Geoset          => self.geosets,
+            Geoset          => self.geosets,
             GeosetAnim      => self.geoanims,
             Attachment      => self.attachments,
             Light           => self.lights,
