@@ -5,6 +5,7 @@ use glam::{Vec2, Vec3, Vec4};
 use paste::paste;
 use pretty_hex::*;
 use regex::Regex;
+use smart_default::SmartDefault;
 use std::collections::HashMap;
 use std::fmt::{Debug as stdDebug, Display, Formatter as stdFormatter, Result as stdResult};
 use std::fs;

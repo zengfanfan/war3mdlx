@@ -401,12 +401,14 @@ impl Geoset {
 
 //#region GeosetAnim
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct GeosetAnim {
+    #[default = 1.0]
     pub alpha: f32,
     #[dbg(fmt = "{:?}")]
     pub flags: GeosetAnimFlags,
     #[dbg(formatter = "fmtx")]
+    #[default(Vec3::ONE)]
     pub color: Vec3,
     pub geoset_id: i32,
 
@@ -464,7 +466,7 @@ impl GeosetAnim {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { alpha:1.0, color:Vec3::ONE };
+        let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "Alpha" => this.alpha = f.value.to(),

@@ -29,7 +29,6 @@ impl EventObject {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::EventObject);
-        this.track._unknown = -1; // in case there is no track
         for b in &block.blocks {
             match_istr!(b.typ.as_str(),
                 "EventTrack" => this.track = EventTrack::read_mdl(b)?,
@@ -47,9 +46,10 @@ impl EventObject {
     }
 }
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct EventTrack {
     #[dbg(skip)]
+    #[default(-1)]
     pub _unknown: i32,
     pub frames: Vec<i32>,
 }
@@ -59,13 +59,9 @@ impl EventTrack {
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build!();
-
         let n = cur.readx::<u32>()?;
         this._unknown = cur.readx()?;
-        for _ in 0..n {
-            this.frames.push(cur.readx()?);
-        }
-
+        this.frames = cur.read_array(n)?;
         return Ok(this);
     }
 
@@ -78,7 +74,7 @@ impl EventTrack {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { _unknown:-1 };
+        let mut this = Build!();
         for f in &block.fields {
             if let MdlValue::Integer(i) = f.value {
                 this.frames.push(i);

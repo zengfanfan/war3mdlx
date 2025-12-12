@@ -1,13 +1,15 @@
 use crate::*;
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct RibbonEmitter {
     pub base: Node,
 
     pub height_above: f32,
     pub height_below: f32,
+    #[default = 1.0]
     pub alpha: f32,
     #[dbg(formatter = "fmtx")]
+    #[default(Vec3::ONE)]
     pub color: Vec3,
     pub lifespan: f32,
     #[dbg(skip)]
@@ -60,10 +62,10 @@ impl RibbonEmitter {
             match cur.read_be()? {
                 Self::ID_HA => this.height_above_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_HB => this.height_below_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_A  => this.alpha_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_C  => this.color_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_A => this.alpha_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_TS => this.texslot_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_V  => this.visibility = Some(Animation::read_mdx(cur)?),
+                Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
         }
@@ -110,8 +112,7 @@ impl RibbonEmitter {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { alpha:1.0, color:Vec3::ONE };
-        this.base = Node::read_mdl(block)?;
+        let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::RibbonEmitter);
         for f in &block.fields {
             match_istr!(f.name.as_str(),

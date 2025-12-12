@@ -1,11 +1,12 @@
 use crate::*;
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct Sequence {
     pub name: String,
     pub start_frame: i32,
     pub end_frame: i32,
     pub move_speed: f32,
+    #[default = true]
     pub looping: bool,
     pub rarity: f32,
     #[dbg(skip)]
@@ -27,7 +28,7 @@ impl Sequence {
             start_frame: cur.readx()?,
             end_frame: cur.readx()?,
             move_speed: cur.readx()?,
-            looping: cur.readx::<u32>()? == 0,
+            looping: cur.readx::<i32>()? == 0,
             rarity: cur.readx()?,
             _unknown: cur.readx()?,
             bounds_radius: cur.readx()?,
@@ -51,7 +52,7 @@ impl Sequence {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { name: block.name.clone(), looping:true };
+        let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "MoveSpeed" => this.move_speed = f.value.to(),

@@ -1,9 +1,11 @@
 use crate::*;
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct Bone {
     pub base: Node,
+    #[default(-1)]
     pub geoset_id: i32,
+    #[default(-1)]
     pub geoanim_id: i32,
 }
 
@@ -22,7 +24,7 @@ impl Bone {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { base: Node::read_mdl(block)? , geoset_id:-1, geoanim_id:-1};
+        let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::Bone);
         for f in &block.fields {
             match_istr!(f.name.as_str(),

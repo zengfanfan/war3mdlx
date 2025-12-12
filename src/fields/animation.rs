@@ -13,9 +13,10 @@ pub struct KeyFrame<T: TAnimation> {
     pub has_tans: bool,
 }
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct Animation<T: TAnimation> {
     pub interp_type: InterpolationType,
+    #[default(-1)]
     pub global_seq_id: i32,
     #[dbg(formatter = "fmtx")]
     pub key_frames: Vec<KeyFrame<T>>,
@@ -75,7 +76,7 @@ impl<T: TAnimation> Animation<T> {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { global_seq_id:-1 };
+        let mut this = Build!();
         for f in &block.fields {
             if let MdlValue::None = f.value {
                 this.interp_type = InterpolationType::from_str(f.name.as_str(), this.interp_type);

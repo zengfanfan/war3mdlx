@@ -1,9 +1,10 @@
 use crate::*;
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct Node {
     pub name: String,
     pub object_id: i32,
+    #[default(-1)]
     pub parent_id: i32,
     #[dbg(fmt = "{:?}")]
     pub flags: NodeFlags, // see NodeFlags
@@ -69,7 +70,7 @@ impl Node {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { name: block.name.clone(), parent_id:-1 };
+        let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "ObjectId" => this.object_id = f.value.to(),

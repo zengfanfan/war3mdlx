@@ -7,3 +7,7 @@ Model "Minimal" {
     MaximumExtent { 44.44, 5, 666 },
     BlendTime 1500,
 }
+// These are still present in MDX by "MdlxConverter 1.03 by Guesst" when empty:
+//      SEQS (Sequences)
+//      TEXS (Textures)
+//      PIVT (PivotPoints)

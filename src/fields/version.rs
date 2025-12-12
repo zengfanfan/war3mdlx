@@ -1,7 +1,8 @@
 use crate::*;
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct Version {
+    #[default = 800]
     pub format_version: i32,
 }
 

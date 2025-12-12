@@ -2,10 +2,14 @@ use crate::*;
 
 #[derive(Dbg, Default)]
 pub struct MdxChunk {
-    // read
+
+    ///* read */
+
     pub id: u32,
     pub body: Vec<u8>,
-    // write
+
+    ///* write */
+
     #[dbg(skip)]
     cursor: Option<Cursor<Vec<u8>>>,
 }

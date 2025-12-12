@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct Model {
     pub name: String,
     #[dbg(skip)]
@@ -10,6 +10,7 @@ pub struct Model {
     pub min_extent: Vec3,
     #[dbg(formatter = "fmtx")]
     pub max_extent: Vec3,
+    #[default = 100]
     pub blend_time: u32,
 }
 

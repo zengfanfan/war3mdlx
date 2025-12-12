@@ -16,8 +16,8 @@ impl GlobalSequence {
         chunk.write(&self.duration)
     }
 
-    pub fn read_mdl(field: &MdlField) -> Result<Self, MyError> {
-        Ok(Self { duration: yesno!(field.name.eq_icase("Duration"), field.value.to(), 0) })
+    pub fn read_mdl(f: &MdlField) -> Result<Self, MyError> {
+        Ok(Self { duration: yesno!(f.name.eq_icase("Duration"), f.value.to(), 0) })
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {

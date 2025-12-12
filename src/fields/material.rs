@@ -1,5 +1,7 @@
 use crate::*;
 
+//#region Material
+
 #[derive(Dbg, Default)]
 pub struct Material {
     pub priority_plane: i32,
@@ -16,34 +18,6 @@ bitflags! {
     }
 }
 
-#[derive(Dbg, Default)]
-pub struct Layer {
-    #[dbg(fmt = "{:?}")]
-    pub filter_mode: FilterMode,
-    #[dbg(fmt = "{:?}")]
-    pub flags: LayerFlags,
-    pub texture_id: i32,
-    pub texture_anim_id: i32,
-    pub coordid: i32,
-    pub alpha: f32,
-
-    #[dbg(formatter = "fmtxx")]
-    pub alpha_anim: Option<Animation<f32>>,
-    #[dbg(formatter = "fmtxx")]
-    pub texid_anim: Option<Animation<i32>>,
-}
-bitflags! {
-    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct LayerFlags : u32 {
-        const Unshaded = 1 << 0;
-        const SphereEnvMap = 1 << 1;
-        const TwoSided = 1 << 4;
-        const Unfogged = 1 << 5;
-        const NoDepthTest = 1 << 6;
-        const NoDepthSet = 1 << 7;
-    }
-}
-
 impl Material {
     pub const ID: u32 = MdlxMagic::MTLS as u32;
 
@@ -53,9 +27,9 @@ impl Material {
         if cur.left() > 8 && cur.read_be::<u32>()? == Layer::ID {
             let count: i32 = cur.readx()?;
             for _ in 0..count {
-                let sz: u32 = cur.readx()?;
+                let sz: i32 = cur.readx()?;
                 yes!(sz < 4, EXIT1!("{} layer size: {} (need >= 4)", TNAME!(), sz));
-                let body = cur.read_bytes(sz - 4)?;
+                let body = cur.read_bytes(sz as u32 - 4)?;
                 let mut cur2 = Cursor::new(&body);
                 this.layers.push(Layer::read_mdx(&mut cur2)?);
             }
@@ -120,6 +94,39 @@ impl Material {
     }
 }
 
+//#endregion
+//#region Layer
+
+#[derive(Dbg, SmartDefault)]
+pub struct Layer {
+    #[dbg(fmt = "{:?}")]
+    pub filter_mode: FilterMode,
+    #[dbg(fmt = "{:?}")]
+    pub flags: LayerFlags,
+    pub texture_id: i32,
+    #[default(-1)]
+    pub texture_anim_id: i32,
+    pub coordid: i32,
+    #[default(1.0)]
+    pub alpha: f32,
+
+    #[dbg(formatter = "fmtxx")]
+    pub alpha_anim: Option<Animation<f32>>,
+    #[dbg(formatter = "fmtxx")]
+    pub texid_anim: Option<Animation<i32>>,
+}
+bitflags! {
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct LayerFlags : u32 {
+        const Unshaded = 1 << 0;
+        const SphereEnvMap = 1 << 1;
+        const TwoSided = 1 << 4;
+        const Unfogged = 1 << 5;
+        const NoDepthTest = 1 << 6;
+        const NoDepthSet = 1 << 7;
+    }
+}
+
 impl Layer {
     pub const ID: u32 = MdlxMagic::LAYS as u32;
     const ID_ALPHA: u32 = MdlxMagic::KMTA as u32;
@@ -166,7 +173,7 @@ impl Layer {
         );
         return Ok(());
     }
-    pub fn calc_mdx_size(&self) -> u32 {//=4*7
+    pub fn calc_mdx_size(&self) -> u32 {
         let mut sz: u32 = 28; // sz + filter_mode + flags + texture_id + texanim_id + coordid + alpha
         sz += self.alpha_anim.calc_mdx_size();
         sz += self.texid_anim.calc_mdx_size();
@@ -174,7 +181,7 @@ impl Layer {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { texture_anim_id:-1, alpha:1.0 };
+        let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "FilterMode" => this.filter_mode = FilterMode::from_str(f.value.as_str()),
@@ -226,6 +233,7 @@ impl Layer {
     }
 }
 
+//#endregion
 //#region FilterMode
 
 #[derive(Debug, Default)]
