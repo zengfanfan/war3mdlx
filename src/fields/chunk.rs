@@ -2,14 +2,11 @@ use crate::*;
 
 #[derive(Dbg, Default)]
 pub struct MdxChunk {
-
     ///* read */
-
     pub id: u32,
+    pub size: u32,
     pub body: Vec<u8>,
-
     ///* write */
-
     #[dbg(skip)]
     cursor: Option<Cursor<Vec<u8>>>,
 }
@@ -21,14 +18,14 @@ impl MdxChunk {
         let estr = F!("reading chunk 0x{id:08X}({})", u32_to_ascii(id));
 
         yes!(left = cur.left(), left < 4, EXIT1!("{} size: {}B left (need 4)", estr, left));
-        let sz = cur.readx().or_else(|e| ERR!("{} size: {}", estr, e))?;
-        vvlog!("chunk = 0x{:08X} ({}) [{}]", id, u32_to_ascii(id), sz);
+        let size = cur.readx().or_else(|e| ERR!("{} size: {}", estr, e))?;
+        vlog!("chunk = 0x{:08X} ({}) [{}]", id, u32_to_ascii(id), size);
 
-        yes!(left = cur.left(), left < sz, EXIT1!("{} body: {}B left (need {})", estr, left, sz));
-        let body = cur.read_bytes(sz).or_else(|e| ERR!("{} body({}B): {}", estr, sz, e))?;
+        yes!(left = cur.left(), left < size, EXIT1!("{} body: {}B left (need {})", estr, left, size));
+        let body = cur.read_bytes(size).or_else(|e| ERR!("{} body({}B): {}", estr, size, e))?;
         vvvlog!("{}", pretty_hex(&body).replace("\n", "\n\t"));
 
-        return Ok(MdxChunk { id, body, cursor: None });
+        return Ok(MdxChunk { id, size, body, cursor: None });
     }
 
     pub fn new(id: u32) -> Self {

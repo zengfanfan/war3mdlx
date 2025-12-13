@@ -1,5 +1,3 @@
-use crate::*;
-
 //#region level
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -64,18 +62,6 @@ macro_rules! vvlog {
 #[macro_export]
 macro_rules! vvvlog {
     ($($arg:tt)*) => {{ _log!(::Verbose3, $($arg)*) }};
-}
-
-//#endregion
-//#region dbgx!
-
-pub fn _dbgx<T: stdDebug>(val: &T, indent: usize) {
-    let s = F!("{:#?}", val);
-    vvvlog!("{}", s.replace("    ", &" ".repeat(indent)));
-}
-#[macro_export]
-macro_rules! dbgx {
-    ($e:expr) => {{ crate::logging::_dbgx($e, 2) }};
 }
 
 //#endregion

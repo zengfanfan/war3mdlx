@@ -138,12 +138,10 @@ impl Worker {
 
         let time = timestamp_ms() as i128 - self.start_time;
         let (ok, skip, error) = (self.ok, self.skip, self.fail);
-        if self.total > 1 {
-            print!("Converted {ok} files");
-            yes!(skip > 0, print!(", {skip} skipped"));
-            yes!(error > 0, print!(", {error} errors"));
-            println!(", cost {}.{:03}s.", time / 1000, time % 1000);
-        };
+        print!("Converted {ok} files");
+        yes!(skip > 0, print!(", {skip} skipped"));
+        yes!(error > 0, print!(", {error} errors"));
+        println!(", cost {}.{:03}s.", time / 1000, time % 1000);
 
         return Ok(());
     }

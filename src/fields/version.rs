@@ -30,6 +30,11 @@ impl Version {
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
-        Ok(vec![F!("Version {{\n{}FormatVersion {},\n}}", indent!(depth + 1), self.format_version)])
+        let (indent, indent2) = (indent!(depth), indent!(depth + 1));
+        return Ok(vec![
+            F!("{indent}Version {{"),
+            F!("{indent2}FormatVersion {},", self.format_version),
+            F!("{indent}}},"),
+        ]);
     }
 }

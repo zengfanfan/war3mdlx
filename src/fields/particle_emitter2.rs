@@ -22,7 +22,7 @@ pub struct ParticleEmitter2 {
     pub time: f32,
 
     #[dbg(formatter = "fmtx")]
-    pub segment_color: Vec<Vec3>,
+    pub segment_color: Vec<Vec3>, // RGB
     #[dbg(formatter = "fmtx")]
     pub segment_alpha: Vec<u8>, // 0~255
     #[dbg(formatter = "fmtx")]
@@ -256,8 +256,6 @@ impl ParticleEmitter2 {
         this.segment_color.resize(3, Vec3::ONE);
 
         this.head_or_tail = yesno!(head && tail, HeadOrTail::Both, yesno!(tail, HeadOrTail::Tail, HeadOrTail::Head));
-        this.segment_color = this.segment_color.convert(|a| a.reverse());
-
         return Ok(this);
     }
 
@@ -271,8 +269,7 @@ impl ParticleEmitter2 {
         {
             let mut clines: Vec<String> = vec![];
             for c in self.segment_color.iter() {
-                let bgr = c.reverse();
-                clines.pushx(&F!("{indent2}Color"), &bgr);
+                clines.pushx(&F!("{indent2}Color"), c);
             }
             if !clines.is_empty() {
                 lines.push(F!("{indent}SegmentColor {{"));
@@ -306,7 +303,7 @@ impl ParticleEmitter2 {
         lines.push_if(self.squirt, F!("{indent}Squirt,"));
         lines.push_if(self.head_or_tail.is_valid(), F!("{indent}{:?},", self.head_or_tail));
 
-        MdlWriteAnimBoth!(lines, depth,
+        MdlWriteAnimEither!(lines, depth,
             "Speed" => self.speed_anim => 0.0 => self.speed,
             "Variation" => self.variation_anim => 0.0 => self.variation,
             "Latitude" => self.latitude_anim => 0.0 => self.latitude,

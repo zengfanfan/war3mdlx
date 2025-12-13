@@ -21,6 +21,8 @@ pub struct Args {
     pub mdl2x: bool,
     #[arg(long, short = '2', help = "Convert *.mdx to *.mdl")]
     pub mdx2l: bool,
+    #[arg(long, short = 'B', help = "Swap color components when needed to make sure they are in RGB order in mdl files [default: as-is]")]
+    pub mdl_rgb: bool,
 
     #[arg(long, short = 'F', help = "Put output files in one directory and ignore hierarchy")]
     pub flat: bool,
@@ -221,7 +223,7 @@ macro_rules! indent {
     };
 }
 
-getter!(log_level, line_ending, precision, stop_on_error, overwrite, start_time);
+getter!(log_level, line_ending, precision, stop_on_error, overwrite, start_time, mdl_rgb);
 
 static mut G_ARGS: Option<&'static Args> = None;
 

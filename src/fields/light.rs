@@ -9,24 +9,24 @@ pub struct Light {
     pub attenuate_start: f32,
     pub attenuate_end: f32,
     #[dbg(formatter = "fmtx")]
-    pub color: Vec3,
+    pub color: Vec3, // RGB
     pub intensity: f32,
     #[dbg(formatter = "fmtx")]
-    pub ambient_color: Vec3,
-    pub ambient_intensity: f32,
+    pub amb_color: Vec3, // RGB
+    pub amb_intensity: f32,
 
     #[dbg(formatter = "fmtxx")]
     pub attenuate_start_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
     pub attenuate_end_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
-    pub color_anim: Option<Animation<Vec3>>,
+    pub color_anim: Option<Animation<Vec3>>, // BGR
     #[dbg(formatter = "fmtxx")]
     pub intensity_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
-    pub ambient_color_anim: Option<Animation<Vec3>>,
+    pub amb_color_anim: Option<Animation<Vec3>>, // BGR
     #[dbg(formatter = "fmtxx")]
-    pub ambient_intensity_anim: Option<Animation<f32>>,
+    pub amb_intensity_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
     pub visibility: Option<Animation<f32>>,
 }
@@ -53,8 +53,8 @@ impl Light {
         this.attenuate_end = cur.readx()?;
         this.color = cur.readx()?;
         this.intensity = cur.readx()?;
-        this.ambient_color = cur.readx()?;
-        this.ambient_intensity = cur.readx()?;
+        this.amb_color = cur.readx()?;
+        this.amb_intensity = cur.readx()?;
 
         while cur.left() >= 16 {
             match cur.read_be()? {
@@ -62,8 +62,8 @@ impl Light {
                 Self::ID_AE => this.attenuate_end_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_C => this.color_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_I => this.intensity_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_AC => this.ambient_color_anim = Some(Animation::read_mdx(cur)?),
-                Self::ID_AI => this.ambient_intensity_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_AC => this.amb_color_anim = Some(Animation::read_mdx(cur)?),
+                Self::ID_AI => this.amb_intensity_anim = Some(Animation::read_mdx(cur)?),
                 Self::ID_V => this.visibility = Some(Animation::read_mdx(cur)?),
                 id => return ERR!("Unknown animation in {}: {} (0x{:08X})", TNAME!(), u32_to_ascii(id), id),
             }
@@ -81,16 +81,16 @@ impl Light {
         chunk.write(&self.attenuate_end)?;
         chunk.write(&self.color)?;
         chunk.write(&self.intensity)?;
-        chunk.write(&self.ambient_color)?;
-        chunk.write(&self.ambient_intensity)?;
+        chunk.write(&self.amb_color)?;
+        chunk.write(&self.amb_intensity)?;
 
         MdxWriteAnim!(chunk,
             Self::ID_AS => self.attenuate_start_anim,
             Self::ID_AE => self.attenuate_end_anim,
             Self::ID_C  => self.color_anim,
             Self::ID_I  => self.intensity_anim,
-            Self::ID_AC => self.ambient_color_anim,
-            Self::ID_AI => self.ambient_intensity_anim,
+            Self::ID_AC => self.amb_color_anim,
+            Self::ID_AI => self.amb_intensity_anim,
             Self::ID_V  => self.visibility,
         );
         return Ok(());
@@ -102,8 +102,8 @@ impl Light {
         sz += self.attenuate_end_anim.calc_mdx_size();
         sz += self.color_anim.calc_mdx_size();
         sz += self.intensity_anim.calc_mdx_size();
-        sz += self.ambient_color_anim.calc_mdx_size();
-        sz += self.ambient_intensity_anim.calc_mdx_size();
+        sz += self.amb_color_anim.calc_mdx_size();
+        sz += self.amb_intensity_anim.calc_mdx_size();
         sz += self.visibility.calc_mdx_size();
         return sz;
     }
@@ -118,8 +118,8 @@ impl Light {
                 "AttenuationEnd" => this.attenuate_end = f.value.to(),
                 "Color" => this.color = f.value.to(),
                 "Intensity" => this.intensity = f.value.to(),
-                "AmbColor" => this.ambient_color = f.value.to(),
-                "AmbIntensity" => this.ambient_intensity = f.value.to(),
+                "AmbColor" => this.amb_color = f.value.to(),
+                "AmbIntensity" => this.amb_intensity = f.value.to(),
                 _other => this.typ = LightType::from_str(_other, this.typ),
             );
         }
@@ -130,18 +130,17 @@ impl Light {
                 "AttenuationEnd" => this.attenuate_end_anim = Some(Animation::read_mdl(b)?),
                 "Color" => this.color_anim = Some(Animation::read_mdl(b)?),
                 "Intensity" => this.intensity_anim = Some(Animation::read_mdl(b)?),
-                "AmbColor" => this.ambient_color_anim = Some(Animation::read_mdl(b)?),
-                "AmbIntensity" => this.ambient_intensity_anim = Some(Animation::read_mdl(b)?),
+                "AmbColor" => this.amb_color_anim = Some(Animation::read_mdl(b)?),
+                "AmbIntensity" => this.amb_intensity_anim = Some(Animation::read_mdl(b)?),
                 "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
                 _other => (),
             );
         }
 
-        this.color = this.color.reverse();
-        this.ambient_color = this.ambient_color.reverse();
-        this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
-        this.ambient_color_anim = this.ambient_color_anim.map(|a| a.convert(|v| v.reverse()));
-
+        if *mdl_rgb!() {
+            this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
+            this.amb_color_anim = this.amb_color_anim.map(|a| a.convert(|v| v.reverse()));
+        }
         return Ok(this);
     }
 
@@ -152,17 +151,18 @@ impl Light {
         lines.append(&mut self.base.write_mdl(depth)?);
         lines.push(F!("{indent}{:?},", self.typ));
 
-        let (bgr, bgr2) = (self.color.reverse(), self.ambient_color.reverse());
         let bgr_anim = self.color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
-        let bgr2_anim = self.ambient_color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
+        let bgr2_anim = self.amb_color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
+        let color_anim = yesno!(*mdl_rgb!(), &bgr_anim, &self.color_anim);
+        let amb_color_anim = yesno!(*mdl_rgb!(), &bgr2_anim, &self.amb_color_anim);
 
-        MdlWriteAnimBoth!(lines, depth,
+        MdlWriteAnimEither!(lines, depth,
             "AttenuationStart" => self.attenuate_start_anim => 0.0 => self.attenuate_start,
             "AttenuationEnd" => self.attenuate_end_anim => 0.0 => self.attenuate_end,
-            "Color" => bgr_anim => Vec3::ZERO => bgr,
+            "Color" => color_anim => Vec3::ZERO => self.color,
             "Intensity" => self.intensity_anim => 0.0 => self.intensity,
-            "AmbColor" => bgr2_anim => Vec3::ZERO => bgr2,
-            "AmbIntensity" => self.ambient_intensity_anim => 0.0 => self.ambient_intensity,
+            "AmbColor" => amb_color_anim => Vec3::ZERO => self.amb_color,
+            "AmbIntensity" => self.amb_intensity_anim => 0.0 => self.amb_intensity,
         );
         MdlWriteAnimIfSome!(lines, depth, "Visibility" => self.visibility);
 

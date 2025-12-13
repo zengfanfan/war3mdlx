@@ -1,0 +1,98 @@
+Version {
+    FormatVersion 800,
+}
+Model "1.TEST.MDLX" {
+    BlendTime 150,
+}
+Sequences 1 {
+    Anim "Stand" {
+        Interval { 0, 5000 },
+    }
+}
+Textures 1 {
+    Bitmap {
+        Image "white.blp",
+    }
+}
+Materials 1 {
+    Material {
+        Layer {
+            FilterMode None,
+            static TextureID 0,
+        }
+    }
+}
+Geoset {
+    Vertices 4 {
+        { -20, -20, 1 },
+        { 20, -20, 1 },
+        { -20, 20, 1 },
+        { 20, 20, 1 },
+    }
+    Normals 4 {
+        { 0, 0, 1 },
+        { 0, 0, 1 },
+        { 0, 0, 1 },
+        { 0, 0, 1 },
+    }
+    TVertices 4 {
+        { 0, 0 },
+        { 0, 1 },
+        { 1, 0 },
+        { 1, 1 },
+    }
+    VertexGroup  {
+        0,
+        0,
+        0,
+        0,
+    }
+    Faces 1 6 {
+        Triangles {
+            { 0, 1, 2, 3, 2, 1 },
+        }
+    }
+    Groups 1 1 {
+        Matrices { 0 },
+    }
+    MaterialID 0,
+}
+Bone "0" {
+    ObjectId 0,
+}
+PivotPoints 2 {
+    { 0, 0, 0 },
+    { 0, 0, 5 },
+}
+ParticleEmitter2 "PE 2" {
+    ObjectId 1,
+    Parent 0,
+    static EmissionRate 1,
+    static Speed 33,
+    static Variation 0,
+    static Latitude 0,
+    static Width 0,
+    static Length 0,
+    static Gravity 0,
+    LifeSpan 8,
+    SegmentColor {
+        // Color { 1,0,0 },
+        // Color { 0,1,0 },
+        Color { 0,0,1 },
+        Color { 0,0,1 },
+        Color { 0,0,1 },
+    },
+    Alpha { 255, 255, 255 },
+    ParticleScaling { 10, 10, 10 },
+    LifeSpanUVAnim { 0,0, 1 },
+    DecayUVAnim { 0,0, 1 },
+    TailUVAnim { 0, 0, 1 },
+    TailDecayUVAnim { 0, 0, 1 },
+    Rows 1,
+    Columns 1,
+    TextureID 0,
+    Blend, // FilterMode
+    Unshaded,
+    Head,
+    Time 0.5,
+}

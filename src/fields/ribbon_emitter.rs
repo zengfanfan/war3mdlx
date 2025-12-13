@@ -10,7 +10,7 @@ pub struct RibbonEmitter {
     pub alpha: f32,
     #[dbg(formatter = "fmtx")]
     #[default(Vec3::ONE)]
-    pub color: Vec3,
+    pub color: Vec3, // RGB
     pub lifespan: f32,
     #[dbg(skip)]
     pub _unknown: i32,
@@ -27,7 +27,7 @@ pub struct RibbonEmitter {
     #[dbg(formatter = "fmtxx")]
     pub alpha_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
-    pub color_anim: Option<Animation<Vec3>>,
+    pub color_anim: Option<Animation<Vec3>>, // BGR
     #[dbg(formatter = "fmtxx")]
     pub texslot_anim: Option<Animation<i32>>,
     #[dbg(formatter = "fmtxx")]
@@ -140,8 +140,9 @@ impl RibbonEmitter {
                 _other => (),
             );
         }
-        this.color = this.color.reverse();
-        this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
+        if *mdl_rgb!() {
+            this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
+        }
         return Ok(this);
     }
 
@@ -151,8 +152,8 @@ impl RibbonEmitter {
 
         lines.append(&mut self.base.write_mdl(depth)?);
 
-        let bgr = self.color.reverse();
         let bgr_anim = self.color_anim.as_ref().and_then(|a| Some(a.convert(|v| v.reverse())));
+        let color_anim = yesno!(*mdl_rgb!(), &bgr_anim, &self.color_anim);
 
         lines.pushx_if_n0(&F!("{indent}EmissionRate"), &self.emit_rate);
         lines.pushx_if_n0(&F!("{indent}LifeSpan"), &self.lifespan);
@@ -161,11 +162,11 @@ impl RibbonEmitter {
         lines.pushx_if_n0(&F!("{indent}Columns"), &self.columns);
         lines.pushx_if_nneg1(&F!("{indent}MaterialID"), &self.material_id);
 
-        MdlWriteAnimBoth!(lines, depth,
+        MdlWriteAnimEither!(lines, depth,
             "HeightAbove" => self.height_above_anim => 0.0 => self.height_above,
             "HeightBelow" => self.height_below_anim => 0.0 => self.height_below,
             "Alpha" => self.alpha_anim => 1.0 => self.alpha,
-            "Color" => bgr_anim => Vec3::ONE => bgr,
+            "Color" => color_anim => Vec3::ONE => self.color,
         );
         MdlWriteAnimIfSome!(lines, depth,
             "TextureSlot" => self.texslot_anim,

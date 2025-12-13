@@ -273,7 +273,8 @@ impl MdlxData {
         );
         MdlWriteType4!(lines, 0, name, "Camera" => self.cameras );
 
-        let text = lines.join("\n") + "\n";
+        let line_ending = line_ending!();
+        let text = lines.join(line_ending) + line_ending;
         return Ok(std::fs::write(path, text)?);
     }
     fn write_mdl_comment(lines: &mut Vec<String>, path: &Path) {

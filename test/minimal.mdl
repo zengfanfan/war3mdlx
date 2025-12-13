@@ -11,3 +11,4 @@ Model "Minimal" {
 //      SEQS (Sequences)
 //      TEXS (Textures)
 //      PIVT (PivotPoints)
+// However, all MDXs in war3*.mpq omit them (if empty).

@@ -1,0 +1,32 @@
+Version {
+    FormatVersion 800,
+}
+Model "1.TEST.MDLX" {
+    BlendTime 150,
+}
+Sequences 1 {
+    Anim "Stand" {
+        Interval { 0000, 6000 },
+    }
+}
+Light "L.1" {
+    ObjectId 0,
+    Directional,
+    static AttenuationStart 1234,
+    static AttenuationEnd 56789,
+    // static Color { 1,0,0 },
+    // static Color { 0,1,0 },
+    // static Color { 0,0,1 },
+    AmbColor 1 {
+        DontInterp,
+        // 0000: { 1,0,0 },
+        0000: { 0,1,0 },
+        // 0000: { 0,0,1 },
+    }
+    // static Intensity 1,
+    // static AmbColor { 1,1,1 },
+    static AmbIntensity 1,
+}
+PivotPoints 1 {
+    { 0,0,0 },
+}

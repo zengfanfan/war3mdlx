@@ -1,0 +1,74 @@
+Version {
+    FormatVersion 800,
+}
+Sequences 1 {
+    Anim "Stand" {
+        Interval { 0000, 20000 },
+    }
+}
+Textures 1 {
+    Bitmap {
+        Image "white.blp",
+    }
+}
+Materials 1 {
+    Material {
+        Layer {
+            FilterMode None,
+            static TextureID 0,
+        }
+    }
+}
+Geoset {
+    Vertices 4 {
+        { -50, +060, 1 },
+        { +50, +060, 1 },
+        { -50, +160, 1 },
+        { +50, +160, 1 },
+    }
+    Normals 4 {
+        { 0, 0, 1 },
+        { 0, 0, 1 },
+        { 0, 0, 1 },
+        { 0, 0, 1 },
+    }
+    TVertices 4 {
+        { 0, 0 },
+        { 0, 1 },
+        { 1, 0 },
+        { 1, 1 },
+    }
+    VertexGroup {
+        0,
+        0,
+        0,
+        0,
+    }
+    Faces 1 6 {
+        Triangles {
+            { 0, 1, 2, 3, 2, 1 },
+        }
+    }
+    Groups 1 1 {
+        Matrices { 0 },
+    }
+    MaterialID 0,
+}
+GeosetAnim {
+    GeosetId 0,
+    // static Color { 0,0,1 },
+    // static Color { 0,1,0 },
+    // static Color { 1,0,0 },
+    Color 1 {
+        DontInterp,
+        0000: { 1,0,0 },
+        // 0000: { 0,1,0 },
+        // 0000: { 0,0,1 },
+    }
+}
+Bone "0" {
+    ObjectId 0,
+}
+PivotPoints 1 {
+    { 0, 0, 0 },
+}

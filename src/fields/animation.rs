@@ -130,9 +130,10 @@ impl<T: TAnimation> Animation<T> {
 macro_rules! MdlWriteAnim {
     ($lines:ident, $depth:expr, $( $name:expr => $avar:expr ),+ $(,)?) => {
         $(
+            let anim = &$avar;
             let indent = indent!(&$depth);
-            $lines.push(F!("{}{} {} {{", indent, $name, $avar.key_frames.len()));
-            $lines.append($avar.write_mdl($depth + 1)?.as_mut());
+            $lines.push(F!("{}{} {} {{", indent, $name, anim.key_frames.len()));
+            $lines.append(anim.write_mdl($depth + 1)?.as_mut());
             $lines.push(F!("{}}}", indent));
         )+
     };
@@ -164,7 +165,7 @@ macro_rules! MdlWriteAnimStaticIfNone {
     };
 }
 #[macro_export]
-macro_rules! MdlWriteAnimBoth {
+macro_rules! MdlWriteAnimEither {
     ($lines:ident, $depth:expr, $( $name:expr => $avar:expr => $def:expr => $svar:expr ),+ $(,)?) => {
         $(if let Some(item) = &$avar {
             MdlWriteAnim!($lines, $depth, $name => item);

@@ -409,13 +409,13 @@ pub struct GeosetAnim {
     pub flags: GeosetAnimFlags,
     #[dbg(formatter = "fmtx")]
     #[default(Vec3::ONE)]
-    pub color: Vec3,
+    pub color: Vec3, // RGB
     pub geoset_id: i32,
 
     #[dbg(formatter = "fmtxx")]
     pub alpha_anim: Option<Animation<f32>>,
     #[dbg(formatter = "fmtxx")]
-    pub color_anim: Option<Animation<Vec3>>,
+    pub color_anim: Option<Animation<Vec3>>, // BGR
 }
 bitflags! {
     #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -490,8 +490,9 @@ impl GeosetAnim {
                 _other => (),
             );
         }
-        this.color = this.color.reverse();
-        this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
+        if *mdl_rgb!() {
+            this.color_anim = this.color_anim.map(|a| a.convert(|v| v.reverse()));
+        }
         return Ok(this);
     }
 
@@ -501,15 +502,16 @@ impl GeosetAnim {
         lines.push_if_nneg1(&F!("{indent}GeosetId"), &self.geoset_id);
         lines.push_if(self.flags.contains(GeosetAnimFlags::DropShadow), F!("{indent}DropShadow,"));
 
-        MdlWriteAnimBoth!(lines, depth, "Alpha" => self.alpha_anim => 1.0 => self.alpha);
-        // [todo] check if color anim need reverse as static does
+        MdlWriteAnimEither!(lines, depth, "Alpha" => self.alpha_anim => 1.0 => self.alpha);
         if self.flags.contains(GeosetAnimFlags::UseColor) {
             if let Some(anim) = &self.color_anim {
-                let bgr = anim.convert(|v| v.reverse());
-                MdlWriteAnim!(lines, depth, "Color" => bgr);
+                if *mdl_rgb!() {
+                    MdlWriteAnim!(lines, depth, "Color" => anim.convert(|v| v.reverse()));
+                } else {
+                    MdlWriteAnim!(lines, depth, "Color" => anim);
+                }
             } else {
-                let bgr = self.color.reverse();
-                MdlWriteAnimStatic!(lines, depth, "Color" => bgr);
+                MdlWriteAnimStatic!(lines, depth, "Color" => self.color);
             }
         }
 

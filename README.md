@@ -1,4 +1,4 @@
-# war3mdlx
+# War3Mdlx
 
 A command line tool to convert warcraft 3 model file: *.mdl <-> *.mdx
 
@@ -16,16 +16,20 @@ $ war3mdlx -h
 Usage: war3mdlx [OPTIONS] <INPUT>
 
 Options:
-      --mdl2x               Convert *.mdl to *.mdx
-      --mdx2l               Convert *.mdx to *.mdl
-  -F, --flat                Put output files in one directory and ignore hierarchy
-  -f, --overwrite           Overwrite existing output files (default: skip)
-  -E, --stop-on-error       Stop walking the directory hierarchy when an error occurs
-  -q, --quiet               Do not print log messages
-  -v, --verbose...          Print verbose log messages (-vv very verbose)
-  -d, --max-depth <0..255>  Max depth of directory traversal [default: 255]
-  -h, --help                Print help
-  -V, --version             Print version
+  -1, --mdl2x                     Convert *.mdl to *.mdx
+  -2, --mdx2l                     Convert *.mdx to *.mdl
+  -B, --mdl-rgb                   Swap color components when needed to make sure they are in RGB order in mdl files [default: as-is]
+  -F, --flat                      Put output files in one directory and ignore hierarchy
+  -f, --overwrite                 Overwrite existing output files [default: skip]
+  -e, --stop-on-error             Stop walking the directory hierarchy when an error occurs
+  -d, --max-depth <0..255>        Max depth of directory traversal [default: 255]
+  -p, --precision <0..10>         Max precision of decimal numbers when converted to text [default: 4]
+  -n, --line-ending <CR|LF|CRLF>  Used when writing text files [default: CRLF] [possible values: CR, LF, CRLF]
+  -i, --indent <Ns|Nt>            Used when writing text files (e.g. 1t: one tab, 4s: four spaces) [default: 1t]
+  -q, --quiet                     Do not print log messages
+  -v, --verbose...                Print verbose log messages (-vv very verbose)
+  -h, --help                      Print help
+  -V, --version                   Print version
 ```
 
 ## Build

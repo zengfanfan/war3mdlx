@@ -11,7 +11,6 @@ RibbonEmitter "[[[[v]]]]" {
     static Alpha 1.1,
     static Color { 0.25098, 0.66025, 0.501961 },
     static TextureSlot 5.5,
-    static Visibility 2.2,
     EmissionRate 8,
     LifeSpan 9,
     Gravity 10,

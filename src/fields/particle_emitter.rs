@@ -160,7 +160,7 @@ impl ParticleEmitter {
         lines.push_if(self.base.flags.contains(NodeFlags::PE1UsesMdl), F!("{indent}EmitterUsesMDL,"));
         lines.push_if(self.base.flags.contains(NodeFlags::PE1UsesTga), F!("{indent}EmitterUsesTGA,"));
 
-        MdlWriteAnimBoth!(lines, depth,
+        MdlWriteAnimEither!(lines, depth,
             "EmissionRate" => self.emit_rate_anim => 0.0 => self.emit_rate,
             "Gravity" => self.gravity_anim => 0.0 => self.gravity,
             "Longitude" => self.longitude_anim => 0.0 => self.longitude,
@@ -170,7 +170,7 @@ impl ParticleEmitter {
 
         {
             let mut tlines: Vec<String> = vec![];
-            MdlWriteAnimBoth!(tlines, depth + 1,
+            MdlWriteAnimEither!(tlines, depth + 1,
                 "LifeSpan" => self.lifespan_anim => 0.0 => self.lifespan,
                 "InitVelocity" => self.speed_anim => 0.0 => self.speed,
             );

@@ -223,7 +223,7 @@ impl Layer {
         lines.push_if_nneg1(&F!("{indent2}TVertexAnimId"), &self.texture_anim_id);
         lines.push_if_n0(&F!("{indent2}CoordId"), &self.coordid);
 
-        MdlWriteAnimBoth!(lines, depth + 1,
+        MdlWriteAnimEither!(lines, depth + 1,
             "TextureID" => self.texid_anim => -1 => self.texture_id,
             "Alpha" => self.alpha_anim => 1.0 => self.alpha,
         );

@@ -7,6 +7,10 @@ homepage = "https://github.com/zengfanfan/war3mdlx"
 repository = "https://github.com/zengfanfan/war3mdlx"
 license = "GPL-3.0"
 
+[[bin]]
+name = "war3mdlx"
+path = "src/main.rs"
+
 [dependencies]
 clap = { version = "4", features = ["derive"], registry = "aliyun" }
 byteorder = { version = "1", registry = "aliyun" }
