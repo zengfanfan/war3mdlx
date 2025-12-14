@@ -6,6 +6,7 @@ authors = ["zengfanfan"]
 homepage = "https://github.com/zengfanfan/war3mdlx"
 repository = "https://github.com/zengfanfan/war3mdlx"
 license = "GPL-3.0"
+description = "A command line tool to convert Warcraft 3 model file (mdl <-> mdx)."
 
 [[bin]]
 name = "war3mdlx"
