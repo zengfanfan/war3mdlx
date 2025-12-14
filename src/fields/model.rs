@@ -15,7 +15,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub const ID: u32 = MdlxMagic::MODL as u32;
+    pub const ID: u32 = MdlxMagic::MODL;
     const NAME_SIZE: u32 = 336;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {

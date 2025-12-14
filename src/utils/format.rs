@@ -14,45 +14,55 @@ macro_rules! F {
 }
 
 pub fn fmtx<T: Formatter>(v: &T) -> String {
-    v.fmt()
+    T::fmt(v)
 }
 pub fn fmtxx<T: FormatterXX>(v: &T) -> String {
-    v.fmtxx()
+    T::fmtxx(v)
 }
 
 fn trim_float_str(s: &str) -> String {
+    let s = s.trim();
+    let signstr = yesno!(s.starts_with('-'), "-", "");
+    let s = s.trim_start_matches('-');
     let (i, f) = match s.split_once('.') {
         Some((i, f)) => (i, f),
         None => (s, ""),
     };
     let mut i = i.trim_start_matches(&[' ', '0']);
     let f = f.trim_end_matches(&[' ', '0']);
-    if i.len() == 0 {
-        i = "0";
+    yes!(i.len() == 0, i = "0");
+    if f.len() == 0 {
+        return F!("{}{}", yesno!(i == "0", "", signstr), i);
+    } else {
+        return F!("{}{}.{}", signstr, i, f);
     }
-    if f.len() == 0 { i.to_string() } else { F!("{}.{}", i, f) }
 }
 
 pub fn fmt_float(v: &f32, len: u32, precision: u32) -> String {
-    let len = len as usize;
-    let precision = precision as usize;
+    let (len, precision) = (len as usize, precision as usize);
     let s = F!("{:.*}", precision, v);
     let s = trim_float_str(&s);
-    if s.len() <= len {
-        return s;
-    }
-    let s = F!("{:.*e}", precision, v);
-    let (i, e) = s.split_once('e').unwrap();
-    let i = trim_float_str(&i);
-    let s = F!("{}e{}", i, e);
-    let ev: i32 = e.parse().unwrap();
-    match ev.abs() as usize > (len + precision) / 2 {
-        true => s,
-        false => {
-            let v: f32 = s.parse().unwrap();
-            let s = F!("{:.*}", precision, v);
-            return trim_float_str(&s);
-        },
+    let ret = if s.len() <= len {
+        s
+    } else {
+        let s = F!("{:.*e}", precision, v);
+        let (i, e) = s.split_once('e').unwrap();
+        let i = trim_float_str(&i);
+        let s = F!("{}e{}", i, e);
+        let ev: i32 = e.parse().unwrap();
+        match ev.abs() as usize > (len + precision) / 2 {
+            true => s,
+            false => {
+                let v: f32 = s.parse().unwrap();
+                let s = F!("{:.*}", precision, v);
+                trim_float_str(&s)
+            },
+        }
+    };
+    if let Ok(f) = ret.parse::<f32>() {
+        return yesno!(f == 0.0, "0".to_string(), ret); // avoid "-0"
+    } else {
+        return ret;
     }
 }
 

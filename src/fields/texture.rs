@@ -18,7 +18,7 @@ bitflags! {
 }
 
 impl Texture {
-    pub const ID: u32 = MdlxMagic::TEXS as u32;
+    pub const ID: u32 = MdlxMagic::TEXS;
     const PATH_SIZE: u32 = 256;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
@@ -76,10 +76,10 @@ pub struct TextureAnim {
 }
 
 impl TextureAnim {
-    pub const ID: u32 = MdlxMagic::TXAN as u32;
-    const ID_T: u32 = MdlxMagic::KTAT as u32; /* Translation */
-    const ID_R: u32 = MdlxMagic::KTAR as u32; /* Rotation */
-    const ID_S: u32 = MdlxMagic::KTAS as u32; /* Scaling */
+    pub const ID: u32 = MdlxMagic::TXAN;
+    const ID_T: u32 = MdlxMagic::KTAT; /* Translation */
+    const ID_R: u32 = MdlxMagic::KTAR; /* Rotation */
+    const ID_S: u32 = MdlxMagic::KTAS; /* Scaling */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build!();

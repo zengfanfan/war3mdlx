@@ -57,15 +57,15 @@ pub struct ParticleEmitter2 {
 }
 
 impl ParticleEmitter2 {
-    pub const ID: u32 = MdlxMagic::PRE2 as u32;
-    const ID_ER: u32 = MdlxMagic::KP2E as u32; /* Emission Rate */
-    const ID_W: u32 = MdlxMagic::KP2W as u32; /* Width */
-    const ID_L: u32 = MdlxMagic::KP2N as u32; /* Length */
-    const ID_SPD: u32 = MdlxMagic::KP2S as u32; /* Speed */
-    const ID_LA: u32 = MdlxMagic::KP2L as u32; /* Latitude */
-    const ID_VA: u32 = MdlxMagic::KP2R as u32; /* Variation */
-    const ID_G: u32 = MdlxMagic::KP2G as u32; /* Gravity */
-    const ID_V: u32 = MdlxMagic::KP2V as u32; /* Visibility */
+    pub const ID: u32 = MdlxMagic::PRE2;
+    const ID_SPD: u32 = MdlxMagic::KP2S; /* Speed */
+    const ID_VA: u32 = MdlxMagic::KP2R; /* Variation */
+    const ID_LA: u32 = MdlxMagic::KP2L; /* Latitude */
+    const ID_G: u32 = MdlxMagic::KP2G; /* Gravity */
+    const ID_ER: u32 = MdlxMagic::KP2E; /* Emission Rate */
+    const ID_V: u32 = MdlxMagic::KP2V; /* Visibility */
+    const ID_L: u32 = MdlxMagic::KP2N; /* Length */
+    const ID_W: u32 = MdlxMagic::KP2W; /* Width */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdx(cur)? };
@@ -165,9 +165,9 @@ impl ParticleEmitter2 {
             Self::ID_LA => self.latitude_anim,
             Self::ID_G  => self.gravity_anim,
             Self::ID_ER => self.emit_rate_anim,
+            Self::ID_V  => self.visibility,
             Self::ID_L  => self.length_anim,
             Self::ID_W  => self.width_anim,
-            Self::ID_V  => self.visibility,
         );
         return Ok(());
     }
@@ -277,33 +277,37 @@ impl ParticleEmitter2 {
                 lines.push(F!("{indent}}},"));
             }
         }
-        lines.pushx(&F!("{indent}Alpha"), &self.segment_alpha);
-        lines.pushx(&F!("{indent}ParticleScaling"), &self.segment_scaling);
-        lines.pushx_if_n0(&F!("{indent}LifeSpanUVAnim"), &self.head_life);
-        lines.pushx_if_n0(&F!("{indent}DecayUVAnim"), &self.head_decay);
-        lines.pushx_if_n0(&F!("{indent}TailUVAnim"), &self.tail_life);
-        lines.pushx_if_n0(&F!("{indent}TailDecayUVAnim"), &self.tail_decay);
+        {
+            lines.pushx(&F!("{indent}Alpha"), &self.segment_alpha);
+            lines.pushx(&F!("{indent}ParticleScaling"), &self.segment_scaling);
+            lines.pushx_if_n0(&F!("{indent}LifeSpanUVAnim"), &self.head_life);
+            lines.pushx_if_n0(&F!("{indent}DecayUVAnim"), &self.head_decay);
+            lines.pushx_if_n0(&F!("{indent}TailUVAnim"), &self.tail_life);
+            lines.pushx_if_n0(&F!("{indent}TailDecayUVAnim"), &self.tail_decay);
+        }
+        {
+            lines.pushx_if_n0(&F!("{indent}Rows"), &self.rows);
+            lines.pushx_if_n0(&F!("{indent}Columns"), &self.columns);
+            lines.pushx_if_n0(&F!("{indent}Time"), &self.time);
+            lines.pushx_if_n0(&F!("{indent}LifeSpan"), &self.lifespan);
+            lines.pushx_if_n0(&F!("{indent}TailLength"), &self.tail_length);
+            lines.pushx_if_nneg1(&F!("{indent}TextureID"), &self.texture_id);
+            lines.pushx_if_n0(&F!("{indent}ReplaceableId"), &self.replace_id);
+            lines.pushx_if_n0(&F!("{indent}PriorityPlane"), &self.priority_plane);
+        }
+        {
+            let flags = self.base.flags;
+            lines.push_if(flags.contains(NodeFlags::PE2SortPrimFarZ), F!("{indent}SortPrimsFarZ,"));
+            lines.push_if(flags.contains(NodeFlags::LineEmitter), F!("{indent}LineEmitter,"));
+            lines.push_if(flags.contains(NodeFlags::ModelSpace), F!("{indent}ModelSpace,"));
+            lines.push_if(flags.contains(NodeFlags::PE2Unshaded), F!("{indent}Unshaded,"));
+            lines.push_if(flags.contains(NodeFlags::Unfogged), F!("{indent}Unfogged,"));
+            lines.push_if(flags.contains(NodeFlags::XYQuad), F!("{indent}XYQuad,"));
+            lines.push_if(self.squirt, F!("{indent}Squirt,"));
+            lines.push_if(self.head_or_tail.is_valid(), F!("{indent}{:?},", self.head_or_tail));
+        }
 
-        lines.pushx_if_n0(&F!("{indent}Rows"), &self.rows);
-        lines.pushx_if_n0(&F!("{indent}Columns"), &self.columns);
-        lines.pushx_if_n0(&F!("{indent}Time"), &self.time);
-        lines.pushx_if_n0(&F!("{indent}LifeSpan"), &self.lifespan);
-        lines.pushx_if_n0(&F!("{indent}TailLength"), &self.tail_length);
-        lines.pushx_if_nneg1(&F!("{indent}TextureID"), &self.texture_id);
-        lines.pushx_if_n0(&F!("{indent}ReplaceableId"), &self.replace_id);
-        lines.pushx_if_n0(&F!("{indent}PriorityPlane"), &self.priority_plane);
-
-        let flags = self.base.flags;
-        lines.push_if(flags.contains(NodeFlags::PE2SortPrimFarZ), F!("{indent}SortPrimsFarZ,"));
-        lines.push_if(flags.contains(NodeFlags::LineEmitter), F!("{indent}LineEmitter,"));
-        lines.push_if(flags.contains(NodeFlags::ModelSpace), F!("{indent}ModelSpace,"));
-        lines.push_if(flags.contains(NodeFlags::PE2Unshaded), F!("{indent}Unshaded,"));
-        lines.push_if(flags.contains(NodeFlags::Unfogged), F!("{indent}Unfogged,"));
-        lines.push_if(flags.contains(NodeFlags::XYQuad), F!("{indent}XYQuad,"));
-        lines.push_if(self.squirt, F!("{indent}Squirt,"));
-        lines.push_if(self.head_or_tail.is_valid(), F!("{indent}{:?},", self.head_or_tail));
-
-        MdlWriteAnimEither!(lines, depth,
+        MdlWriteAnimBoth!(lines, depth,
             "Speed" => self.speed_anim => 0.0 => self.speed,
             "Variation" => self.variation_anim => 0.0 => self.variation,
             "Latitude" => self.latitude_anim => 0.0 => self.latitude,

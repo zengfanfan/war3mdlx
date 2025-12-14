@@ -19,9 +19,9 @@ pub struct Node {
 
 impl Node {
     const NAME_SIZE: u32 = 80;
-    const ID_T: u32 = MdlxMagic::KGTR as u32; /* Translation */
-    const ID_R: u32 = MdlxMagic::KGRT as u32; /* Rotation */
-    const ID_S: u32 = MdlxMagic::KGSC as u32; /* Scaling */
+    const ID_T: u32 = MdlxMagic::KGTR; /* Translation */
+    const ID_R: u32 = MdlxMagic::KGRT; /* Rotation */
+    const ID_S: u32 = MdlxMagic::KGSC; /* Scaling */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build!();

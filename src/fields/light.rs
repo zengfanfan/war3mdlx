@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct Light {
     pub base: Node,
 
@@ -9,9 +9,11 @@ pub struct Light {
     pub attenuate_start: f32,
     pub attenuate_end: f32,
     #[dbg(formatter = "fmtx")]
+    #[default(Vec3::ONE)]
     pub color: Vec3, // RGB
     pub intensity: f32,
     #[dbg(formatter = "fmtx")]
+    #[default(Vec3::ONE)]
     pub amb_color: Vec3, // RGB
     pub amb_intensity: f32,
 
@@ -32,14 +34,14 @@ pub struct Light {
 }
 
 impl Light {
-    pub const ID: u32 = MdlxMagic::LITE as u32;
-    const ID_AS: u32 = MdlxMagic::KLAS as u32; /* Attenuate start */
-    const ID_AE: u32 = MdlxMagic::KLAE as u32; /* Attenuate end */
-    const ID_C: u32 = MdlxMagic::KLAC as u32; /* Color */
-    const ID_I: u32 = MdlxMagic::KLAI as u32; /* Intensity */
-    const ID_AC: u32 = MdlxMagic::KLBC as u32; /* Ambient color */
-    const ID_AI: u32 = MdlxMagic::KLBI as u32; /* Ambient intensity */
-    const ID_V: u32 = MdlxMagic::KLAV as u32; /* Visibility */
+    pub const ID: u32 = MdlxMagic::LITE;
+    const ID_AS: u32 = MdlxMagic::KLAS; /* Attenuate start */
+    const ID_AE: u32 = MdlxMagic::KLAE; /* Attenuate end */
+    const ID_C: u32 = MdlxMagic::KLAC; /* Color */
+    const ID_I: u32 = MdlxMagic::KLAI; /* Intensity */
+    const ID_AC: u32 = MdlxMagic::KLBC; /* Ambient color */
+    const ID_AI: u32 = MdlxMagic::KLBI; /* Ambient intensity */
+    const ID_V: u32 = MdlxMagic::KLAV; /* Visibility */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdx(cur)? };
@@ -156,12 +158,12 @@ impl Light {
         let color_anim = yesno!(*mdl_rgb!(), &bgr_anim, &self.color_anim);
         let amb_color_anim = yesno!(*mdl_rgb!(), &bgr2_anim, &self.amb_color_anim);
 
-        MdlWriteAnimEither!(lines, depth,
+        MdlWriteAnimBoth!(lines, depth,
             "AttenuationStart" => self.attenuate_start_anim => 0.0 => self.attenuate_start,
             "AttenuationEnd" => self.attenuate_end_anim => 0.0 => self.attenuate_end,
-            "Color" => color_anim => Vec3::ZERO => self.color,
+            "Color" => color_anim => Vec3::ONE => self.color,
             "Intensity" => self.intensity_anim => 0.0 => self.intensity,
-            "AmbColor" => amb_color_anim => Vec3::ZERO => self.amb_color,
+            "AmbColor" => amb_color_anim => Vec3::ONE => self.amb_color,
             "AmbIntensity" => self.amb_intensity_anim => 0.0 => self.amb_intensity,
         );
         MdlWriteAnimIfSome!(lines, depth, "Visibility" => self.visibility);

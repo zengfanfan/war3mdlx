@@ -206,7 +206,7 @@ impl Geoset {
         }
 
         let (nnorm, nvert) = (this.normals.len(), this.vertices.len());
-        yes!(nnorm != nvert, elog!("OMG! {} #[normals] {} != {} #[vertices] ?", TNAME!(), nnorm, nvert));
+        yes!(nnorm != nvert, log!("OMG! {} #[normals] {} != {} #[vertices] ?", TNAME!(), nnorm, nvert));
 
         yes!(uvsn != this.uvss.len(), elog!("OMG! {} [number for UVs] {uvsn} != {} ?", TNAME!(), this.uvss.len()));
 
@@ -426,9 +426,9 @@ bitflags! {
 }
 
 impl GeosetAnim {
-    pub const ID: u32 = MdlxMagic::GEOA as u32;
-    const ID_ALPHA: u32 = MdlxMagic::KGAO as u32;
-    const ID_COLOR: u32 = MdlxMagic::KGAC as u32;
+    pub const ID: u32 = MdlxMagic::GEOA;
+    const ID_ALPHA: u32 = MdlxMagic::KGAO;
+    const ID_COLOR: u32 = MdlxMagic::KGAC;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build!();
@@ -502,7 +502,7 @@ impl GeosetAnim {
         lines.push_if_nneg1(&F!("{indent}GeosetId"), &self.geoset_id);
         lines.push_if(self.flags.contains(GeosetAnimFlags::DropShadow), F!("{indent}DropShadow,"));
 
-        MdlWriteAnimEither!(lines, depth, "Alpha" => self.alpha_anim => 1.0 => self.alpha);
+        MdlWriteAnimBoth!(lines, depth, "Alpha" => self.alpha_anim => 1.0 => self.alpha);
         if self.flags.contains(GeosetAnimFlags::UseColor) {
             if let Some(anim) = &self.color_anim {
                 if *mdl_rgb!() {

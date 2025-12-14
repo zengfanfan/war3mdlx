@@ -72,7 +72,7 @@ macro_rules! MdxWriteType2 {
 }
 
 impl MdlxData {
-    pub fn write_mdx(&self, path: &Path) -> Result<(), MyError> /* [todo] */ {
+    pub fn write_mdx(&self, path: &Path) -> Result<(), MyError> {
         let mut cur = Cursor::new(Vec::<u8>::with_capacity(0x40000_usize));
 
         if let Err(e) = cur.write_be(&MdlxMagic::MDLX) {
@@ -86,29 +86,23 @@ impl MdlxData {
         MdxWriteType2!(cur,
             Sequence        => self.sequences,
             GlobalSequence  => self.globalseqs,
-            Texture         => self.textures,
-            Bone            => self.bones,
-            Helper          => self.helpers,
-            EventObject     => self.eventobjs,
-            CollisionShape  => self.collisions,
-            PivotPoint      => self.pivot_points,
-            TextureAnim     => self.texanims,
             Material        => self.materials,
+            Texture         => self.textures,
+            TextureAnim     => self.texanims,
             Geoset          => self.geosets,
             GeosetAnim      => self.geoanims,
-            Attachment      => self.attachments,
+            Bone            => self.bones,
             Light           => self.lights,
+            Helper          => self.helpers,
+            Attachment      => self.attachments,
+            PivotPoint      => self.pivot_points,
             ParticleEmitter => self.particle_emitters,
             ParticleEmitter2=> self.particle_emitters2,
             RibbonEmitter   => self.ribbon_emitters,
             Camera          => self.cameras,
+            EventObject     => self.eventobjs,
+            CollisionShape  => self.collisions,
         );
-
-        if let Some(parent) = path.parent() {
-            if let Err(e) = fs::create_dir_all(parent) {
-                EXIT1!("creating directory: {}", e);
-            }
-        }
 
         std::fs::write(path, cur.into_inner())?;
         EXIT!();
@@ -128,7 +122,7 @@ impl MdlxData {
             this.parse_mdx_chunk(&chunk)?;
         }
 
-        dbgx!(&this);
+        vvvlog!("{}", F!("{:#?}", &this).replace("    ", "  "));
         return Ok(this);
     }
 

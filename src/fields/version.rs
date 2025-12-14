@@ -7,7 +7,7 @@ pub struct Version {
 }
 
 impl Version {
-    pub const ID: u32 = MdlxMagic::VERS as u32;
+    pub const ID: u32 = MdlxMagic::VERS;
     pub const SUPPORTED_VERSION: [i32; 1] = [800];
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
@@ -34,7 +34,7 @@ impl Version {
         return Ok(vec![
             F!("{indent}Version {{"),
             F!("{indent2}FormatVersion {},", self.format_version),
-            F!("{indent}}},"),
+            F!("{indent}}}"),
         ]);
     }
 }

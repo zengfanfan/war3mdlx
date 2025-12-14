@@ -21,7 +21,11 @@ pub struct Args {
     pub mdl2x: bool,
     #[arg(long, short = '2', help = "Convert *.mdx to *.mdl")]
     pub mdx2l: bool,
-    #[arg(long, short = 'B', help = "Swap color components when needed to make sure they are in RGB order in mdl files [default: as-is]")]
+    #[arg(
+        long,
+        short = 'B',
+        help = "Swap color components when needed to make sure they are in RGB order in mdl files [default: as-is]"
+    )]
     pub mdl_rgb: bool,
 
     #[arg(long, short = 'F', help = "Put output files in one directory and ignore hierarchy")]
@@ -37,11 +41,11 @@ pub struct Args {
         long,
         short = 'p',
         default_value_t = 4,
-        value_parser = clap::value_parser!(i8).range(0..=10),
-        value_name = "0..10",
+        value_parser = clap::value_parser!(u8).range(0..=255),
+        value_name = "0..255",
         help = "Max precision of decimal numbers when converted to text",
     )]
-    pub precision: i8,
+    pub precision: u8,
     #[arg(
         long,
         short = 'n',
@@ -84,13 +88,13 @@ impl Args {
     pub fn execute(&self, worker: &mut Worker) -> Result<(), MyError> {
         let input = PathBuf::from(&self.input);
         match self.check_input(&input) {
-            CheckResult::ExpectFileDir => EXIT1!("Not a file or directory: {:?}", input),
+            CheckResult::ExpectFileDir => EXIT1!("Not an existing file or directory: {:?}", input),
             CheckResult::ExpectMDLX => EXIT1!("Invalid input: {:?}, expect *.mdl or *.mdx", input),
             CheckResult::ExpectMDL => EXIT1!("Invalid input: {:?}, expect *.mdl", input),
             CheckResult::ExpectMDX => EXIT1!("Invalid input: {:?}, expect *.mdx", input),
-            CheckResult::Ok => match input.ext_lower().as_str() {
-                ext @ ("mdl" | "mdx") => self.handle_file(worker, input, ext),
-                _ => self.handle_dir(worker, input),
+            CheckResult::Ok => match input.is_dir() {
+                false => self.handle_file(worker, input),
+                true => self.handle_dir(worker, input),
             },
         }
     }
@@ -107,10 +111,10 @@ impl Args {
         }
     }
 
-    fn handle_file(&self, worker: &mut Worker, input: PathBuf, inext: &str) -> Result<(), MyError> {
+    fn handle_file(&self, worker: &mut Worker, input: PathBuf) -> Result<(), MyError> {
         let mut output = match &self.output {
             Some(o) => PathBuf::from(o),
-            None => input.with_extension(self.guess_output_ext(inext)),
+            None => input.with_extension(self.guess_output_ext(input.extension().unwrap().to_str().unwrap())),
         };
 
         let opath = output.display().to_string();
@@ -131,7 +135,7 @@ impl Args {
     fn handle_dir(&self, worker: &mut Worker, input: PathBuf) -> Result<(), MyError> {
         let output = self.output.as_ref().and_then(|o| Some(PathBuf::from(o))).unwrap_or(input.to_path_buf());
         if !output.is_dir() {
-            EXIT1!("Output should be also a directory: {}", output.fmtx());
+            EXIT1!("Output is not an existing directory: {}", output.fmtx());
         }
 
         for entry in WalkDir::new(&input).max_depth(self.max_depth as usize + 1).into_iter().filter_map(|e| e.ok()) {

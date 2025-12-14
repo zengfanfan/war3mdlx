@@ -7,7 +7,7 @@ pub struct PivotPoint {
 }
 
 impl PivotPoint {
-    pub const ID: u32 = MdlxMagic::PIVT as u32;
+    pub const ID: u32 = MdlxMagic::PIVT;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Self { position: cur.readx()? })

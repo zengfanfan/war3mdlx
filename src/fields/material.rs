@@ -128,9 +128,9 @@ bitflags! {
 }
 
 impl Layer {
-    pub const ID: u32 = MdlxMagic::LAYS as u32;
-    const ID_ALPHA: u32 = MdlxMagic::KMTA as u32;
-    const ID_TEXID: u32 = MdlxMagic::KMTF as u32;
+    pub const ID: u32 = MdlxMagic::LAYS;
+    const ID_ALPHA: u32 = MdlxMagic::KMTA;
+    const ID_TEXID: u32 = MdlxMagic::KMTF;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build!();
@@ -223,7 +223,7 @@ impl Layer {
         lines.push_if_nneg1(&F!("{indent2}TVertexAnimId"), &self.texture_anim_id);
         lines.push_if_n0(&F!("{indent2}CoordId"), &self.coordid);
 
-        MdlWriteAnimEither!(lines, depth + 1,
+        MdlWriteAnimBoth!(lines, depth + 1,
             "TextureID" => self.texid_anim => -1 => self.texture_id,
             "Alpha" => self.alpha_anim => 1.0 => self.alpha,
         );

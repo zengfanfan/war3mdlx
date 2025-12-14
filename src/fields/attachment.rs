@@ -16,8 +16,8 @@ pub struct Attachment {
 }
 
 impl Attachment {
-    pub const ID: u32 = MdlxMagic::ATCH as u32;
-    const ID_V: u32 = MdlxMagic::KATV as u32; /* Visibility */
+    pub const ID: u32 = MdlxMagic::ATCH;
+    const ID_V: u32 = MdlxMagic::KATV; /* Visibility */
     const PATH_SIZE: u32 = 256;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {

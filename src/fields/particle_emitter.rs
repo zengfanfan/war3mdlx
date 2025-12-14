@@ -31,14 +31,14 @@ pub struct ParticleEmitter {
 }
 
 impl ParticleEmitter {
-    pub const ID: u32 = MdlxMagic::PREM as u32;
-    const ID_ER: u32 = MdlxMagic::KPEE as u32; /* Emission rate */
-    const ID_G: u32 = MdlxMagic::KPEG as u32; /* Gravity */
-    const ID_LO: u32 = MdlxMagic::KPLN as u32; /* Longitude */
-    const ID_LA: u32 = MdlxMagic::KPLT as u32; /* Latitude */
-    const ID_LS: u32 = MdlxMagic::KPEL as u32; /* Life span */
-    const ID_SPD: u32 = MdlxMagic::KPES as u32; /* Speed */
-    const ID_V: u32 = MdlxMagic::KPEV as u32; /* Visibility */
+    pub const ID: u32 = MdlxMagic::PREM;
+    const ID_ER: u32 = MdlxMagic::KPEE; /* Emission rate */
+    const ID_G: u32 = MdlxMagic::KPEG; /* Gravity */
+    const ID_LO: u32 = MdlxMagic::KPLN; /* Longitude */
+    const ID_LA: u32 = MdlxMagic::KPLT; /* Latitude */
+    const ID_LS: u32 = MdlxMagic::KPEL; /* Life span */
+    const ID_SPD: u32 = MdlxMagic::KPES; /* Speed */
+    const ID_V: u32 = MdlxMagic::KPEV; /* Visibility */
     const PATH_SIZE: u32 = 256;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
@@ -160,7 +160,7 @@ impl ParticleEmitter {
         lines.push_if(self.base.flags.contains(NodeFlags::PE1UsesMdl), F!("{indent}EmitterUsesMDL,"));
         lines.push_if(self.base.flags.contains(NodeFlags::PE1UsesTga), F!("{indent}EmitterUsesTGA,"));
 
-        MdlWriteAnimEither!(lines, depth,
+        MdlWriteAnimBoth!(lines, depth,
             "EmissionRate" => self.emit_rate_anim => 0.0 => self.emit_rate,
             "Gravity" => self.gravity_anim => 0.0 => self.gravity,
             "Longitude" => self.longitude_anim => 0.0 => self.longitude,
@@ -170,7 +170,7 @@ impl ParticleEmitter {
 
         {
             let mut tlines: Vec<String> = vec![];
-            MdlWriteAnimEither!(tlines, depth + 1,
+            MdlWriteAnimBoth!(tlines, depth + 1,
                 "LifeSpan" => self.lifespan_anim => 0.0 => self.lifespan,
                 "InitVelocity" => self.speed_anim => 0.0 => self.speed,
             );

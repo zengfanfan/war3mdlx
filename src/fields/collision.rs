@@ -10,7 +10,7 @@ pub struct CollisionShape {
 }
 
 impl CollisionShape {
-    pub const ID: u32 = MdlxMagic::CLID as u32;
+    pub const ID: u32 = MdlxMagic::CLID;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdx(cur)? };

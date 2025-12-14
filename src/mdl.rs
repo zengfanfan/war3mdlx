@@ -208,11 +208,19 @@ impl MdlValue {
                 let mut fv = Vec::<f32>::with_capacity(inner.len());
                 let mut iv = Vec::<i32>::with_capacity(fv.capacity());
                 for p in inner {
+                    let s = p.as_str();
                     if p.as_rule() == Rule::float {
-                        fv.push(p.as_str().parse().unwrap());
+                        fv.push(s.parse().unwrap());
                     } else {
-                        let s = p.as_str();
-                        iv.push(s.parse().unwrap());
+                        // 19: number of digits in i64:MAX
+                        let i = if s.len() < 19 {
+                            s.parse::<i64>().unwrap()
+                        } else {
+                            yesno!(s.starts_with('-'), i64::MIN, i64::MAX)
+                        };
+                        if i >= i32::MIN as i64 && i <= i32::MAX as i64 {
+                            iv.push(i as i32);
+                        }
                         fv.push(s.parse().unwrap());
                     }
                 }

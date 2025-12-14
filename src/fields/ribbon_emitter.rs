@@ -35,13 +35,13 @@ pub struct RibbonEmitter {
 }
 
 impl RibbonEmitter {
-    pub const ID: u32 = MdlxMagic::RIBB as u32;
-    const ID_HA: u32 = MdlxMagic::KRHA as u32; /* Height Above */
-    const ID_HB: u32 = MdlxMagic::KRHB as u32; /* Height Below */
-    const ID_A: u32 = MdlxMagic::KRAL as u32; /* Alpha */
-    const ID_C: u32 = MdlxMagic::KRCO as u32; /* Color */
-    const ID_TS: u32 = MdlxMagic::KRTX as u32; /* TextureSlot */
-    const ID_V: u32 = MdlxMagic::KRVS as u32; /* Visibility */
+    pub const ID: u32 = MdlxMagic::RIBB;
+    const ID_HA: u32 = MdlxMagic::KRHA; /* Height Above */
+    const ID_HB: u32 = MdlxMagic::KRHB; /* Height Below */
+    const ID_A: u32 = MdlxMagic::KRAL; /* Alpha */
+    const ID_C: u32 = MdlxMagic::KRCO; /* Color */
+    const ID_TS: u32 = MdlxMagic::KRTX; /* TextureSlot */
+    const ID_V: u32 = MdlxMagic::KRVS; /* Visibility */
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdx(cur)? };
@@ -162,7 +162,7 @@ impl RibbonEmitter {
         lines.pushx_if_n0(&F!("{indent}Columns"), &self.columns);
         lines.pushx_if_nneg1(&F!("{indent}MaterialID"), &self.material_id);
 
-        MdlWriteAnimEither!(lines, depth,
+        MdlWriteAnimBoth!(lines, depth,
             "HeightAbove" => self.height_above_anim => 0.0 => self.height_above,
             "HeightBelow" => self.height_below_anim => 0.0 => self.height_below,
             "Alpha" => self.alpha_anim => 1.0 => self.alpha,

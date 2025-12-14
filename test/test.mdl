@@ -6,7 +6,7 @@
 //+------------------------------------------------+
 Version {
 	FormatVersion 800,
-},
+}
 Model "Minimal" {
 	BoundsRadius 123.456,
 	MinimumExtent { 1, 2.2, 3.33 },

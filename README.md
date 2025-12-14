@@ -23,7 +23,7 @@ Options:
   -f, --overwrite                 Overwrite existing output files [default: skip]
   -e, --stop-on-error             Stop walking the directory hierarchy when an error occurs
   -d, --max-depth <0..255>        Max depth of directory traversal [default: 255]
-  -p, --precision <0..10>         Max precision of decimal numbers when converted to text [default: 4]
+  -p, --precision <0..255>        Max precision of decimal numbers when converted to text [default: 4]
   -n, --line-ending <CR|LF|CRLF>  Used when writing text files [default: CRLF] [possible values: CR, LF, CRLF]
   -i, --indent <Ns|Nt>            Used when writing text files (e.g. 1t: one tab, 4s: four spaces) [default: 1t]
   -q, --quiet                     Do not print log messages

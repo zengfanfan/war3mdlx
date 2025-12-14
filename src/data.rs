@@ -55,6 +55,11 @@ impl MdlxData {
     }
 
     pub fn write(&mut self, path: &Path) -> Result<(), MyError> {
+        if let Some(parent) = path.parent() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                EXIT1!("creating directory: {}", e);
+            }
+        }
         match path.ext_lower().as_ref() {
             "mdl" => self.write_mdl(path).or_else(|e| ERR!("Failed to write file {:?}: {}", path, e)),
             "mdx" => self.write_mdx(path).or_else(|e| ERR!("Failed to write file {:?}: {}", path, e)),

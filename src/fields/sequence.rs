@@ -19,7 +19,7 @@ pub struct Sequence {
 }
 
 impl Sequence {
-    pub const ID: u32 = MdlxMagic::SEQS as u32;
+    pub const ID: u32 = MdlxMagic::SEQS;
     const NAME_SIZE: u32 = 80;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {

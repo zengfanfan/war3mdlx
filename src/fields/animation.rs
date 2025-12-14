@@ -157,21 +157,20 @@ macro_rules! MdlWriteAnimStatic {
     };
 }
 #[macro_export]
-macro_rules! MdlWriteAnimStaticIfNone {
-    ($lines:ident, $depth:expr, $( $name:expr => $avar:expr => $def:expr => $svar:expr ),+ $(,)?) => {
-        $(if let None = &$avar && $svar != $def {
+macro_rules! MdlWriteAnimStaticIfNot {
+    ($lines:ident, $depth:expr, $( $name:expr => $def:expr => $svar:expr ),+ $(,)?) => {
+        $(if $svar != $def {
             MdlWriteAnimStatic!($lines, $depth, $name => $svar);
         })+
     };
 }
 #[macro_export]
-macro_rules! MdlWriteAnimEither {
+macro_rules! MdlWriteAnimBoth {
     ($lines:ident, $depth:expr, $( $name:expr => $avar:expr => $def:expr => $svar:expr ),+ $(,)?) => {
-        $(if let Some(item) = &$avar {
-            MdlWriteAnim!($lines, $depth, $name => item);
-        } else if $svar != $def {
-            MdlWriteAnimStatic!($lines, $depth, $name => $svar);
-        })+
+        $(
+            MdlWriteAnimStaticIfNot!($lines, $depth, $name => $def => $svar);
+            MdlWriteAnimIfSome!($lines, $depth, $name => $avar);
+        )+
     };
 }
 

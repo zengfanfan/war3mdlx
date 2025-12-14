@@ -94,6 +94,7 @@ Materials 3 {
             static Alpha 0.55,
         }
         Layer {
+            // MPQ/MDX Animation order: Units/Human/WaterElemental/WaterElemental.mdx: "KMTA", "KMTF"
             FilterMode None,
             TVertexAnimId 123,
             TextureID 2 {
@@ -112,6 +113,7 @@ Materials 3 {
 }
 TextureAnims 2 {
     TVertexAnim {
+        // MPQ/MDX Animation order: Abilities/Spells/Human/ManaShield/ManaShieldCaster.mdx": "KTAT", "KTAR", "KTAS"
         Translation 1 {
             Linear,
             GlobalSeqId 0,
@@ -284,6 +286,7 @@ GeosetAnim {
 }
 GeosetAnim {
     GeosetId 0,
+    // MPQ/MDX Animation order: Abilities/Spells/Human/InnerFire/InnerFireTarget.mdx: "KGAO", "KGAC"
     Alpha 1 {
         Bezier,
         0: 1,
@@ -311,6 +314,7 @@ Bone "child" {
     BillboardedLockY,
     BillboardedLockZ,
     CameraAnchored,
+    // MPQ/MDX Animation order: Abilities/Spells/Demon/RainOfFire/RainOfFireTarget.mdx: "KGTR", "KGRT", "KGSC"
     Translation 3 {
         Hermite,
         0: { 0, 0, 0 },
@@ -380,13 +384,11 @@ Light "LITE.2 color anim" {
     Parent 2,
     Directional,
     // The animation order should not matter, but [ToolA] differ from us:
-    //      KLAS
-    //      KLAE
-    //      KLAI
-    //      KLAV
-    //      KLAC
-    //      KLBC
-    //      KLBI
+    //      KLAS -> KLAE -> KLAI -> KLAV -> KLAC -> KLBC -> KLBI
+    // MPQ/MDX Animation order:
+    //      Doodads/LordaeronSummer/Props/brazierOmni/brazierOmni.mdx: "KLAI", "KLAV"
+    //      Environment/DNC/DNCAshenvale/DNCAshenValeTerrain/DNCAshenValeTerrain.mdx: "KLAC", "KLBC"
+    //      Environment/DNC/DNCLordaeron/DNCLordaeronTarget/DNCLordaeronTarget.mdx: "KLAI", "KLBI"
     AttenuationStart 2 {
         Linear,
         110: 199,
@@ -431,6 +433,10 @@ Light "LITE.2 color anim" {
         440: 499,
         420: 46,
     }
+    Visibility 1 {
+        DontInterp,
+        0: 1,
+    }
 }
 Helper "HELP" {
     ObjectId 3,
@@ -466,6 +472,7 @@ ParticleEmitter "PERM anim" {
     ObjectId 51,
     Parent 5,
     EmitterUsesTGA,
+    // MPQ/MDX Animation order: no MDXs use animations other than Visibility (KPEV).
     EmissionRate 2 {
         Linear,
         1123: 1456,
@@ -561,14 +568,10 @@ ParticleEmitter2 "PRE2" {
 ParticleEmitter2 "PRE2 anim" {
     ObjectId 61,
     // The animation order should not matter, but [ToolA] differ from us:
-    //      KP2S
-    //      KP2R
-    //      KP2L
-    //      KP2G
-    //      KP2E
-    //      KP2V
-    //      KP2N
-    //      KP2W
+    //      KP2S -> KP2R -> KP2L -> KP2G -> KP2E -> KP2V -> KP2N -> KP2W
+    // MPQ/MDX Animation order:
+    //      Abilities/Spells/Human/HolyBolt/HolyBoltSpecialArt.mdx: "KP2S", "KP2L", "KP2E", "KP2V", "KP2N", "KP2W"
+    //      - no MDXs use Variation(KP2R) and Gravity(KP2G).
     Speed 2 {
         Linear,
         1123: 11.23,
@@ -637,12 +640,9 @@ RibbonEmitter "RIBE" {
 RibbonEmitter "RIBE anim" {
     ObjectId 71,
     // The animation order should not matter, but [ToolA] differ from us:
-    //      KRHA
-    //      KRHB
-    //      KRAL
-    //      KRCO
-    //      KRVS
-    //      KRTX
+    //      KRHA -> KRHB -> KRAL -> KRCO -> KRVS -> KRTX
+    // MPQ/MDX Animation order: only 1 MDX use more than 1 animations:
+    //      Abilities/Spells/Human/Resurrect/Resurrecttarget.mdx: "KRHA", "KRHB"
     HeightAbove 2 {
         DontInterp,
         1123: 412.299988,
@@ -713,6 +713,7 @@ Camera "Camera01" {
     NearClip 1,
     // [ToolA] convert 'Translation' to "KTTR" and 'Target/Translation' to "KCTR",
     // -- which I believe is a bug. (should be "KCTR" and "KTTR")
+    // MPQ/MDX Animation order: Buildings/Human/HumanTower/HumanTower.mdx: "KCTR", "KCRL", "KTTR"
     Translation 2 {
         Linear,
         123: { 1, 2, 3 },

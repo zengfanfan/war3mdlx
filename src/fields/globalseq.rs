@@ -6,7 +6,7 @@ pub struct GlobalSequence {
 }
 
 impl GlobalSequence {
-    pub const ID: u32 = MdlxMagic::GLBS as u32;
+    pub const ID: u32 = MdlxMagic::GLBS;
 
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         Ok(Build! { duration: cur.readx()? })
