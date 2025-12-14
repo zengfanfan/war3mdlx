@@ -1,6 +1,6 @@
 [package]
 name = "War3Mdlx"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 authors = ["zengfanfan"]
 homepage = "https://github.com/zengfanfan/war3mdlx"
