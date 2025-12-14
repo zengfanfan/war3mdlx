@@ -32,11 +32,19 @@ Options:
   -V, --version                   Print version
 ```
 
+## Install
+
+```bash
+$ cargo install War3Mdlx
+```
+
+> You may need to install [rust and cargo](https://rust-lang.org/tools/install/).
+
 ## Build
 
-When you are in the root directory of the project, run the following command to build the binary:
+When you are in the root directory of the project:
 ```bash
 $ cargo build --release
 ```
 
-> This is a Rust project, so you need to install [rust and cargo](https://rust-lang.org/tools/install/) to build it.
+> You may need to install [rust and cargo](https://rust-lang.org/tools/install/).
