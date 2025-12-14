@@ -43,7 +43,7 @@ impl MdlxData {
         if let Ok(mut this) = ret {
             let fver = this.version.format_version;
             if !Version::SUPPORTED_VERSION.contains(&fver) {
-                EXIT1!("Unsupported version: {} (should be one of {:?})", fver, Version::SUPPORTED_VERSION);
+                EXIT1!("Unsupported version {fver} (should be one of {:?}) in {path:?}", Version::SUPPORTED_VERSION);
             }
             for (i, a) in this.attachments.iter_mut().enumerate() {
                 a.aindex = i as i32;

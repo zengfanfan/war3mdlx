@@ -6,6 +6,8 @@ pub struct Geoset {
     pub vertices: Vec<Vec3>,
     #[dbg(formatter = "fmtx")]
     pub normals: Vec<Vec3>,
+    #[dbg(skip)]
+    nvs_count: u32,
     #[dbg(formatter = "fmtx")]
     pub uvss: Vec<Vec<Vec2>>,
     #[dbg(fmt = "{:?}")]
@@ -178,7 +180,6 @@ impl Geoset {
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
         let mut this = Build!();
 
-        let mut uvsn = 0_usize;
         while cur.left() >= 16 {
             let (id, n) = (cur.read_be::<u32>()?, cur.readx::<u32>()?);
             match id {
@@ -190,7 +191,7 @@ impl Geoset {
                 MdlxMagic::GNDX => this.vtxgrps = cur.read_array(n)?,
                 MdlxMagic::MTGC => this.mtxgrpcnts = cur.read_array(n)?,
                 MdlxMagic::MATS => this.mtx_indices = cur.read_array(n)?,
-                MdlxMagic::UVAS => uvsn = n as usize,
+                MdlxMagic::UVAS => this.nvs_count = n,
                 MdlxMagic::UVBS => this.uvss.push(cur.read_array(n)?),
                 id => {
                     this.material_id = id.swap_bytes() as i32;
@@ -205,21 +206,29 @@ impl Geoset {
             }
         }
 
-        let (nnorm, nvert) = (this.normals.len(), this.vertices.len());
-        yes!(nnorm != nvert, log!("OMG! {} #[normals] {} != {} #[vertices] ?", TNAME!(), nnorm, nvert));
-
-        yes!(uvsn != this.uvss.len(), elog!("OMG! {} [number for UVs] {uvsn} != {} ?", TNAME!(), this.uvss.len()));
-
-        let n = this.face_vtxcnts.len();
-        yes!(n > 1, elog!("OMG! {} #[face_vtxcnts] {n} > 1 ?", TNAME!()));
-
-        let n = this.face_types.len();
-        yes!(n > 1, elog!("OMG! {} #[face_types] {n} > 1 ?", TNAME!()));
-        if this.face_types.iter().any(|&x| x != FaceType::Triangles) {
-            elog!("OMG! face type other than triangle({}): {:?}", FaceType::Triangles.to(), this.face_types);
-        }
-
+        this.validate();
         return Ok(this);
+    }
+
+    fn validate(&self) {
+        let tn = TNAME!();
+
+        let (nnorm, nvert) = (self.normals.len(), self.vertices.len());
+        yes!(nnorm != nvert, log!("OMG! {tn} #[normals] {} != {} #[vertices] ?", nnorm, nvert));
+
+        let n = self.uvss.len() as u32;
+        yes!(self.nvs_count != n, wlog!("OMG! {tn} #[UVs] {} != {} ?", self.nvs_count, n));
+
+        let n = self.face_vtxcnts.len();
+        yes!(n > 1, wlog!("OMG! {tn} #[face_vtxcnts] {n} > 1 ?"));
+
+        let n = self.face_types.len();
+        yes!(n > 1, wlog!("OMG! {tn} #[face_types] {n} > 1 ?"));
+
+        let tri = FaceType::Triangles;
+        if self.face_types.iter().any(|&x| x != tri) {
+            wlog!("OMG! face type other than {tri:?}({}): {:?}", tri.to(), self.face_types);
+        }
     }
 
     pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
@@ -283,8 +292,7 @@ impl Geoset {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build!();
-        this.extent = BoundExtent::read_mdl(&block)?;
+        let mut this = Build! { extent: BoundExtent::read_mdl(&block)? };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "MaterialID" => this.material_id = f.value.to(),
@@ -299,22 +307,22 @@ impl Geoset {
                 "Normals" => this.normals = a.fields.to(),
                 "TVertices" => this.uvss.push(a.fields.to()),
                 "VertexGroup" => this.vtxgrps = a.fields.to(),
-                "Faces" => for b in &a.blocks { this.read_mdl_face(b); },
-                "Groups" => for f in &a.fields { this.read_mdl_matrices(f); },
+                "Faces" => for b in &a.blocks { this.read_mdl_face(b)?; },
+                "Groups" => for f in &a.fields { this.read_mdl_matrices(f)?; },
                 "Anim" => this.anim_extents.push(BoundExtent::read_mdl(&a)?),
                 _other => (),
             );
         }
+        this.validate();
         return Ok(this);
     }
-    fn read_mdl_face(&mut self, block: &MdlBlock) {
+    fn read_mdl_face(&mut self, block: &MdlBlock) -> Result<(), MyError> {
         let t = FaceType::from_str(block.typ.as_str());
         if let FaceType::Error(_) = t {
-            elog!("OMG! unknown face type: {}", block.typ);
-            return;
+            return ERR!("OMG! unknown face type: {}", block.typ);
         }
 
-        no!(t == FaceType::Triangles, elog!("OMG! unexpected face type: {:?} ({})", t, block.typ));
+        no!(t == FaceType::Triangles, wlog!("OMG! unexpected face type: {:?} ({})", t, block.typ));
         for f in &block.fields {
             no!(f.name == "", continue);
             if let MdlValue::IntegerArray(iv) = &f.value {
@@ -324,17 +332,19 @@ impl Geoset {
                 self.face_vertices.append(&mut miv);
             }
         }
+
+        return Ok(());
     }
-    fn read_mdl_matrices(&mut self, field: &MdlField) {
+    fn read_mdl_matrices(&mut self, field: &MdlField) -> Result<(), MyError> {
         if !field.name.eq_icase("Matrices") {
-            elog!("OMG! unknown group type: {} (expected 'Matrices')", field.name);
-            return;
+            return ERR!("OMG! unknown group type: {} (expected 'Matrices')", field.name);
         }
         if let MdlValue::IntegerArray(iv) = &field.value {
             self.mtxgrpcnts.push(iv.len() as i32);
             let mut miv = iv.convert(|v| *v as i32);
             self.mtx_indices.append(&mut miv);
         }
+        return Ok(());
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {

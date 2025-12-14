@@ -87,8 +87,17 @@ impl _ExtendCursorRead for Cursor<&Vec<u8>> {
     fn read_string(&mut self, n: u32) -> Result<String, MyError> {
         let buf = self.read_bytes(n)?;
         let end = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
-        let s = str::from_utf8(&buf[..end]).expect("Invalid UTF-8");
-        return Ok(s.to_string());
+        match str::from_utf8(&buf[..end]) {
+            Ok(s) => Ok(s.to_string()),
+            Err(e) => {
+                let valid_end = e.valid_up_to();
+                let mut s = unsafe { str::from_utf8_unchecked(&buf[..valid_end]).to_string() };
+                for b in &buf[valid_end..end] {
+                    s.push(yesno!(b.is_ascii_graphic() || *b == 0x20, *b as char, '?'));
+                }
+                Ok(s)
+            },
+        }
     }
 }
 

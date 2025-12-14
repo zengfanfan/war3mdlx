@@ -23,7 +23,7 @@ impl MdxChunk {
 
         yes!(left = cur.left(), left < size, EXIT1!("{} body: {}B left (need {})", estr, left, size));
         let body = cur.read_bytes(size).or_else(|e| ERR!("{} body({}B): {}", estr, size, e))?;
-        vvvlog!("{}", pretty_hex(&body).replace("\n", "\n\t"));
+        vvvlog!("{}", hexdump(&body, "\t"));
 
         return Ok(MdxChunk { id, size, body, cursor: None });
     }

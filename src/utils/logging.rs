@@ -1,3 +1,5 @@
+use crate::*;
+
 //#region level
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -62,6 +64,14 @@ macro_rules! vvlog {
 #[macro_export]
 macro_rules! vvvlog {
     ($($arg:tt)*) => {{ _log!(::Verbose3, $($arg)*) }};
+}
+
+//#endregion
+//#region hex dump
+
+#[allow(dead_code)]
+pub fn hexdump(data: &Vec<u8>, indent: &str) -> String {
+    pretty_hex(data).replace("\n", &F!("\n{indent}"))
 }
 
 //#endregion

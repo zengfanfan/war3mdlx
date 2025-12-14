@@ -11,6 +11,16 @@ impl _ExtendString for String {
 }
 
 #[allow(dead_code)]
+pub trait S {
+    fn s(&self) -> String;
+}
+impl<T: ToString> S for T {
+    fn s(&self) -> String {
+        self.to_string()
+    }
+}
+
+#[allow(dead_code)]
 pub trait _ExtendStringArray {
     fn push_if(&mut self, cond: bool, s: String);
 }
