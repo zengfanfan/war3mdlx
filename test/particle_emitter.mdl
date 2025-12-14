@@ -21,99 +21,48 @@ ParticleEmitter "values" {
 ParticleEmitter "anims" {
     ObjectId 2,
     EmitterUsesMDL,
-    EmissionRate 2 {
+    EmissionRate 1 {
         Hermite,
-        0: 0,
-            InTan 0,
-            OutTan 0,
         1: 1.1,
-            InTan 1,
-            OutTan 1.1,
+            InTan 1.11,
+            OutTan 1.12,
     }
-    Gravity 2 {
+    Gravity 1 {
         Hermite,
-        2: 2.22,
-            InTan 2,
-            OutTan 2.22,
-        3: 3.333,
-            InTan 3,
-            OutTan 3.333,
+        2: 2.1,
+            InTan 2.11,
+            OutTan 2.12,
     }
-    Longitude 3 {
-        Bezier,
-        0: 3,
-            InTan 0,
-            OutTan 0,
-        2: 2.22,
-            InTan 2,
-            OutTan 2.22,
-        3: 3.333,
-            InTan 3,
-            OutTan 3.333,
-    }
-    Latitude 4 {
-        Bezier,
-        0: 4.4,
-            InTan 0,
-            OutTan 0,
-        1: 1.1,
-            InTan 1,
-            OutTan 1.1,
-        2: 2.22,
-            InTan 2,
-            OutTan 2.22,
-        3: 3.333,
-            InTan 3,
-            OutTan 3.333,
-    }
-    Visibility 5 {
+    Longitude 1 {
         Hermite,
-        0: 0,
-            InTan 0,
-            OutTan 0,
-        1: 1.1,
-            InTan 1,
-            OutTan 1.1,
-        2: 2.22,
-            InTan 2,
-            OutTan 2.22,
-        3: 3.333,
-            InTan 3,
-            OutTan 3.333,
-        5: 5.55555,
-            InTan 5,
-            OutTan 5.55555,
+        3: 3.1,
+            InTan 3.11,
+            OutTan 3.12,
+    }
+    Latitude 1 {
+        Hermite,
+        4: 4.1,
+            InTan 4.11,
+            OutTan 4.12,
+    }
+    Visibility 1 {
+        Hermite,
+        5: 5.1,
+            InTan 5.11,
+            OutTan 5.12,
     }
     Particle {
-        LifeSpan 4 {
+        LifeSpan 1 {
             Hermite,
-            0: 6.66,
-                InTan 0,
-                OutTan 0,
-            1: 1.1,
-                InTan 1,
-                OutTan 1.1,
-            2: 2.22,
-                InTan 2,
-                OutTan 2.22,
-            3: 3.333,
-                InTan 3,
-                OutTan 3.333,
+            6: 6.1,
+                InTan 6.11,
+                OutTan 6.12,
         }
-        InitVelocity 4 {
-            Bezier,
-            0: 7.77,
-                InTan 0,
-                OutTan 0,
-            1: 1.1,
-                InTan 1,
-                OutTan 1.1,
-            2: 2.22,
-                InTan 2,
-                OutTan 2.22,
-            3: 3.333,
-                InTan 3,
-                OutTan 3.333,
+        InitVelocity 1 {
+            Hermite,
+            7: 7.1,
+                InTan 7.11,
+                OutTan 7.12,
         }
         Path "ok\hey.mdl",
     }

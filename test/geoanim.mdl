@@ -13,13 +13,13 @@ GeosetAnim {
     GeosetId 999,
     Alpha 1 {
         Bezier,
-        111: 0.11,
-            InTan 1.10,
-            OutTan 10.1,
+        111: 1.1,
+            InTan 1.11,
+            OutTan 1.12,
     }
     Color 1 {
         Hermite,
-        222: { 2.1, 2.1, 2.3 },
+        222: { 2.1, 2.2, 2.3 },
             InTan { 2.11, 2.12, 2.13 },
             OutTan { 2.21, 2.22, 2.23 },
     }
