@@ -18,7 +18,7 @@ Usage: war3mdlx [OPTIONS] <INPUT>
 Options:
   -1, --mdl2x                     Convert *.mdl to *.mdx
   -2, --mdx2l                     Convert *.mdx to *.mdl
-  -B, --mdl-rgb                   Swap color components when needed to make sure they are in RGB order in mdl files [default: as-is]
+  -B, --mdl-rgb                   Make sure colors are in RGB order in mdl files
   -F, --flat                      Put output files in one directory and ignore hierarchy
   -f, --overwrite                 Overwrite existing output files [default: skip]
   -e, --stop-on-error             Stop walking the directory hierarchy when an error occurs

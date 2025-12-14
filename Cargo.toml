@@ -12,17 +12,17 @@ name = "war3mdlx"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4", features = ["derive"], registry = "aliyun" }
-byteorder = { version = "1", registry = "aliyun" }
-walkdir = { version = "2", registry = "aliyun" }
-glam = { version = "0.30.9", registry = "aliyun" }
-derive-debug = { version = "0.1.2", registry = "aliyun" }
-pretty-hex = { version = "0.4.1", registry = "aliyun" }
-paste = { version = "1.0.15", registry = "aliyun" }
-bitflags = { version = "2.10.0", registry = "aliyun" }
-regex = { version = "1.12.2", registry = "aliyun" }
-path-clean = { version = "1.0.1", registry = "aliyun" }
-pest = { version = "2.8.4", registry = "aliyun" }
-pest_derive = { version = "2.8.4", registry = "aliyun" }
-chrono = { version = "0.4.42", registry = "aliyun" }
-smart-default = { version = "0.7.1", registry = "aliyun" }
+clap = { version = "4", features = ["derive"], registry = "tuna" }
+byteorder = { version = "1", registry = "tuna" }
+walkdir = { version = "2", registry = "tuna" }
+glam = { version = "0.30.9", registry = "tuna" }
+derive-debug = { version = "0.1.2", registry = "tuna" }
+pretty-hex = { version = "0.4.1", registry = "tuna" }
+paste = { version = "1.0.15", registry = "tuna" }
+bitflags = { version = "2.10.0", registry = "tuna" }
+regex = { version = "1.12.2", registry = "tuna" }
+path-clean = { version = "1.0.1", registry = "tuna" }
+pest = { version = "2.8.4", registry = "tuna" }
+pest_derive = { version = "2.8.4", registry = "tuna" }
+chrono = { version = "0.4.42", registry = "tuna" }
+smart-default = { version = "0.7.1", registry = "tuna" }
