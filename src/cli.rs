@@ -10,7 +10,7 @@ enum CheckResult {
 }
 
 #[derive(Debug, Parser, Clone)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, after_help = env!("CARGO_PKG_HOMEPAGE"))]
 pub struct Args {
     #[arg(hide = true)]
     pub input: String,
