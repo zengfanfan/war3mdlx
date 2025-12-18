@@ -22,7 +22,7 @@ impl Version {
         let mut this = Build!();
         for f in &block.fields {
             if f.name.eq_icase("FormatVersion") {
-                this.format_version = f.value.to();
+                this.format_version = f.value.to()?;
                 break; // only 1 field
             }
         }

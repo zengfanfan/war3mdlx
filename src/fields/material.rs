@@ -60,7 +60,7 @@ impl Material {
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "PriorityPlane" => this.priority_plane = f.value.to(),
+                "PriorityPlane" => this.priority_plane = f.value.to()?,
                 "ConstantColor" => this.flags.insert(MaterialFlags::ConstantColor),
                 "SortPrimsFarZ" => this.flags.insert(MaterialFlags::SortPrimsFarZ),
                 "FullResolution" => this.flags.insert(MaterialFlags::FullResolution),
@@ -146,8 +146,6 @@ impl Layer {
         this.coordid = cur.readx()?;
         this.alpha = cur.readx()?;
 
-        yes!(this.coordid != 0, log!("OMG! {}[CoordId] {} not 0 ?", TNAME!(), this.coordid));
-
         while cur.left() >= 16 {
             match cur.read_be()? {
                 Self::ID_ALPHA => this.alpha_anim = Some(Animation::read_mdx(cur)?),
@@ -191,10 +189,10 @@ impl Layer {
                 "Unfogged" => this.flags.insert(LayerFlags::Unfogged),
                 "NoDepthTest" => this.flags.insert(LayerFlags::NoDepthTest),
                 "NoDepthSet" => this.flags.insert(LayerFlags::NoDepthSet),
-                "TextureID" => this.texture_id = f.value.to(),
-                "TVertexAnimId" => this.texture_anim_id = f.value.to(),
-                "CoordId" => this.coordid = f.value.to(),
-                "Alpha" => this.alpha = f.value.to(),
+                "TextureID" => this.texture_id = f.value.to()?,
+                "TVertexAnimId" => this.texture_anim_id = f.value.to()?,
+                "CoordId" => this.coordid = f.value.to()?,
+                "Alpha" => this.alpha = f.value.to()?,
                 _other => (),
             );
         }

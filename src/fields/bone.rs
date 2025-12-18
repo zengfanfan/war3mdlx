@@ -28,8 +28,8 @@ impl Bone {
         this.base.flags.insert(NodeFlags::Bone);
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "GeosetId" => this.geoset_id = f.value.to(),
-                "GeosetAnimId" => this.geoanim_id = f.value.to(),
+                "GeosetId" => this.geoset_id = f.value.to()?,
+                "GeosetAnimId" => this.geoanim_id = f.value.to()?,
                 _other => (),
             );
         }

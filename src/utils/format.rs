@@ -137,7 +137,7 @@ macro_rules! impl_Formatter_array {
         )*
     };
 }
-macro_rules! impl_Formatter_vec234 {
+macro_rules! impl_Formatter_vecN {
     ($($t:ty),*) => {
         $(
             impl Formatter for $t {
@@ -152,7 +152,7 @@ macro_rules! impl_Formatter_vec234 {
 
 impl_Formatter!(i8, u8, i16, u16, i32, u32);
 impl_Formatter_array!(i8, u8, i16, u16, i32, u32, f32);
-impl_Formatter_vec234!(Vec2, Vec3, Vec4);
+impl_Formatter_vecN!(Vec2, Vec3, Vec4);
 impl_Formatter_array!(Vec2, Vec3, Vec4);
 impl_Formatter_array!(Vec<Vec2>, Vec<Vec3>, Vec<Vec4>);
 

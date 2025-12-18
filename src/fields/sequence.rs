@@ -55,14 +55,14 @@ impl Sequence {
         let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "MoveSpeed" => this.move_speed = f.value.to(),
+                "MoveSpeed" => this.move_speed = f.value.to()?,
                 "NonLooping" => this.looping = false,
-                "Rarity" => this.rarity = f.value.to(),
-                "BoundsRadius" => this.bounds_radius = f.value.to(),
-                "MinimumExtent" => this.min_extent = f.value.to(),
-                "MaximumExtent" => this.max_extent = f.value.to(),
+                "Rarity" => this.rarity = f.value.to()?,
+                "BoundsRadius" => this.bounds_radius = f.value.to()?,
+                "MinimumExtent" => this.min_extent = f.value.to()?,
+                "MaximumExtent" => this.max_extent = f.value.to()?,
                 "Interval" => {
-                    let interval: Vec<i32> = f.value.to();
+                    let interval: Vec<i32> = f.value.to()?;
                     this.start_frame = interval.get(0).cloned().unwrap_or(0);
                     this.end_frame = interval.get(1).cloned().unwrap_or(0);
                 },

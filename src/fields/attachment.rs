@@ -57,8 +57,8 @@ impl Attachment {
         this.base.flags.insert(NodeFlags::Attachment);
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "Path" => this.child_path = f.value.to(),
-                "AttachmentID" => this.attachment_id = Some(f.value.to()),
+                "Path" => this.child_path = f.value.to()?,
+                "AttachmentID" => this.attachment_id = Some(f.value.to()?),
                 _other => (),
             );
         }

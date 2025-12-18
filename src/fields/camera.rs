@@ -75,10 +75,10 @@ impl Camera {
         let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "Position" => this.position = f.value.to(),
-                "FieldOfView" => this.field_of_view = f.value.to(),
-                "FarClip" => this.far_clip = f.value.to(),
-                "NearClip" => this.near_clip = f.value.to(),
+                "Position" => this.position = f.value.to()?,
+                "FieldOfView" => this.field_of_view = f.value.to()?,
+                "FarClip" => this.far_clip = f.value.to()?,
+                "NearClip" => this.near_clip = f.value.to()?,
                 _other => (),
             );
         }
@@ -95,7 +95,7 @@ impl Camera {
     pub fn read_mdl_target(&mut self, block: &MdlBlock) -> Result<(), MyError> {
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "Position" => self.target = f.value.to(),
+                "Position" => self.target = f.value.to()?,
                 _other => (),
             );
         }

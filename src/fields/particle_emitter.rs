@@ -111,10 +111,10 @@ impl ParticleEmitter {
         this.base.flags.insert(NodeFlags::ParticleEmitter);
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "EmissionRate" => this.emit_rate = f.value.to(),
-                "Gravity" => this.gravity = f.value.to(),
-                "Longitude" => this.longitude = f.value.to(),
-                "Latitude" => this.latitude = f.value.to(),
+                "EmissionRate" => this.emit_rate = f.value.to()?,
+                "Gravity" => this.gravity = f.value.to()?,
+                "Longitude" => this.longitude = f.value.to()?,
+                "Latitude" => this.latitude = f.value.to()?,
                 "EmitterUsesMDL" => this.base.flags.insert(NodeFlags::PE1UsesMdl),
                 "EmitterUsesTGA" => this.base.flags.insert(NodeFlags::PE1UsesTga),
                 _other => (),
@@ -136,9 +136,9 @@ impl ParticleEmitter {
     fn read_mdl_particle(&mut self, block: &MdlBlock) -> Result<(), MyError> {
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "Path" => self.path = f.value.to(),
-                "LifeSpan" => self.lifespan = f.value.to(),
-                "InitVelocity" => self.speed = f.value.to(),
+                "Path" => self.path = f.value.to()?,
+                "LifeSpan" => self.lifespan = f.value.to()?,
+                "InitVelocity" => self.speed = f.value.to()?,
                 _other => (),
             );
         }

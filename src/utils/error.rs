@@ -1,9 +1,12 @@
 use crate::*;
+use std::num::{ParseFloatError, ParseIntError};
 
 #[derive(Debug)]
 pub enum MyError {
     String(String),
     Io(ioError),
+    ParseInt(ParseIntError),
+    ParseFloat(ParseFloatError),
 }
 
 //#region trait: Display
@@ -13,6 +16,8 @@ impl Display for MyError {
         match self {
             Self::String(s) => write!(f, "{}", s),
             Self::Io(e) => write!(f, "{}", e),
+            Self::ParseInt(e) => write!(f, "{}", e),
+            Self::ParseFloat(e) => write!(f, "{}", e),
         }
     }
 }
@@ -25,9 +30,22 @@ impl From<String> for MyError {
         MyError::String(e)
     }
 }
+
 impl From<std::io::Error> for MyError {
     fn from(e: std::io::Error) -> Self {
         MyError::Io(e)
+    }
+}
+
+impl From<ParseIntError> for MyError {
+    fn from(e: ParseIntError) -> Self {
+        MyError::ParseInt(e)
+    }
+}
+
+impl From<ParseFloatError> for MyError {
+    fn from(e: ParseFloatError) -> Self {
+        MyError::ParseFloat(e)
     }
 }
 

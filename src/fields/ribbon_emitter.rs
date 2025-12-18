@@ -1,15 +1,13 @@
 use crate::*;
 
-#[derive(Dbg, SmartDefault)]
+#[derive(Dbg, Default)]
 pub struct RibbonEmitter {
     pub base: Node,
 
     pub height_above: f32,
     pub height_below: f32,
-    #[default = 1.0]
     pub alpha: f32,
     #[dbg(formatter = "fmtx")]
-    #[default(Vec3::ONE)]
     pub color: Vec3, // RGB
     pub lifespan: f32,
     #[dbg(skip)]
@@ -116,16 +114,16 @@ impl RibbonEmitter {
         this.base.flags.insert(NodeFlags::RibbonEmitter);
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "HeightAbove" => this.height_above = f.value.to(),
-                "HeightBelow" => this.height_below = f.value.to(),
-                "Alpha" => this.alpha = f.value.to(),
-                "Color" => this.color = f.value.to(),
-                "EmissionRate" => this.emit_rate = f.value.to(),
-                "LifeSpan" => this.lifespan = f.value.to(),
-                "Gravity" => this.gravity = f.value.to(),
-                "Rows" => this.rows = f.value.to(),
-                "Columns" => this.columns = f.value.to(),
-                "MaterialID" => this.material_id = f.value.to(),
+                "HeightAbove" => this.height_above = f.value.to()?,
+                "HeightBelow" => this.height_below = f.value.to()?,
+                "Alpha" => this.alpha = f.value.to()?,
+                "Color" => this.color = f.value.to()?,
+                "EmissionRate" => this.emit_rate = f.value.to()?,
+                "LifeSpan" => this.lifespan = f.value.to()?,
+                "Gravity" => this.gravity = f.value.to()?,
+                "Rows" => this.rows = f.value.to()?,
+                "Columns" => this.columns = f.value.to()?,
+                "MaterialID" => this.material_id = f.value.to()?,
                 _other => (),
             );
         }
@@ -165,8 +163,8 @@ impl RibbonEmitter {
         MdlWriteAnimBoth!(lines, depth,
             "HeightAbove" => self.height_above_anim => 0.0 => self.height_above,
             "HeightBelow" => self.height_below_anim => 0.0 => self.height_below,
-            "Alpha" => self.alpha_anim => 1.0 => self.alpha,
-            "Color" => color_anim => Vec3::ONE => self.color,
+            "Alpha" => self.alpha_anim => 0.0 => self.alpha,
+            "Color" => color_anim => Vec3::ZERO => self.color,
         );
         MdlWriteAnimIfSome!(lines, depth,
             "TextureSlot" => self.texslot_anim,

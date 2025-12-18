@@ -43,10 +43,10 @@ impl Model {
         let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "BoundsRadius" => this.bounds_radius = f.value.to(),
-                "MinimumExtent" => this.min_extent = f.value.to(),
-                "MaximumExtent" => this.max_extent = f.value.to(),
-                "BlendTime" => this.blend_time = f.value.to(),
+                "BoundsRadius" => this.bounds_radius = f.value.to()?,
+                "MinimumExtent" => this.min_extent = f.value.to()?,
+                "MaximumExtent" => this.max_extent = f.value.to()?,
+                "BlendTime" => this.blend_time = f.value.to()?,
                 _other => (),
             );
         }

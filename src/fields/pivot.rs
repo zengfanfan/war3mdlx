@@ -18,7 +18,7 @@ impl PivotPoint {
     }
 
     pub fn read_mdl(field: &MdlField) -> Result<Self, MyError> {
-        Ok(Self { position: field.value.to() })
+        Ok(Self { position: field.value.to()? })
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {

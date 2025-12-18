@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Dbg, SmartDefault)]
+#[derive(Dbg, Default)]
 pub struct Light {
     pub base: Node,
 
@@ -9,11 +9,9 @@ pub struct Light {
     pub attenuate_start: f32,
     pub attenuate_end: f32,
     #[dbg(formatter = "fmtx")]
-    #[default(Vec3::ONE)]
     pub color: Vec3, // RGB
     pub intensity: f32,
     #[dbg(formatter = "fmtx")]
-    #[default(Vec3::ONE)]
     pub amb_color: Vec3, // RGB
     pub amb_intensity: f32,
 
@@ -116,12 +114,12 @@ impl Light {
 
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "AttenuationStart" => this.attenuate_start = f.value.to(),
-                "AttenuationEnd" => this.attenuate_end = f.value.to(),
-                "Color" => this.color = f.value.to(),
-                "Intensity" => this.intensity = f.value.to(),
-                "AmbColor" => this.amb_color = f.value.to(),
-                "AmbIntensity" => this.amb_intensity = f.value.to(),
+                "AttenuationStart" => this.attenuate_start = f.value.to()?,
+                "AttenuationEnd" => this.attenuate_end = f.value.to()?,
+                "Color" => this.color = f.value.to()?,
+                "Intensity" => this.intensity = f.value.to()?,
+                "AmbColor" => this.amb_color = f.value.to()?,
+                "AmbIntensity" => this.amb_intensity = f.value.to()?,
                 _other => this.typ = LightType::from_str(_other, this.typ),
             );
         }
@@ -161,9 +159,9 @@ impl Light {
         MdlWriteAnimBoth!(lines, depth,
             "AttenuationStart" => self.attenuate_start_anim => 0.0 => self.attenuate_start,
             "AttenuationEnd" => self.attenuate_end_anim => 0.0 => self.attenuate_end,
-            "Color" => color_anim => Vec3::ONE => self.color,
+            "Color" => color_anim => Vec3::ZERO => self.color,
             "Intensity" => self.intensity_anim => 0.0 => self.intensity,
-            "AmbColor" => amb_color_anim => Vec3::ONE => self.amb_color,
+            "AmbColor" => amb_color_anim => Vec3::ZERO => self.amb_color,
             "AmbIntensity" => self.amb_intensity_anim => 0.0 => self.amb_intensity,
         );
         MdlWriteAnimIfSome!(lines, depth, "Visibility" => self.visibility);

@@ -76,8 +76,8 @@ impl EventTrack {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build!();
         for f in &block.fields {
-            if let MdlValue::Integer(i) = f.value {
-                this.frames.push(i);
+            if let MdlValueType::Integer(i) = &f.value.typ {
+                this.frames.push(*i);
             }
         }
         return Ok(this);

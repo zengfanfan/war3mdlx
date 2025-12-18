@@ -78,18 +78,18 @@ impl<T: TAnimation> Animation<T> {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build!();
         for f in &block.fields {
-            if let MdlValue::None = f.value {
+            if let MdlValueType::None = f.value.typ {
                 this.interp_type = InterpolationType::from_str(f.name.as_str(), this.interp_type);
             } else if f.name == "GlobalSeqId" {
-                this.global_seq_id = f.value.to();
+                this.global_seq_id = f.value.to()?;
             }
         }
         for f in &block.frames {
             this.key_frames.push(KeyFrame {
                 frame: f.frame,
-                value: f.value.to(),
-                itan: f.intan.to(),
-                otan: f.outan.to(),
+                value: f.value.to()?,
+                itan: f.intan.to()?,
+                otan: f.outan.to()?,
                 has_tans: this.interp_type.has_tans(),
             });
         }

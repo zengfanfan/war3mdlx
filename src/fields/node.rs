@@ -73,10 +73,10 @@ impl Node {
         let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "ObjectId" => this.object_id = f.value.to(),
-                "Parent" => this.parent_id = f.value.to(),
+                "ObjectId" => this.object_id = f.value.to()?,
+                "Parent" => this.parent_id = f.value.to()?,
                 "DontInherit" => {
-                    let flags: Vec<String> = f.value.to();
+                    let flags: Vec<String> = f.value.to()?;
                     for s in &flags {
                         match_istr!(s.as_str(),
                             "Translation" => this.flags.insert(NodeFlags::DontInheritT),

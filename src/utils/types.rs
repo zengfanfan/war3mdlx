@@ -143,15 +143,29 @@ impl CheckValue for String {
 pub trait ConvertVec<A> {
     fn convert<B, F>(&self, f: F) -> Vec<B>
     where
-        F: FnMut(&A) -> B;
+        F: Fn(&A) -> B;
+    fn try_convert<B, F>(&self, f: F) -> Result<Vec<B>, MyError>
+    where
+        F: Fn(&A) -> Result<B, MyError>;
 }
 
 impl<A> ConvertVec<A> for Vec<A> {
     fn convert<B, F>(&self, f: F) -> Vec<B>
     where
-        F: FnMut(&A) -> B,
+        F: Fn(&A) -> B,
     {
         self.into_iter().map(f).collect()
+    }
+
+    fn try_convert<B, F>(&self, f: F) -> Result<Vec<B>, MyError>
+    where
+        F: Fn(&A) -> Result<B, MyError>,
+    {
+        let mut ret = Vec::with_capacity(self.len());
+        for a in self.iter() {
+            ret.push(f(a)?);
+        }
+        return Ok(ret);
     }
 }
 

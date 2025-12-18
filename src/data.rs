@@ -39,18 +39,18 @@ impl MdlxData {
             },
             _ => ERR!("Invalid input path: {:?}, expected *.mdl or *.mdx", path),
         };
-
-        if let Ok(mut this) = ret {
-            let fver = this.version.format_version;
-            if !Version::SUPPORTED_VERSION.contains(&fver) {
-                EXIT1!("Unsupported version {fver} (should be one of {:?}) in {path:?}", Version::SUPPORTED_VERSION);
-            }
-            for (i, a) in this.attachments.iter_mut().enumerate() {
-                a.aindex = i as i32;
-            }
-            return Ok(this);
-        } else {
-            return ret;
+        match ret {
+            Err(_) => return ret,
+            Ok(mut this) => {
+                let fver = this.version.format_version;
+                if !Version::SUPPORTED_VERSION.contains(&fver) {
+                    EXIT1!("Unsupported version {fver} (should be in {:?}): {path:?}", Version::SUPPORTED_VERSION);
+                }
+                for (i, a) in this.attachments.iter_mut().enumerate() {
+                    a.aindex = i as i32;
+                }
+                return Ok(this);
+            },
         }
     }
 

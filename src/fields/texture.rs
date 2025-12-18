@@ -42,8 +42,8 @@ impl Texture {
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "ReplaceableId" => this.replace_id = f.value.to(),
-                "Image" => this.path = f.value.to(),
+                "ReplaceableId" => this.replace_id = f.value.to()?,
+                "Image" => this.path = f.value.to()?,
                 "WrapWidth" => this.flags.insert(TextureFlags::WrapWidth),
                 "WrapHeight" => this.flags.insert(TextureFlags::WrapHeight),
                 _other => (),

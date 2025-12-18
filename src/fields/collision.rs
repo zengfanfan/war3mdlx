@@ -48,13 +48,13 @@ impl CollisionShape {
         this.base.flags.insert(NodeFlags::CollisionShape);
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "BoundsRadius" => this.bounds_radius = f.value.to(),
+                "BoundsRadius" => this.bounds_radius = f.value.to()?,
                 _other => this.shape = CollisionType::from_str(_other, this.shape),
             );
         }
         for b in &block.blocks {
             match_istr!(b.typ.as_str(),
-                "Vertices" => this.vertices = b.fields.to(),
+                "Vertices" => this.vertices = b.fields.to()?,
                 _other => (),
             );
         }

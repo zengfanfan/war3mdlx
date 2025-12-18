@@ -61,9 +61,9 @@ impl BoundExtent {
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "BoundsRadius" => this.bound_radius = f.value.to(),
-                "MinimumExtent" => this.min_extent = f.value.to(),
-                "MaximumExtent" => this.max_extent = f.value.to(),
+                "BoundsRadius" => this.bound_radius = f.value.to()?,
+                "MinimumExtent" => this.min_extent = f.value.to()?,
+                "MaximumExtent" => this.max_extent = f.value.to()?,
                 _other => (),
             );
         }
@@ -214,16 +214,13 @@ impl Geoset {
         let tn = TNAME!();
 
         let (nnorm, nvert) = (self.normals.len(), self.vertices.len());
-        yes!(nnorm != nvert, log!("OMG! {tn} #[normals] {} != {} #[vertices] ?", nnorm, nvert));
+        yes!(nnorm > 0 && nnorm != nvert, wlog!("OMG! {tn} #[normals] {} != {} #[vertices] ?", nnorm, nvert));
 
         let n = self.uvss.len() as u32;
         yes!(self.nvs_count != n, wlog!("OMG! {tn} #[UVs] {} != {} ?", self.nvs_count, n));
 
-        let n = self.face_vtxcnts.len();
-        yes!(n > 1, wlog!("OMG! {tn} #[face_vtxcnts] {n} > 1 ?"));
-
-        let n = self.face_types.len();
-        yes!(n > 1, wlog!("OMG! {tn} #[face_types] {n} > 1 ?"));
+        let (n1, n2) = (self.face_vtxcnts.len(), self.face_types.len());
+        yes!(n1 != n2, wlog!("OMG! {tn} #[face_vtxcnts] != #[face_types] ?"));
 
         let tri = FaceType::Triangles;
         if self.face_types.iter().any(|&x| x != tri) {
@@ -295,24 +292,25 @@ impl Geoset {
         let mut this = Build! { extent: BoundExtent::read_mdl(&block)? };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "MaterialID" => this.material_id = f.value.to(),
-                "SelectionGroup" => this.sel_group = f.value.to(),
+                "MaterialID" => this.material_id = f.value.to()?,
+                "SelectionGroup" => this.sel_group = f.value.to()?,
                 "Unselectable" => this.sel_type = 4,
                 _other => (),
             );
         }
         for a in &block.blocks {
             match_istr!(a.typ.as_str(),
-                "Vertices" => this.vertices = a.fields.to(),
-                "Normals" => this.normals = a.fields.to(),
-                "TVertices" => this.uvss.push(a.fields.to()),
-                "VertexGroup" => this.vtxgrps = a.fields.to(),
+                "Vertices" => this.vertices = a.fields.to()?,
+                "Normals" => this.normals = a.fields.to()?,
+                "TVertices" => this.uvss.push(a.fields.to()?),
+                "VertexGroup" => this.vtxgrps = a.fields.to()?,
                 "Faces" => for b in &a.blocks { this.read_mdl_face(b)?; },
                 "Groups" => for f in &a.fields { this.read_mdl_matrices(f)?; },
                 "Anim" => this.anim_extents.push(BoundExtent::read_mdl(&a)?),
                 _other => (),
             );
         }
+        this.nvs_count = this.uvss.len() as u32;
         this.validate();
         return Ok(this);
     }
@@ -325,7 +323,7 @@ impl Geoset {
         no!(t == FaceType::Triangles, wlog!("OMG! unexpected face type: {:?} ({})", t, block.typ));
         for f in &block.fields {
             no!(f.name == "", continue);
-            if let MdlValue::IntegerArray(iv) = &f.value {
+            if let MdlValueType::IntegerArray(iv) = &f.value.typ {
                 self.face_types.push(t);
                 self.face_vtxcnts.push(iv.len() as i32);
                 let mut miv = iv.convert(|v| *v as u16);
@@ -339,7 +337,7 @@ impl Geoset {
         if !field.name.eq_icase("Matrices") {
             return ERR!("OMG! unknown group type: {} (expected 'Matrices')", field.name);
         }
-        if let MdlValue::IntegerArray(iv) = &field.value {
+        if let MdlValueType::IntegerArray(iv) = &field.value.typ {
             self.mtxgrpcnts.push(iv.len() as i32);
             let mut miv = iv.convert(|v| *v as i32);
             self.mtx_indices.append(&mut miv);
@@ -418,7 +416,6 @@ pub struct GeosetAnim {
     #[dbg(fmt = "{:?}")]
     pub flags: GeosetAnimFlags,
     #[dbg(formatter = "fmtx")]
-    #[default(Vec3::ONE)]
     pub color: Vec3, // RGB
     pub geoset_id: i32,
 
@@ -479,14 +476,14 @@ impl GeosetAnim {
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "Alpha" => this.alpha = f.value.to(),
+                "Alpha" => this.alpha = f.value.to()?,
                 "UseColor" => this.flags.insert(GeosetAnimFlags::UseColor),
                 "DropShadow" => this.flags.insert(GeosetAnimFlags::DropShadow),
                 "Color" => {
-                    this.color = f.value.to();
+                    this.color = f.value.to()?;
                     this.flags.insert(GeosetAnimFlags::UseColor);
                 },
-                "GeosetID" => this.geoset_id = f.value.to(),
+                "GeosetID" => this.geoset_id = f.value.to()?,
                 _other => (),
             );
         }
