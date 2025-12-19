@@ -84,14 +84,20 @@ impl<T: TAnimation> Animation<T> {
                 this.global_seq_id = f.value.to()?;
             }
         }
+        let has_tans = this.interp_type.has_tans();
         for f in &block.frames {
-            this.key_frames.push(KeyFrame {
-                frame: f.frame,
-                value: f.value.to()?,
-                itan: f.intan.to()?,
-                otan: f.outan.to()?,
-                has_tans: this.interp_type.has_tans(),
-            });
+            let mut kf = KeyFrame::<T>::default();
+            kf.frame = f.frame;
+            kf.value = f.value.to()?;
+            kf.has_tans = has_tans;
+            if has_tans {
+                if f.intan.typ == MdlValueType::None || f.outan.typ == MdlValueType::None {
+                    EXIT1!("Missing InTan or OutTan at line {}", f.value.line);
+                }
+                kf.itan = f.intan.to()?;
+                kf.otan = f.outan.to()?;
+            }
+            this.key_frames.push(kf);
         }
         return Ok(this);
     }

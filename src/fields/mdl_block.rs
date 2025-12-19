@@ -105,7 +105,7 @@ impl MdlFrame {
 //#endregion
 //#region MdlValue
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 pub enum MdlValueType {
     #[default]
     None,

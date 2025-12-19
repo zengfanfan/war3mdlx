@@ -63,9 +63,10 @@ macro_rules! Build {
         }
     };
     ($ty:path $(, $field:ident : $value:expr )* $(,)?) => {
-        $ty {
-            $($field: $value,)*
-            ..Default::default()
+        {
+            let mut ret = <$ty>::default();
+            $(ret.$field = $value;)*
+            ret
         }
     };
 }
