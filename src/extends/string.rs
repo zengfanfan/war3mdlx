@@ -1,12 +1,17 @@
 use crate::*;
 
+lazy_static! {
+    static ref re_trailing_backslash: Regex = Regex::new(r"\\+$").unwrap();
+}
+
 pub trait _ExtendString {
     fn eq_icase(&self, s: &str) -> bool;
     fn escape(&self) -> String;
+    fn escape_path(&self) -> String;
     fn unescape(&self) -> String;
 }
 
-impl _ExtendString for &str {
+impl _ExtendString for str {
     fn eq_icase(&self, s: &str) -> bool {
         self.eq_ignore_ascii_case(s)
     }
@@ -15,18 +20,10 @@ impl _ExtendString for &str {
         self.replace("\"", "\\\"").replace("\\", "\\\\")
     }
 
-    fn unescape(&self) -> String {
-        self.replace("\\\\", "\\").replace("\\\"", "\"")
-    }
-}
-
-impl _ExtendString for String {
-    fn eq_icase(&self, s: &str) -> bool {
-        self.eq_ignore_ascii_case(s)
-    }
-
-    fn escape(&self) -> String {
-        self.replace("\"", "\\\"").replace("\\", "\\\\")
+    fn escape_path(&self) -> String {
+        re_trailing_backslash
+            .replace_all(&self.replace("\"", "\\\""), |caps: &regex::Captures| "\\".repeat(caps[0].len() * 2))
+            .to_string()
     }
 
     fn unescape(&self) -> String {

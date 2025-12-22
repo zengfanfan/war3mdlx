@@ -167,6 +167,11 @@ impl Formatter for String {
         F!("\"{self}\"")
     }
 }
+impl Formatter for str {
+    fn fmt(&self) -> String {
+        F!("\"{self}\"")
+    }
+}
 
 impl<T: stdDebug> Formatter for Option<T> {
     fn fmt(&self) -> String {

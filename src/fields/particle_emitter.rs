@@ -174,7 +174,7 @@ impl ParticleEmitter {
                 "LifeSpan" => self.lifespan_anim => 0.0 => self.lifespan,
                 "InitVelocity" => self.speed_anim => 0.0 => self.speed,
             );
-            tlines.pushx_if_n0(&F!("{indent2}Path"), &self.path.escape());
+            tlines.pushx_if_n0(&F!("{indent2}Path"), &self.path.escape_path());
             if !tlines.is_empty() {
                 lines.push(F!("{indent}Particle {{"));
                 lines.append(&mut tlines);

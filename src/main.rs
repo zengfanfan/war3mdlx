@@ -2,6 +2,7 @@ use bitflags::bitflags;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt, WriteBytesExt};
 use derive_debug::Dbg;
 use glam::{Vec2, Vec3, Vec4};
+use lazy_static::lazy_static;
 use paste::paste;
 use pest::Parser;
 use pest::iterators::Pair;

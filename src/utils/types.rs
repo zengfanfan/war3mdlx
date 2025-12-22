@@ -136,6 +136,17 @@ impl CheckValue for String {
         false
     }
 }
+impl CheckValue for str {
+    fn is0(&self) -> bool {
+        self.is_empty()
+    }
+    fn is1(&self) -> bool {
+        false
+    }
+    fn isneg1(&self) -> bool {
+        false
+    }
+}
 
 //#endregion
 //#region convert
