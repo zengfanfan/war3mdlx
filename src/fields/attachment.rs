@@ -78,7 +78,7 @@ impl Attachment {
         if let Some(aid) = self.attachment_id {
             lines.push_if(aid != self.aindex, F!("{indent}AttachmentID {},", aid));
         }
-        lines.pushx_if_n0(&F!("{indent}Path"), &self.child_path);
+        lines.pushx_if_n0(&F!("{indent}Path"), &self.child_path.escape());
         MdlWriteAnimIfSome!(lines, depth, "Visibility" => self.visibility);
         return Ok(lines);
     }

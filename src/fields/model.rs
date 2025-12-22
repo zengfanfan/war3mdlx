@@ -56,7 +56,7 @@ impl Model {
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let indent = indent!(depth + 1);
         let mut lines: Vec<String> = vec![];
-        lines.push(F!("Model \"{}\" {{", self.name));
+        lines.push(F!("Model \"{}\" {{", self.name.escape()));
         if !(self.bounds_radius.is0() && self.min_extent.is0() && self.max_extent.is0()) {
             lines.pushx(&F!("{indent}BoundsRadius"), &self.bounds_radius);
             lines.pushx(&F!("{indent}MinimumExtent"), &self.min_extent);

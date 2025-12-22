@@ -2,11 +2,35 @@ use crate::*;
 
 pub trait _ExtendString {
     fn eq_icase(&self, s: &str) -> bool;
+    fn escape(&self) -> String;
+    fn unescape(&self) -> String;
+}
+
+impl _ExtendString for &str {
+    fn eq_icase(&self, s: &str) -> bool {
+        self.eq_ignore_ascii_case(s)
+    }
+
+    fn escape(&self) -> String {
+        self.replace("\"", "\\\"").replace("\\", "\\\\")
+    }
+
+    fn unescape(&self) -> String {
+        self.replace("\\\\", "\\").replace("\\\"", "\"")
+    }
 }
 
 impl _ExtendString for String {
     fn eq_icase(&self, s: &str) -> bool {
         self.eq_ignore_ascii_case(s)
+    }
+
+    fn escape(&self) -> String {
+        self.replace("\"", "\\\"").replace("\\", "\\\\")
+    }
+
+    fn unescape(&self) -> String {
+        self.replace("\\\\", "\\").replace("\\\"", "\"")
     }
 }
 

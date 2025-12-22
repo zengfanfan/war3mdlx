@@ -167,8 +167,8 @@ impl MdlValue {
     }
 
     pub fn unwrap_string(s: &str) -> String {
-        let s = &s[1..s.len() - 1];
-        s.to_string()
+        let s = &s[1..s.len() - 1]; // remove quotes
+        s.unescape()
     }
 
     pub fn as_str(&self) -> &str {

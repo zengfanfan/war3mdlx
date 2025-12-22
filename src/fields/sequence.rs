@@ -75,7 +75,7 @@ impl Sequence {
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         let (indent, indent2) = (indent!(depth), indent!(depth + 1));
         let mut lines: Vec<String> = vec![];
-        lines.push(F!("{indent}Anim \"{}\" {{", self.name));
+        lines.push(F!("{indent}Anim \"{}\" {{", self.name.escape()));
         lines.push(F!("{indent2}Interval {{ {}, {} }},", self.start_frame, self.end_frame));
         lines.pushx_if_n0(&F!("{indent2}MoveSpeed"), &self.move_speed);
         yes!(!self.looping, lines.push(F!("{indent2}NonLooping,")));

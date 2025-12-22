@@ -78,7 +78,7 @@ macro_rules! MdlWriteType4 {
     ($lines:ident, $depth:expr, $member:expr, $( $name:expr => $var:expr ),+ $(,)?) => {
         $(if !$var.is_empty() {
             for a in $var.iter() {
-                paste!{ $lines.push(F!("{} \"{}\" {{", $name, a.$member)); }
+                paste!{ $lines.push(F!("{} \"{}\" {{", $name, a.$member.escape())); }
                 MdlWriteType1!($lines, $depth+1, a);
                 $lines.push(F!("}}"));
             }
