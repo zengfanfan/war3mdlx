@@ -98,6 +98,15 @@ macro_rules! TNAME {
     };
 }
 
+#[allow(dead_code)]
+pub fn tname_long<T>(_: &T) -> &str {
+    std::any::type_name::<T>()
+}
+#[allow(dead_code)]
+pub fn tname<T>(_: &T) -> String {
+    tname_last_seg_trim::<T>(2)
+}
+
 pub fn tname_last_seg_trim<T>(n: u32) -> String {
     let n = n as usize;
     let full = TNAMEL!(T);

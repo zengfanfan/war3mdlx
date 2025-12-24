@@ -21,8 +21,8 @@ impl MdlBlock {
                 Rule::identifier => this.typ = p.as_str().to_string(),
                 Rule::string => this.name = MdlValue::unwrap_string(p.as_str()),
                 Rule::block => this.blocks.push(MdlBlock::from(p)?),
-                Rule::field => this.fields.push(MdlField::from(p)?),
-                Rule::frame => this.frames.push(MdlFrame::from(p)?),
+                Rule::field => this.fields.push(MdlField::from(p, &this.typ)?),
+                Rule::frame => this.frames.push(MdlFrame::from(p, &this.typ)?),
                 _other => (), // ignore integers
             }
         }
@@ -36,13 +36,14 @@ impl MdlBlock {
 #[derive(Dbg, Default)]
 pub struct MdlField {
     pub name: String,
+    pub scope: String,
     #[dbg(fmt = "{:?}")]
     pub value: MdlValue, // option
 }
 
 impl MdlField {
-    pub fn from(pair: Pair<'_, Rule>) -> Result<Self, MyError> {
-        let mut this = Build!();
+    pub fn from(pair: Pair<'_, Rule>, scope: &str) -> Result<Self, MyError> {
+        let mut this = Build! {scope: scope.s()};
         let inner = pair.into_inner();
         let mut first_ident = true;
         for p in inner {
@@ -52,10 +53,10 @@ impl MdlField {
                         this.name = p.as_str().to_string();
                         first_ident = false;
                     } else {
-                        this.value = MdlValue::from(p)?;
+                        this.value = MdlValue::from(p, &this.name)?;
                     }
                 },
-                _value => this.value = MdlValue::from(p)?,
+                _value => this.value = MdlValue::from(p, &this.name)?,
             }
         }
         return Ok(this);
@@ -79,6 +80,7 @@ impl Formatter for Vec<MdlField> {
 
 #[derive(Dbg, Default)]
 pub struct MdlFrame {
+    pub scope: String,
     pub frame: i32,
     #[dbg(fmt = "{:?}")]
     pub value: MdlValue,
@@ -89,14 +91,14 @@ pub struct MdlFrame {
 }
 
 impl MdlFrame {
-    pub fn from(pair: Pair<'_, Rule>) -> Result<Self, MyError> {
-        let mut this = Build!();
+    pub fn from(pair: Pair<'_, Rule>, scope: &str) -> Result<Self, MyError> {
+        let mut this = Build! {scope: scope.s()};
         let mut inner = pair.into_inner();
         this.frame = inner.next().unwrap().as_str().parse().unwrap();
-        this.value = MdlValue::from(inner.next().unwrap())?;
+        this.value = MdlValue::from(inner.next().unwrap(), &this.scope)?;
         if !inner.is_empty() {
-            this.intan = MdlValue::from(inner.next().unwrap())?;
-            this.outan = MdlValue::from(inner.next().unwrap())?;
+            this.intan = MdlValue::from(inner.next().unwrap(), &this.scope)?;
+            this.outan = MdlValue::from(inner.next().unwrap(), &this.scope)?;
         }
         return Ok(this);
     }
@@ -120,14 +122,15 @@ pub enum MdlValueType {
 
 #[derive(Debug, Default)]
 pub struct MdlValue {
+    pub name: String,
     pub typ: MdlValueType,
     pub line: u32,
 }
 
 impl MdlValue {
-    pub fn from(p: Pair<'_, Rule>) -> Result<Self, MyError> {
+    pub fn from(p: Pair<'_, Rule>, name: &str) -> Result<Self, MyError> {
         let line = p.as_span().start_pos().line_col().0 as u32;
-        Ok(match p.as_rule() {
+        let mut this = match p.as_rule() {
             Rule::integer => Self::Integer(line, p.as_str().parse()?),
             Rule::float => Self::Float(line, p.as_str().parse()?),
             Rule::identifier => Self::Flag(line, p.as_str().s()),
@@ -159,7 +162,9 @@ impl MdlValue {
                 yesno!(iv.len() == fv.len(), Self::IntegerArray(line, iv), Self::FloatArray(line, fv))
             },
             _impossible => Self::default(),
-        })
+        };
+        this.name = name.to_string();
+        return Ok(this);
     }
 
     pub fn to<T: FromMdlValue>(&self) -> Result<T, MyError> {
@@ -180,32 +185,32 @@ impl MdlValue {
     }
 
     pub fn expect<T>(&self, s: &str) -> Result<T, MyError> {
-        ERR!("Expected {} at line {}", s, self.line)
+        ERR!("Expected {} for {:?} at line {}, got {:?}.", s, self.name, self.line, self.typ)
     }
 }
 
 #[allow(non_snake_case)]
 impl MdlValue {
     fn Integer(line: u32, v: i32) -> Self {
-        Self { line, typ: MdlValueType::Integer(v) }
+        Build! { line: line, typ: MdlValueType::Integer(v) }
     }
     fn Float(line: u32, v: f32) -> Self {
-        Self { line, typ: MdlValueType::Float(v) }
+        Build! { line: line, typ: MdlValueType::Float(v) }
     }
     fn String(line: u32, v: String) -> Self {
-        Self { line, typ: MdlValueType::String(v) }
+        Build! { line: line, typ: MdlValueType::String(v) }
     }
     fn Flag(line: u32, v: String) -> Self {
-        Self { line, typ: MdlValueType::Flag(v) }
+        Build! { line: line, typ: MdlValueType::Flag(v) }
     }
     fn IntegerArray(line: u32, v: Vec<i32>) -> Self {
-        Self { line, typ: MdlValueType::IntegerArray(v) }
+        Build! { line: line, typ: MdlValueType::IntegerArray(v) }
     }
     fn FloatArray(line: u32, v: Vec<f32>) -> Self {
-        Self { line, typ: MdlValueType::FloatArray(v) }
+        Build! { line: line, typ: MdlValueType::FloatArray(v) }
     }
     fn FlagArray(line: u32, v: Vec<String>) -> Self {
-        Self { line, typ: MdlValueType::FlagArray(v) }
+        Build! { line: line, typ: MdlValueType::FlagArray(v) }
     }
 }
 
