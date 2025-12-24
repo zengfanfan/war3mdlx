@@ -416,6 +416,7 @@ pub struct GeosetAnim {
     #[dbg(fmt = "{:?}")]
     pub flags: GeosetAnimFlags,
     #[dbg(formatter = "fmtx")]
+    #[default(Vec3::ONE)]
     pub color: Vec3, // RGB
     pub geoset_id: i32,
 
