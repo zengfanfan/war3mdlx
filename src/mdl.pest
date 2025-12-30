@@ -15,20 +15,9 @@ file = { SOI ~ block* ~ EOI }
 block = { identifier ~ (string|integer+)? ~ "{" ~ (block | field | frame)* ~ "}" ~ ","? }
 
 field = { "static"? ~ (identifier ~ value | identifier | value) ~ "," }
-frame = {
-    integer ~ ":" ~ (number|number_array) ~ "," ~ (
-        "InTan" ~ (number|number_array) ~ "," ~
-        "OutTan" ~ (number|number_array) ~ ","
-    )?
-}
+frame = { integer ~ ":" ~ (number|number_array) ~ "," ~ field* }
 
-value = _{
-      number
-    | string
-    | array
-    | identifier
-}
-
+value = _{ number | string | array | identifier }
 number = _{ float | integer }
 
 identifier = @{ !ASCII_DIGIT ~ ASCII_ALPHANUMERIC+ }

@@ -96,6 +96,9 @@ impl<T: TAnimation> Animation<T> {
                 }
                 kf.itan = f.intan.to()?;
                 kf.otan = f.outan.to()?;
+            } else {
+                yes!(f.intan.typ != MdlValueType::None, EXIT1!("Unexpected InTan at line {}", f.intan.line));
+                yes!(f.outan.typ != MdlValueType::None, EXIT1!("Unexpected OutTan at line {}", f.outan.line));
             }
             this.key_frames.push(kf);
         }

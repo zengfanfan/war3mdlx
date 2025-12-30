@@ -96,9 +96,14 @@ impl MdlFrame {
         let mut inner = pair.into_inner();
         this.frame = inner.next().unwrap().as_str().parse().unwrap();
         this.value = MdlValue::from(inner.next().unwrap(), &this.scope)?;
-        if !inner.is_empty() {
-            this.intan = MdlValue::from(inner.next().unwrap(), &this.scope)?;
-            this.outan = MdlValue::from(inner.next().unwrap(), &this.scope)?;
+        for p in inner {
+            let f = MdlField::from(p, &this.scope)?;
+            match_istr!(f.name.as_str(),
+                "Intan" => this.intan = f.value,
+                "OutTan" => this.outan = f.value,
+                _other => EXIT1!("Unexpected {:?} (in {}) at line {}",
+                f.name.or(&f.value.raw), this.scope, f.value.line),
+            );
         }
         return Ok(this);
     }
@@ -123,13 +128,21 @@ pub enum MdlValueType {
 #[derive(Debug, Default)]
 pub struct MdlValue {
     pub name: String,
+    pub raw: String,
     pub typ: MdlValueType,
     pub line: u32,
+}
+
+impl Display for MdlValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.raw)
+    }
 }
 
 impl MdlValue {
     pub fn from(p: Pair<'_, Rule>, name: &str) -> Result<Self, MyError> {
         let line = p.as_span().start_pos().line_col().0 as u32;
+        let raw = p.as_str().s();
         let mut this = match p.as_rule() {
             Rule::integer => Self::Integer(line, p.as_str().parse()?),
             Rule::float => Self::Float(line, p.as_str().parse()?),
@@ -164,6 +177,7 @@ impl MdlValue {
             _impossible => Self::default(),
         };
         this.name = name.to_string();
+        this.raw = raw;
         return Ok(this);
     }
 
@@ -185,7 +199,7 @@ impl MdlValue {
     }
 
     pub fn expect<T>(&self, s: &str) -> Result<T, MyError> {
-        ERR!("Expected {} for {:?} at line {}, got {:?}.", s, self.name, self.line, self.typ)
+        ERR!("Expected {} for {:?} at line {}, got {:?}({:?}).", s, self.name, self.line, self.typ, self.raw)
     }
 }
 

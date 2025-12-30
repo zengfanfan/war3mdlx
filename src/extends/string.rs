@@ -5,6 +5,7 @@ lazy_static! {
 }
 
 pub trait _ExtendString {
+    fn or(&self, def: &str) -> String;
     fn eq_icase(&self, s: &str) -> bool;
     fn escape(&self) -> String;
     fn escape_path(&self) -> String;
@@ -12,6 +13,10 @@ pub trait _ExtendString {
 }
 
 impl _ExtendString for str {
+    fn or(&self, def: &str) -> String {
+        if self.is_empty() { def.to_string() } else { self.to_string() }
+    }
+
     fn eq_icase(&self, s: &str) -> bool {
         self.eq_ignore_ascii_case(s)
     }
@@ -94,5 +99,19 @@ impl<T: CheckValue + Formatter> _ExtendStringArrayIfFMTX<T> for Vec<String> {
     }
     fn pushx_if_nneg1(&mut self, name: &str, v: &T) {
         yes!(!v.isneg1(), self.pushx(name, v));
+    }
+}
+
+pub trait _DisplayX {
+    fn s(&self) -> String;
+    fn to_string(&self) -> String;
+}
+
+impl<T: Display> _DisplayX for Vec<T> {
+    fn s(&self) -> String {
+        self.to_string()
+    }
+    fn to_string(&self) -> String {
+        F!("[{}]", self.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(", "))
     }
 }
