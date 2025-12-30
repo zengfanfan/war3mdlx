@@ -1,5 +1,7 @@
 use crate::*;
 
+//#region trait: _ExtendPair
+
 trait _ExtendPair {
     fn lineno(&self) -> u32;
 }
@@ -9,6 +11,7 @@ impl _ExtendPair for Pair<'_, Rule> {
     }
 }
 
+//#endregion
 //#region MdlBlock
 
 #[derive(Dbg, Default)]
@@ -38,6 +41,10 @@ impl MdlBlock {
         }
         return Ok(this);
     }
+
+    pub fn unexpect<T>(&self) -> Result<T, MyError> {
+        ERR!("Unexpected {}({:?}) at line {}.", self.typ, self.name, self.line)
+    }
 }
 
 //#endregion
@@ -55,19 +62,19 @@ pub struct MdlField {
 impl MdlField {
     pub fn from(pair: Pair<'_, Rule>, scope: &str) -> Result<Self, MyError> {
         let mut this = Build! {scope: scope.s(), line: pair.lineno()};
+        this.value.line = this.line;
         let inner = pair.into_inner();
         let mut first_ident = true;
         for p in inner {
-            match p.as_rule() {
-                Rule::identifier => {
-                    if first_ident {
-                        this.name = p.as_str().to_string();
-                        first_ident = false;
-                    } else {
-                        this.value = MdlValue::from(p, &this.name)?;
-                    }
-                },
-                _value => this.value = MdlValue::from(p, &this.name)?,
+            if let Rule::identifier = p.as_rule() {
+                if first_ident {
+                    this.name = p.as_str().to_string();
+                    first_ident = false;
+                } else {
+                    this.value = MdlValue::from(p, &this.name)?;
+                }
+            } else {
+                this.value = MdlValue::from(p, &this.name)?;
             }
         }
         return Ok(this);
@@ -214,7 +221,9 @@ impl MdlValue {
     }
 
     pub fn expect<T>(&self, s: &str) -> Result<T, MyError> {
-        ERR!("Expected {} for {:?} at line {}, got {:?}({:?}).", s, self.name, self.line, self.typ, self.raw)
+        let forname = yesno!(self.name.is_empty(), "".s(), F!(" for {:?}", self.name));
+        let gottype = yesno!(self.typ == MdlValueType::None, "".s(), F!(", got {:?}", self.typ));
+        ERR!("Expected {}{} at line {}{}.", s, forname, self.line, gottype)
     }
 }
 

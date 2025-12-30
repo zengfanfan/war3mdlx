@@ -16,6 +16,8 @@ macro_rules! MdlReadType2 {
                     let name = yesno!(a.name.is_empty(), $var.len().s(), a.name.clone());
                     $var.push(<$ty>::read_mdl(a)
                     .or_else(|e| ERR!("{}[{:?}]: {}", TNAME!($ty), name, e))?);
+                } else {
+                    return a.unexpect();
                 }
             }
             return Ok(());
@@ -187,6 +189,6 @@ impl MdlxData {
             GlobalSequence  => self.globalseqs,
             PivotPoint      => self.pivot_points,
         );
-        return Ok(());
+        EXIT1!("Unknown block {} {} at line {}.", block.typ, block.name, block.line);
     }
 }

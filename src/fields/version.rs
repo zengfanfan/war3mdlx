@@ -20,7 +20,6 @@ impl Version {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build!();
         for f in &block.fields {
-            elog!(" * {:?}", f);
             match_istr!(f.name.as_str(),
                 "FormatVersion" => this.format_version = f.value.to()?,
                 _other => return f.unexpect(),

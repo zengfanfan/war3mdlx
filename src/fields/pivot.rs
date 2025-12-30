@@ -17,8 +17,8 @@ impl PivotPoint {
         chunk.write(&self.position)
     }
 
-    pub fn read_mdl(field: &MdlField) -> Result<Self, MyError> {
-        Ok(Self { position: field.value.to()? })
+    pub fn read_mdl(f: &MdlField) -> Result<Self, MyError> {
+        yesno!(f.name.is_empty(), Ok(Self { position: f.value.to()? }), f.unexpect())
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {

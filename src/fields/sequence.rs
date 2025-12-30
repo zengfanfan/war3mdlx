@@ -66,7 +66,7 @@ impl Sequence {
                     this.start_frame = interval.get(0).cloned().unwrap_or(0);
                     this.end_frame = interval.get(1).cloned().unwrap_or(0);
                 },
-                _other => (),
+                _other => return f.unexpect(),
             );
         }
         return Ok(this);
