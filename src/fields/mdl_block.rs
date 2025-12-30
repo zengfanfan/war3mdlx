@@ -228,7 +228,11 @@ macro_rules! impl_FromMdlValue_int {
         $(
             impl FromMdlValue for $ty {
                 fn from(v: &MdlValue) -> Result<Self, MyError> {
-                    if let MdlValueType::Integer(i) = &v.typ { Ok(*i as $ty) } else { v.expect("integer") }
+                    match &v.typ {
+                        MdlValueType::Integer(i) => Ok(*i as $ty),
+                        MdlValueType::Flag(f) if f.eq_icase("None") => Ok(-1),
+                        _ => v.expect("integer"),
+                    }
                 }
             }
             impl FromMdlValue for Vec<$ty> {
