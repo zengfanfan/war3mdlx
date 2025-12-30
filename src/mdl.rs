@@ -189,6 +189,6 @@ impl MdlxData {
             GlobalSequence  => self.globalseqs,
             PivotPoint      => self.pivot_points,
         );
-        EXIT1!("Unknown block {} {} at line {}.", block.typ, block.name, block.line);
+        return block.unexpect();
     }
 }

@@ -43,7 +43,8 @@ impl MdlBlock {
     }
 
     pub fn unexpect<T>(&self) -> Result<T, MyError> {
-        ERR!("Unexpected {}({:?}) at line {}.", self.typ, self.name, self.line)
+        let name = yesno!(self.name.is_empty(), "".s(), F!("({:?})", self.name));
+        ERR!("Unexpected {}{} at line {}.", self.typ, name, self.line)
     }
 }
 

@@ -46,7 +46,7 @@ impl Texture {
                 "Image" => this.path = f.value.to()?,
                 "WrapWidth" => this.flags.insert(TextureFlags::WrapWidth),
                 "WrapHeight" => this.flags.insert(TextureFlags::WrapHeight),
-                _other => (),
+                _other => return f.unexpect(),
             );
         }
         return Ok(this);

@@ -64,13 +64,13 @@ impl Material {
                 "ConstantColor" => this.flags.insert(MaterialFlags::ConstantColor),
                 "SortPrimsFarZ" => this.flags.insert(MaterialFlags::SortPrimsFarZ),
                 "FullResolution" => this.flags.insert(MaterialFlags::FullResolution),
-                _other => (),
+                _other => return f.unexpect(),
             );
         }
         for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Layer" => this.layers.push(Layer::read_mdl(f)?),
-                _other => (),
+                _other => return f.unexpect(),
             );
         }
         return Ok(this);
@@ -182,7 +182,12 @@ impl Layer {
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "FilterMode" => this.filter_mode = FilterMode::from_str(f.value.as_str()),
+                "FilterMode" => {
+                    this.filter_mode = FilterMode::from_str(f.value.as_str());
+                    if let FilterMode::Error(_) = this.filter_mode {
+                        EXIT1!("Unknown {} {:?} at line {}.", f.name, f.value.as_str(), f.line);
+                    }
+                },
                 "Unshaded" => this.flags.insert(LayerFlags::Unshaded),
                 "SphereEnvMap" => this.flags.insert(LayerFlags::SphereEnvMap),
                 "TwoSided" => this.flags.insert(LayerFlags::TwoSided),
@@ -193,14 +198,14 @@ impl Layer {
                 "TVertexAnimId" => this.texture_anim_id = f.value.to()?,
                 "CoordId" => this.coordid = f.value.to()?,
                 "Alpha" => this.alpha = f.value.to()?,
-                _other => (),
+                _other => return f.unexpect(),
             );
         }
         for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
                 "TextureID" => this.texid_anim = Some(Animation::read_mdl(f)?),
-                _other => (),
+                _other => return f.unexpect(),
             );
         }
         return Ok(this);
