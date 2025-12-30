@@ -230,7 +230,7 @@ macro_rules! impl_FromMdlValue_int {
                 fn from(v: &MdlValue) -> Result<Self, MyError> {
                     match &v.typ {
                         MdlValueType::Integer(i) => Ok(*i as $ty),
-                        MdlValueType::Flag(f) if f.eq_icase("None") => Ok(-1),
+                        MdlValueType::Flag(f) if f.eq_icase("None") || f.eq_icase("Multiple") => Ok(-1),
                         _ => v.expect("integer"),
                     }
                 }
