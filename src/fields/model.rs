@@ -47,7 +47,7 @@ impl Model {
                 "MinimumExtent" => this.min_extent = f.value.to()?,
                 "MaximumExtent" => this.max_extent = f.value.to()?,
                 "BlendTime" => this.blend_time = f.value.to()?,
-                _other => (),
+                _other => (), // ignore
             );
         }
         return Ok(this);

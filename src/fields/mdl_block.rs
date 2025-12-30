@@ -1,11 +1,21 @@
 use crate::*;
 
+trait _ExtendPair {
+    fn lineno(&self) -> u32;
+}
+impl _ExtendPair for Pair<'_, Rule> {
+    fn lineno(&self) -> u32 {
+        self.as_span().start_pos().line_col().0 as u32
+    }
+}
+
 //#region MdlBlock
 
 #[derive(Dbg, Default)]
 pub struct MdlBlock {
     pub typ: String,
     pub name: String,
+    pub line: u32,
     #[dbg(formatter = "fmtx")]
     pub fields: Vec<MdlField>,
     pub frames: Vec<MdlFrame>,
@@ -14,7 +24,7 @@ pub struct MdlBlock {
 
 impl MdlBlock {
     pub fn from(pair: Pair<'_, Rule>) -> Result<Self, MyError> {
-        let mut this = Build!();
+        let mut this = Build! {line: pair.lineno()};
         let inner = pair.into_inner();
         for p in inner {
             match p.as_rule() {
@@ -37,13 +47,14 @@ impl MdlBlock {
 pub struct MdlField {
     pub name: String,
     pub scope: String,
+    pub line: u32,
     #[dbg(fmt = "{:?}")]
     pub value: MdlValue, // option
 }
 
 impl MdlField {
     pub fn from(pair: Pair<'_, Rule>, scope: &str) -> Result<Self, MyError> {
-        let mut this = Build! {scope: scope.s()};
+        let mut this = Build! {scope: scope.s(), line: pair.lineno()};
         let inner = pair.into_inner();
         let mut first_ident = true;
         for p in inner {
@@ -60,6 +71,11 @@ impl MdlField {
             }
         }
         return Ok(this);
+    }
+
+    pub fn unexpect<T>(&self) -> Result<T, MyError> {
+        let name = yesno!(self.name.is_empty(), &self.value.raw, &self.name);
+        ERR!("Unexpected {:?} (in {}) at line {}.", name, self.scope, self.line)
     }
 }
 
@@ -81,6 +97,7 @@ impl Formatter for Vec<MdlField> {
 #[derive(Dbg, Default)]
 pub struct MdlFrame {
     pub scope: String,
+    pub line: u32,
     pub frame: i32,
     #[dbg(fmt = "{:?}")]
     pub value: MdlValue,
@@ -92,7 +109,7 @@ pub struct MdlFrame {
 
 impl MdlFrame {
     pub fn from(pair: Pair<'_, Rule>, scope: &str) -> Result<Self, MyError> {
-        let mut this = Build! {scope: scope.s()};
+        let mut this = Build! {scope: scope.s(), line: pair.lineno()};
         let mut inner = pair.into_inner();
         this.frame = inner.next().unwrap().as_str().parse().unwrap();
         this.value = MdlValue::from(inner.next().unwrap(), &this.scope)?;
@@ -141,15 +158,15 @@ impl Display for MdlValue {
 
 impl MdlValue {
     pub fn from(p: Pair<'_, Rule>, name: &str) -> Result<Self, MyError> {
-        let line = p.as_span().start_pos().line_col().0 as u32;
-        let raw = p.as_str().s();
-        let mut this = match p.as_rule() {
-            Rule::integer => Self::Integer(line, p.as_str().parse()?),
-            Rule::float => Self::Float(line, p.as_str().parse()?),
-            Rule::identifier => Self::Flag(line, p.as_str().s()),
-            Rule::string => Self::String(line, Self::unwrap_string(p.as_str())),
+        let raw = p.as_str();
+        let mut this = Build! {name: name.s(), line: p.lineno(), raw: raw.s()};
+        this.typ = match p.as_rule() {
+            Rule::integer => MdlValueType::Integer(raw.parse()?),
+            Rule::float => MdlValueType::Float(raw.parse()?),
+            Rule::identifier => MdlValueType::Flag(raw.s()),
+            Rule::string => MdlValueType::String(Self::unwrap_string(raw)),
             Rule::identifier_array => {
-                Self::FlagArray(line, p.into_inner().into_iter().map(|p| p.as_str().s()).collect())
+                MdlValueType::FlagArray(p.into_inner().into_iter().map(|p| p.as_str().s()).collect())
             },
             Rule::number_array => {
                 let inner = p.into_inner();
@@ -172,12 +189,10 @@ impl MdlValue {
                         fv.push(s.parse()?);
                     }
                 }
-                yesno!(iv.len() == fv.len(), Self::IntegerArray(line, iv), Self::FloatArray(line, fv))
+                yesno!(iv.len() == fv.len(), MdlValueType::IntegerArray(iv), MdlValueType::FloatArray(fv))
             },
-            _impossible => Self::default(),
+            _impossible => MdlValueType::default(),
         };
-        this.name = name.to_string();
-        this.raw = raw;
         return Ok(this);
     }
 
@@ -200,31 +215,6 @@ impl MdlValue {
 
     pub fn expect<T>(&self, s: &str) -> Result<T, MyError> {
         ERR!("Expected {} for {:?} at line {}, got {:?}({:?}).", s, self.name, self.line, self.typ, self.raw)
-    }
-}
-
-#[allow(non_snake_case)]
-impl MdlValue {
-    fn Integer(line: u32, v: i32) -> Self {
-        Build! { line: line, typ: MdlValueType::Integer(v) }
-    }
-    fn Float(line: u32, v: f32) -> Self {
-        Build! { line: line, typ: MdlValueType::Float(v) }
-    }
-    fn String(line: u32, v: String) -> Self {
-        Build! { line: line, typ: MdlValueType::String(v) }
-    }
-    fn Flag(line: u32, v: String) -> Self {
-        Build! { line: line, typ: MdlValueType::Flag(v) }
-    }
-    fn IntegerArray(line: u32, v: Vec<i32>) -> Self {
-        Build! { line: line, typ: MdlValueType::IntegerArray(v) }
-    }
-    fn FloatArray(line: u32, v: Vec<f32>) -> Self {
-        Build! { line: line, typ: MdlValueType::FloatArray(v) }
-    }
-    fn FlagArray(line: u32, v: Vec<String>) -> Self {
-        Build! { line: line, typ: MdlValueType::FlagArray(v) }
     }
 }
 

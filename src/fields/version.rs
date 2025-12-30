@@ -1,8 +1,7 @@
 use crate::*;
 
-#[derive(Dbg, SmartDefault)]
+#[derive(Dbg, Default)]
 pub struct Version {
-    #[default = 800]
     pub format_version: i32,
 }
 
@@ -21,10 +20,11 @@ impl Version {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build!();
         for f in &block.fields {
-            if f.name.eq_icase("FormatVersion") {
-                this.format_version = f.value.to()?;
-                break; // only 1 field
-            }
+            elog!(" * {:?}", f);
+            match_istr!(f.name.as_str(),
+                "FormatVersion" => this.format_version = f.value.to()?,
+                _other => return f.unexpect(),
+            );
         }
         return Ok(this);
     }
