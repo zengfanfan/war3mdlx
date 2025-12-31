@@ -11,6 +11,7 @@ use pretty_hex::*;
 use regex::Regex;
 use smart_default::SmartDefault;
 use std::collections::HashMap;
+use std::env;
 use std::fmt::{Debug as stdDebug, Display, Formatter as stdFormatter, Result as stdResult};
 use std::fs;
 use std::io::{Cursor, Error as ioError, Read, Write};

@@ -11,6 +11,8 @@ macro_rules! MdlReadType1 {
 macro_rules! MdlReadType2 {
     ($block:expr, $( $ty:ty => $name:expr => $var:expr ),+ $(,)?) => {
         $(if $block.typ == F!("{}s", stringify!($ty)) {
+            $block.unexpect_fields()?;
+            $block.unexpect_frames()?;
             for a in $block.blocks.iter() {
                 if a.typ == $name {
                     let name = yesno!(a.name.is_empty(), $var.len().s(), F!("{:?}",a.name));
@@ -36,6 +38,8 @@ macro_rules! MdlReadType3 {
 macro_rules! MdlReadType4 {
     ($block:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $block.typ == F!("{}s", stringify!($ty)) {
+            $block.unexpect_frames()?;
+            $block.unexpect_blocks()?;
             for a in $block.fields.iter() {
                 $var.push(<$ty>::read_mdl(a).or_else(|e| ERR!("{}: {}", TNAME!($ty), e))?);
             }
@@ -150,7 +154,7 @@ impl MdlxData {
             if let Rule::file = pair.as_rule() {
                 for p in pair.into_inner() {
                     if let Rule::block = p.as_rule() {
-                        this.parse_mdl_block(MdlBlock::from(p)?)?;
+                        this.parse_mdl_block(MdlBlock::from(p, "")?)?;
                     }
                 }
                 break; // only 1 [file] rule

@@ -5,6 +5,7 @@ lazy_static! {
 }
 
 pub trait _ExtendString {
+    #[allow(unused)]
     fn or(&self, def: &str) -> String;
     fn eq_icase(&self, s: &str) -> bool;
     fn escape(&self) -> String;

@@ -59,6 +59,8 @@ impl BoundExtent {
 
     pub fn read_mdl(block: &MdlBlock, strict: bool) -> Result<Self, MyError> {
         let mut this = Build!();
+        yes!(strict, block.unexpect_frames()?);
+        yes!(strict, block.unexpect_blocks()?);
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "BoundsRadius" => this.bound_radius = f.value.to()?,
@@ -226,7 +228,7 @@ impl Geoset {
         for (t, n) in self.face_types.iter().zip(self.face_vtxcnts.iter()) {
             if *t == tri {
                 if n % trin != 0 {
-                    wlog!("Expected length of {t:?} (in {}) to be multiple of {trin}, but got {n}.", TNAME!());
+                    wlog!("Expecting length of {t:?} (in {}) to be multiple of {trin}, but got {n}.", TNAME!());
                 }
             } else {
                 wlog!("OMG! {} other than {tri:?}({}): {:?}", TNAME!(&tri), tri.to(), self.face_types);
@@ -296,7 +298,7 @@ impl Geoset {
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build! { extent: BoundExtent::read_mdl(&block, false)? };
-        for f in &block.frames { return f.unexpect(); }
+        block.unexpect_frames()?;
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "MaterialID" => this.material_id = f.value.to()?,
@@ -307,19 +309,30 @@ impl Geoset {
             );
         }
         for a in &block.blocks {
+            a.unexpect_frames()?;
             match_istr!(a.typ.as_str(),
-                "Vertices" => this.vertices = a.fields.to_noname()?,
-                "Normals" => this.normals = a.fields.to_noname()?,
-                "TVertices" => this.uvss.push(a.fields.to_noname()?),
-                "VertexGroup" => this.vtxgrps = a.fields.to_noname()?,
+                "Vertices" => {
+                    a.unexpect_blocks()?;
+                    this.vertices = a.fields.to_noname()?
+                },
+                "Normals" => {
+                    a.unexpect_blocks()?;
+                    this.normals = a.fields.to_noname()?
+                },
+                "TVertices" => {
+                    a.unexpect_blocks()?;
+                    this.uvss.push(a.fields.to_noname()?)
+                },
+                "VertexGroup" => {
+                    a.unexpect_blocks()?;
+                    this.vtxgrps = a.fields.to_noname()?
+                },
                 "Faces" => {
-                    for f in &a.fields { return f.unexpect(); }
-                    for f in &a.frames { return f.unexpect(); }
+                    a.unexpect_fields()?;
                     for b in &a.blocks { this.read_mdl_face(b)?; }
                 },
                 "Groups" => {
-                    for f in &a.frames { return f.unexpect(); }
-                    for b in &a.blocks { return b.unexpect(); }
+                    a.unexpect_blocks()?;
                     for f in &a.fields { this.read_mdl_matrices(f)?; }
                 },
                 "Anim" => this.anim_extents.push(BoundExtent::read_mdl(&a, true)?),
@@ -331,6 +344,9 @@ impl Geoset {
         return Ok(this);
     }
     fn read_mdl_face(&mut self, block: &MdlBlock) -> Result<(), MyError> {
+        block.unexpect_frames()?;
+        block.unexpect_blocks()?;
+
         let (ts, line) = (block.typ.as_str(), block.line);
         let t = FaceType::from_str(ts);
         if let FaceType::Error(_) = t {
@@ -490,6 +506,7 @@ impl GeosetAnim {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_frames()?;
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),

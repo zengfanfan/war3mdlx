@@ -76,11 +76,13 @@ impl<T: TAnimation> Animation<T> {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_blocks()?;
         let mut this = Build!();
         for f in &block.fields {
             if f.name == "GlobalSeqId" {
                 this.global_seq_id = f.value.to()?;
             } else {
+                no!(f.value.is_empty(), return f.unexpect());
                 match InterpolationType::from_str(f.name.as_str()) {
                     InterpolationType::Error(_) => return f.unexpect(),
                     _interp => this.interp_type = _interp,
@@ -94,14 +96,14 @@ impl<T: TAnimation> Animation<T> {
             kf.value = f.value.to()?;
             kf.has_tans = has_tans;
             if has_tans {
-                if f.intan.typ == MdlValueType::None || f.outan.typ == MdlValueType::None {
+                if f.intan.is_empty() || f.outan.is_empty() {
                     EXIT1!("Missing InTan or OutTan at line {}", f.value.line);
                 }
                 kf.itan = f.intan.to()?;
                 kf.otan = f.outan.to()?;
             } else {
-                yes!(f.intan.typ != MdlValueType::None, EXIT1!("Unexpected InTan at line {}", f.intan.line));
-                yes!(f.outan.typ != MdlValueType::None, EXIT1!("Unexpected OutTan at line {}", f.outan.line));
+                no!(f.intan.is_empty(), EXIT1!("Unexpected InTan at line {}", f.intan.line));
+                no!(f.outan.is_empty(), EXIT1!("Unexpected OutTan at line {}", f.outan.line));
             }
             this.key_frames.push(kf);
         }

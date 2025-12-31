@@ -18,6 +18,7 @@ impl _ExtendPair for Pair<'_, Rule> {
 pub struct MdlBlock {
     pub typ: String,
     pub name: String,
+    pub scope: String,
     pub line: u32,
     #[dbg(formatter = "fmtx")]
     pub fields: Vec<MdlField>,
@@ -26,14 +27,14 @@ pub struct MdlBlock {
 }
 
 impl MdlBlock {
-    pub fn from(pair: Pair<'_, Rule>) -> Result<Self, MyError> {
-        let mut this = Build! {line: pair.lineno()};
+    pub fn from(pair: Pair<'_, Rule>, scope: &str) -> Result<Self, MyError> {
+        let mut this = Build! {line: pair.lineno(), scope: scope.s()};
         let inner = pair.into_inner();
         for p in inner {
             match p.as_rule() {
                 Rule::identifier => this.typ = p.as_str().to_string(),
                 Rule::string => this.name = MdlValue::unwrap_string(p.as_str()),
-                Rule::block => this.blocks.push(MdlBlock::from(p)?),
+                Rule::block => this.blocks.push(MdlBlock::from(p, &this.typ)?),
                 Rule::field => this.fields.push(MdlField::from(p, &this.typ)?),
                 Rule::frame => this.frames.push(MdlFrame::from(p, &this.typ)?),
                 _other => (), // ignore integers
@@ -43,8 +44,28 @@ impl MdlBlock {
     }
 
     pub fn unexpect<T>(&self) -> Result<T, MyError> {
-        let (t, n, l) = (&self.typ, &self.name, &self.line);
-        yesno!(n.is_empty(), ERR!("Unexpected {t:?} at line {l}."), ERR!("Unexpected {t}({n:?}) at line {l}."))
+        let (t, n, l, s) = (&self.typ, &self.name, &self.line, &self.scope);
+        let name = yesno!(n.is_empty(), "".s(), F!("({n:?})"));
+        let scope = yesno!(s.is_empty(), "".s(), F!(" (in {s})"));
+        ERR!("Unexpected {t:?}{name}{scope} at line {l}.")
+    }
+    pub fn unexpect_fields(&self) -> Result<(), MyError> {
+        for f in &self.fields {
+            return f.unexpect();
+        }
+        return Ok(());
+    }
+    pub fn unexpect_frames(&self) -> Result<(), MyError> {
+        for f in &self.frames {
+            return f.unexpect();
+        }
+        return Ok(());
+    }
+    pub fn unexpect_blocks(&self) -> Result<(), MyError> {
+        for f in &self.blocks {
+            return f.unexpect();
+        }
+        return Ok(());
     }
 }
 
@@ -64,12 +85,14 @@ impl MdlField {
     pub fn from(pair: Pair<'_, Rule>, scope: &str) -> Result<Self, MyError> {
         let mut this = Build! {scope: scope.s(), line: pair.lineno()};
         this.value.line = this.line;
+        this.value.name = this.scope.s();
         let inner = pair.into_inner();
         let mut first_ident = true;
         for p in inner {
             if let Rule::identifier = p.as_rule() {
                 if first_ident {
                     this.name = p.as_str().to_string();
+                    this.value.name = this.name.s();
                     first_ident = false;
                 } else {
                     this.value = MdlValue::from(p, &this.name)?;
@@ -84,6 +107,9 @@ impl MdlField {
     pub fn unexpect<T>(&self) -> Result<T, MyError> {
         let name = yesno!(self.name.is_empty(), &self.value.raw, &self.name);
         ERR!("Unexpected {:?} (in {}) at line {}.", name, self.scope, self.line)
+    }
+    pub fn expect_flag(&self) -> Result<&str, MyError> {
+        yesno!(self.value.is_empty(), Ok(self.name.as_str()), self.value.unexpect())
     }
 }
 
@@ -126,8 +152,7 @@ impl MdlFrame {
             match_istr!(f.name.as_str(),
                 "Intan" => this.intan = f.value,
                 "OutTan" => this.outan = f.value,
-                _other => EXIT1!("Unexpected {:?} (in {}) at line {}",
-                f.name.or(&f.value.raw), this.scope, f.value.line),
+                _other => return f.unexpect(),
             );
         }
         return Ok(this);
@@ -225,10 +250,18 @@ impl MdlValue {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.typ == MdlValueType::None
+    }
+
     pub fn expect<T>(&self, s: &str) -> Result<T, MyError> {
         let forname = yesno!(self.name.is_empty(), "".s(), F!(" for {:?}", self.name));
-        let gottype = yesno!(self.typ == MdlValueType::None, "".s(), F!(", got {:?}", self.typ));
-        ERR!("Expected {}{} at line {}{}.", s, forname, self.line, gottype)
+        let gottype = yesno!(self.is_empty(), "".s(), F!(", got {:?}", self.typ));
+        ERR!("Expecting {}{} at line {}{}.", s, forname, self.line, gottype)
+    }
+    pub fn unexpect<T>(&self) -> Result<T, MyError> {
+        let forname = yesno!(self.name.is_empty(), "".s(), F!(" for {:?}", self.name));
+        ERR!("Unexpected {:?}{forname} at line {}.", self.raw, self.line)
     }
 }
 

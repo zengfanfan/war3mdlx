@@ -39,6 +39,8 @@ impl Texture {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_frames()?;
+        block.unexpect_blocks()?;
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
@@ -112,6 +114,8 @@ impl TextureAnim {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_fields()?;
+        block.unexpect_frames()?;
         let mut this = Build!();
         for f in &block.blocks {
             match_istr!(f.typ.as_str(),

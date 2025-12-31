@@ -18,6 +18,8 @@ impl Version {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_frames()?;
+        block.unexpect_blocks()?;
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),

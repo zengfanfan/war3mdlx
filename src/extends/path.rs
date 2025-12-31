@@ -7,6 +7,7 @@ pub trait _ExtendPath {
     fn same_as(&self, other: &Self) -> bool;
     fn shorten(&self, max_len: usize) -> String;
     fn fmtx(&self) -> String;
+    fn relative_to(&self, other: &Self) -> &Self;
 }
 
 impl _ExtendPath for Path {
@@ -58,5 +59,9 @@ impl _ExtendPath for Path {
 
     fn fmtx(&self) -> String {
         fmtx(&self.shorten(60))
+    }
+
+    fn relative_to(&self, other: &Self) -> &Self {
+        self.strip_prefix(other).unwrap_or(self)
     }
 }

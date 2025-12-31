@@ -40,6 +40,8 @@ impl Model {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_frames()?;
+        block.unexpect_blocks()?;
         let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
@@ -47,7 +49,8 @@ impl Model {
                 "MinimumExtent" => this.min_extent = f.value.to()?,
                 "MaximumExtent" => this.max_extent = f.value.to()?,
                 "BlendTime" => this.blend_time = f.value.to()?,
-                _other => (), // ignore
+                "" => return f.unexpect(),
+                _other => yes!(f.value.is_empty(), return f.unexpect()),
             );
         }
         return Ok(this);

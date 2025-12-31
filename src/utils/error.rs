@@ -54,6 +54,7 @@ impl From<ParseFloatError> for MyError {
 #[macro_export]
 macro_rules! ERR {
     ($($arg:tt)*) => {{
-        core::result::Result::Err(crate::error::MyError::String(format!($($arg)*)))
+        // yes!(cfg!(debug_assertions), elog!("ERR: {}", debug_trace(0,6)));
+        core::result::Result::Err(crate::error::MyError::String(F!($($arg)*)))
     }};
 }

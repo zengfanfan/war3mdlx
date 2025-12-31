@@ -57,6 +57,7 @@ impl Material {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_frames()?;
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
@@ -126,6 +127,19 @@ bitflags! {
         const NoDepthSet = 1 << 7;
     }
 }
+impl LayerFlags {
+    pub fn from_str(s: &str) -> Result<Self, MyError> {
+        match_istr!(s,
+            "Unshaded" => Ok(Self::Unshaded),
+            "SphereEnvMap" => Ok(Self::SphereEnvMap),
+            "TwoSided" => Ok(Self::TwoSided),
+            "Unfogged" => Ok(Self::Unfogged),
+            "NoDepthTest" => Ok(Self::NoDepthTest),
+            "NoDepthSet" => Ok(Self::NoDepthSet),
+            _other => ERR!("Unknown {}({s})", TNAME!()),
+        )
+    }
+}
 
 impl Layer {
     pub const ID: u32 = MdlxMagic::LAYS;
@@ -179,6 +193,7 @@ impl Layer {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_frames()?;
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
@@ -188,17 +203,17 @@ impl Layer {
                         EXIT1!("Unknown {} {:?} at line {}.", f.name, f.value.as_str(), f.line);
                     }
                 },
-                "Unshaded" => this.flags.insert(LayerFlags::Unshaded),
-                "SphereEnvMap" => this.flags.insert(LayerFlags::SphereEnvMap),
-                "TwoSided" => this.flags.insert(LayerFlags::TwoSided),
-                "Unfogged" => this.flags.insert(LayerFlags::Unfogged),
-                "NoDepthTest" => this.flags.insert(LayerFlags::NoDepthTest),
-                "NoDepthSet" => this.flags.insert(LayerFlags::NoDepthSet),
                 "TextureID" => this.texture_id = f.value.to()?,
                 "TVertexAnimId" => this.texture_anim_id = f.value.to()?,
                 "CoordId" => this.coordid = f.value.to()?,
                 "Alpha" => this.alpha = f.value.to()?,
-                _other => return f.unexpect(),
+                _other => {
+                    if let Ok(v) = LayerFlags::from_str(f.expect_flag()?) {
+                        this.flags.insert(v);
+                    } else {
+                        return f.unexpect();
+                    }
+                },
             );
         }
         for f in &block.blocks {

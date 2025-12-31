@@ -29,3 +29,5 @@ pest = { version = "2.8.4", registry = "tuna" }
 pest_derive = { version = "2.8.4", registry = "tuna" }
 chrono = { version = "0.4.42", registry = "tuna" }
 smart-default = { version = "0.7.1", registry = "tuna" }
+lazy_static = { version = "1.5.0", registry = "tuna" }
+backtrace = { version = "0.3.76", registry = "tuna" }

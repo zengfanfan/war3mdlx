@@ -22,12 +22,12 @@ number = _{ float | integer }
 
 identifier = @{ !ASCII_DIGIT ~ ASCII_ALPHANUMERIC+ }
 string = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
-float = @{(
+float = @{( integer ~ ("e"|"E") ~ integer ) | (
     ("-"|"+")? ~
     ( ASCII_DIGIT* ~ "." ~ ASCII_DIGIT+ | ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* ) ~
-    (("e"|"E") ~ ("-"|"+")? ~ ASCII_DIGIT+ )?
+    (("e"|"E") ~ integer )?
 )}
-integer = @{ ( ("-"|"+")? ~ ASCII_DIGIT+ ) }
+integer = @{ ("-"|"+")? ~ ASCII_DIGIT+ }
 
 array =  _{ number_array | identifier_array }
 number_array =  { "{" ~ (number ~ ("," ~ number)*)? ~ ","? ~ "}" }
