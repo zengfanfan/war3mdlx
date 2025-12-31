@@ -73,11 +73,12 @@ impl BoundExtent {
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
-        Ok(vec![
-            F!("{}BoundsRadius {},", indent!(depth), fmtx(&self.bound_radius)),
-            F!("{}MinimumExtent {},", indent!(depth), fmtx(&self.min_extent)),
-            F!("{}MaximumExtent {},", indent!(depth), fmtx(&self.max_extent)),
-        ])
+        let mut lines: Vec<String> = vec![];
+        let indent = indent!(depth);
+        lines.pushx_if_n0(&F!("{indent}BoundsRadius"), &self.bound_radius);
+        lines.pushx_if_n0(&F!("{indent}MinimumExtent"), &self.min_extent);
+        lines.pushx_if_n0(&F!("{indent}MaximumExtent"), &self.max_extent);
+        return Ok(lines);
     }
 }
 

@@ -32,7 +32,7 @@ impl MdlBlock {
         let inner = pair.into_inner();
         for p in inner {
             match p.as_rule() {
-                Rule::identifier => this.typ = p.as_str().to_string(),
+                Rule::identifier => this.typ = p.as_str().s(),
                 Rule::string => this.name = MdlValue::unwrap_string(p.as_str()),
                 Rule::block => this.blocks.push(MdlBlock::from(p, &this.typ)?),
                 Rule::field => this.fields.push(MdlField::from(p, &this.typ)?),
@@ -103,16 +103,17 @@ impl MdlField {
         let inner = pair.into_inner();
         let mut first_ident = true;
         for p in inner {
-            if let Rule::identifier = p.as_rule() {
-                if first_ident {
-                    this.name = p.as_str().to_string();
-                    this.value.name = this.name.s();
-                    first_ident = false;
-                } else {
-                    this.value = MdlValue::from(p, &this.name)?;
-                }
-            } else {
-                this.value = MdlValue::from(p, &this.name)?;
+            match p.as_rule() {
+                Rule::identifier | Rule::tankey => {
+                    if first_ident {
+                        this.name = p.as_str().s();
+                        this.value.name = this.name.s();
+                        first_ident = false;
+                    } else {
+                        this.value = MdlValue::from(p, &this.name)?;
+                    }
+                },
+                _value => this.value = MdlValue::from(p, &this.name)?,
             }
         }
         return Ok(this);

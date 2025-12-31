@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Dbg, Default)]
+#[derive(Dbg, SmartDefault)]
 pub struct ParticleEmitter2 {
     pub base: Node,
 
@@ -22,9 +22,12 @@ pub struct ParticleEmitter2 {
     pub time: f32,
 
     #[dbg(formatter = "fmtx")]
+    #[default(vec![Vec3::ONE; 3])]
     pub segment_color: Vec<Vec3>, // RGB
+    #[default(vec![255u8; 3])]
     #[dbg(formatter = "fmtx")]
     pub segment_alpha: Vec<u8>, // 0~255
+    #[default(vec![1f32; 3])]
     #[dbg(formatter = "fmtx")]
     pub segment_scaling: Vec<f32>,
 

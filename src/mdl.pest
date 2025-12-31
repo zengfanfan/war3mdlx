@@ -15,7 +15,10 @@ file = { SOI ~ block* ~ EOI }
 block = { identifier ~ (string|integer+)? ~ "{" ~ (block | field | frame)* ~ "}" ~ ","? }
 
 field = { "static"? ~ (identifier ~ value | identifier | value) ~ "," }
-frame = { integer ~ ":" ~ (number|number_array) ~ "," ~ field* }
+frame = { integer ~ ":" ~ (number|number_array) ~ "," ~ tangent* }
+
+tangent = { tankey ~ (number|number_array) ~ "," }
+tankey = @{ "InTan" | "inTan" | "intan" | "OutTan" | "outTan" | "outtan" }
 
 value = _{ number | string | array | identifier }
 number = _{ float | integer }

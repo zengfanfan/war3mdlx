@@ -6,17 +6,17 @@ RibbonEmitter "" {
 }
 RibbonEmitter "[[[[v]]]]" {
     ObjectId 1,
-    static HeightAbove 3.3,
-    static HeightBelow 4.4,
-    static Alpha 1.1,
-    static Color { 0.25098, 0.66025, 0.501961 },
-    static TextureSlot 5.5,
     EmissionRate 8,
     LifeSpan 9,
     Gravity 10,
     Rows 6,
     Columns 7,
     MaterialID 89,
+    static HeightAbove 3.3,
+    static HeightBelow 4.4,
+    static Alpha 1.1,
+    static Color { 0.25098, 0.66025, 0.501961 },
+    // static TextureSlot 5.5,
 }
 RibbonEmitter "[[[[a]]]]" {
     ObjectId 2,

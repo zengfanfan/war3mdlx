@@ -7,14 +7,6 @@ ParticleEmitter2 "" {
 ParticleEmitter2 "values" {
     ObjectId 1,
     AlphaKey,
-    static Speed 2.2,
-    static Variation 3.33,
-    static Latitude 44.44,
-    static Gravity 7777.78,
-    static EmissionRate 0.1,
-    static Width 555.55,
-    static Length 666.666,
-    static Visibility 0.55,
     SegmentColor {
         Color { 11, 12, 13 },
         Color { 21, 22, 23 },
@@ -31,18 +23,25 @@ ParticleEmitter2 "values" {
     Time 11.23,
     LifeSpan 5.6,
     TailLength 7.8,
+    TextureID -99,
+    ReplaceableId 10,
+    PriorityPlane 9,
     SortPrimsFarZ,
     LineEmitter,
     ModelSpace,
-    AlphaKey,
     Unshaded,
     Unfogged,
     XYQuad,
     Squirt,
     Both,
-    TextureID -99,
-    ReplaceableId 10,
-    PriorityPlane 9,
+    static Speed 2.2,
+    static Variation 3.33,
+    static Latitude 44.44,
+    static Gravity 7777.78,
+    static EmissionRate 0.1,
+    static Length 666.666,
+    static Width 555.55,
+    // static Visibility 0.55,
 }
 ParticleEmitter2 "anims" {
     ObjectId 2,
@@ -66,13 +65,13 @@ ParticleEmitter2 "anims" {
         Linear,
         5: 0,
     }
-    Width 1 {
-        Linear,
-        6: 0,
-    }
     Length 1 {
         Linear,
         7: 0,
+    }
+    Width 1 {
+        Linear,
+        6: 0,
     }
     Visibility 1 {
         Linear,

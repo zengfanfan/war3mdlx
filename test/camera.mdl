@@ -4,10 +4,10 @@ Version {
 Camera "default" {
 }
 Camera "values" {
+    Position { 123.321, 246.642, 369.963 },
     FieldOfView 3.14159265,
     FarClip 9999,
     NearClip 111,
-    Position { 123.321, 246.642, 369.963 },
     Target {
         Position { 4.4, 5.05, 60.66 },
     }
