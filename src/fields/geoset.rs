@@ -57,14 +57,14 @@ impl BoundExtent {
         28 // = 4 + 12 + 12
     }
 
-    pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+    pub fn read_mdl(block: &MdlBlock, strict: bool) -> Result<Self, MyError> {
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "BoundsRadius" => this.bound_radius = f.value.to()?,
                 "MinimumExtent" => this.min_extent = f.value.to()?,
                 "MaximumExtent" => this.max_extent = f.value.to()?,
-                _other => (),
+                _other => yesno!(strict, return f.unexpect(), ()),
             );
         }
         return Ok(this);
@@ -217,14 +217,20 @@ impl Geoset {
         yes!(nnorm > 0 && nnorm != nvert, wlog!("OMG! {tn} #[normals] {} != {} #[vertices] ?", nnorm, nvert));
 
         let n = self.uvss.len() as u32;
-        yes!(self.nvs_count != n, wlog!("OMG! {tn} #[UVs] {} != {} ?", self.nvs_count, n));
+        yes!(self.nvs_count != n, wlog!("OMG! {tn} #[UVs] {} != {n} ?", self.nvs_count));
 
         let (n1, n2) = (self.face_vtxcnts.len(), self.face_types.len());
         yes!(n1 != n2, wlog!("OMG! {tn} #[face_vtxcnts] != #[face_types] ?"));
 
-        let tri = FaceType::Triangles;
-        if self.face_types.iter().any(|&x| x != tri) {
-            wlog!("OMG! face type other than {tri:?}({}): {:?}", tri.to(), self.face_types);
+        let (tri, trin) = (FaceType::Triangles, 3);
+        for (t, n) in self.face_types.iter().zip(self.face_vtxcnts.iter()) {
+            if *t == tri {
+                if n % trin != 0 {
+                    wlog!("Expected length of {t:?} (in {}) to be multiple of {trin}, but got {n}.", TNAME!());
+                }
+            } else {
+                wlog!("OMG! {} other than {tri:?}({}): {:?}", TNAME!(&tri), tri.to(), self.face_types);
+            }
         }
     }
 
@@ -289,25 +295,35 @@ impl Geoset {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build! { extent: BoundExtent::read_mdl(&block)? };
+        let mut this = Build! { extent: BoundExtent::read_mdl(&block, false)? };
+        for f in &block.frames { return f.unexpect(); }
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "MaterialID" => this.material_id = f.value.to()?,
                 "SelectionGroup" => this.sel_group = f.value.to()?,
                 "Unselectable" => this.sel_type = 4,
-                _other => (),
+                "BoundsRadius" | "MinimumExtent" | "MaximumExtent" => (),
+                _other => return f.unexpect(),
             );
         }
         for a in &block.blocks {
             match_istr!(a.typ.as_str(),
-                "Vertices" => this.vertices = a.fields.to()?,
-                "Normals" => this.normals = a.fields.to()?,
-                "TVertices" => this.uvss.push(a.fields.to()?),
-                "VertexGroup" => this.vtxgrps = a.fields.to()?,
-                "Faces" => for b in &a.blocks { this.read_mdl_face(b)?; },
-                "Groups" => for f in &a.fields { this.read_mdl_matrices(f)?; },
-                "Anim" => this.anim_extents.push(BoundExtent::read_mdl(&a)?),
-                _other => (),
+                "Vertices" => this.vertices = a.fields.to_noname()?,
+                "Normals" => this.normals = a.fields.to_noname()?,
+                "TVertices" => this.uvss.push(a.fields.to_noname()?),
+                "VertexGroup" => this.vtxgrps = a.fields.to_noname()?,
+                "Faces" => {
+                    for f in &a.fields { return f.unexpect(); }
+                    for f in &a.frames { return f.unexpect(); }
+                    for b in &a.blocks { this.read_mdl_face(b)?; }
+                },
+                "Groups" => {
+                    for f in &a.frames { return f.unexpect(); }
+                    for b in &a.blocks { return b.unexpect(); }
+                    for f in &a.fields { this.read_mdl_matrices(f)?; }
+                },
+                "Anim" => this.anim_extents.push(BoundExtent::read_mdl(&a, true)?),
+                _other => return a.unexpect(),
             );
         }
         this.nvs_count = this.uvss.len() as u32;
@@ -315,33 +331,33 @@ impl Geoset {
         return Ok(this);
     }
     fn read_mdl_face(&mut self, block: &MdlBlock) -> Result<(), MyError> {
-        let t = FaceType::from_str(block.typ.as_str());
+        let (ts, line) = (block.typ.as_str(), block.line);
+        let t = FaceType::from_str(ts);
         if let FaceType::Error(_) = t {
-            return ERR!("OMG! unknown face type: {}", block.typ);
+            EXIT1!("Unknown {} {ts:?} at line {line}.", TNAME!(&t));
         }
 
-        no!(t == FaceType::Triangles, wlog!("OMG! unexpected face type: {:?} ({})", t, block.typ));
+        no!(t == FaceType::Triangles, wlog!("OMG! Bad {} ({:?}) at line {}.", TNAME!(&t), t, line));
         for f in &block.fields {
-            no!(f.name == "", continue);
-            if let MdlValueType::IntegerArray(iv) = &f.value.typ {
-                self.face_types.push(t);
-                self.face_vtxcnts.push(iv.len() as i32);
-                let mut miv = iv.convert(|v| *v as u16);
-                self.face_vertices.append(&mut miv);
-            }
+            no!(f.name.is_empty(), EXIT1!("Unexpected {:?} (in {}) at line {}.", f.name, ts, f.line));
+            let iv: Vec<i32> = f.value.to()?;
+            self.face_types.push(t);
+            self.face_vtxcnts.push(iv.len() as i32);
+            let mut miv = iv.convert(|v| *v as u16);
+            self.face_vertices.append(&mut miv);
         }
 
         return Ok(());
     }
     fn read_mdl_matrices(&mut self, field: &MdlField) -> Result<(), MyError> {
+        let (n, v, l) = (&field.name, &field.value, field.line);
         if !field.name.eq_icase("Matrices") {
-            return ERR!("OMG! unknown group type: {} (expected 'Matrices')", field.name);
+            EXIT1!("Unknown GroupType {n:?} at line {l}.");
         }
-        if let MdlValueType::IntegerArray(iv) = &field.value.typ {
-            self.mtxgrpcnts.push(iv.len() as i32);
-            let mut miv = iv.convert(|v| *v as i32);
-            self.mtx_indices.append(&mut miv);
-        }
+        let iv: Vec<i32> = v.to()?;
+        self.mtxgrpcnts.push(iv.len() as i32);
+        let mut miv = iv.convert(|v| *v as i32);
+        self.mtx_indices.append(&mut miv);
         return Ok(());
     }
 

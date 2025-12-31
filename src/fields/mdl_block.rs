@@ -43,8 +43,8 @@ impl MdlBlock {
     }
 
     pub fn unexpect<T>(&self) -> Result<T, MyError> {
-        let name = yesno!(self.name.is_empty(), "".s(), F!("({:?})", self.name));
-        ERR!("Unexpected {}{} at line {}.", self.typ, name, self.line)
+        let (t, n, l) = (&self.typ, &self.name, &self.line);
+        yesno!(n.is_empty(), ERR!("Unexpected {t:?} at line {l}."), ERR!("Unexpected {t}({n:?}) at line {l}."))
     }
 }
 
@@ -131,6 +131,10 @@ impl MdlFrame {
             );
         }
         return Ok(this);
+    }
+
+    pub fn unexpect<T>(&self) -> Result<T, MyError> {
+        ERR!("Unexpected '{}:' (in {}) at line {}.", self.frame, self.scope, self.line)
     }
 }
 
@@ -339,10 +343,14 @@ impl FromMdlValue for Vec<String> {
 
 pub trait _ExtendMdlFieldArray {
     fn to<T: FromMdlFieldArray>(&self) -> Result<T, MyError>;
+    fn to_noname<T: FromMdlFieldArray>(&self) -> Result<T, MyError>;
 }
 impl _ExtendMdlFieldArray for Vec<MdlField> {
     fn to<T: FromMdlFieldArray>(&self) -> Result<T, MyError> {
         T::from(&self)
+    }
+    fn to_noname<T: FromMdlFieldArray>(&self) -> Result<T, MyError> {
+        T::from_noname(&self)
     }
 }
 
@@ -353,6 +361,9 @@ pub trait FromMdlFieldArray {
     fn from(v: &Vec<MdlField>) -> Result<Self, MyError>
     where
         Self: Sized;
+    fn from_noname(v: &Vec<MdlField>) -> Result<Self, MyError>
+    where
+        Self: Sized;
 }
 
 macro_rules! impl_FromMdlFieldArray {
@@ -360,6 +371,9 @@ macro_rules! impl_FromMdlFieldArray {
         $(impl FromMdlFieldArray for Vec<$ty> {
             fn from(v: &Vec<MdlField>) -> Result<Self, MyError> {
                 v.try_convert(|f| FromMdlValue::from(&f.value))
+            }
+            fn from_noname(v: &Vec<MdlField>) -> Result<Self, MyError> {
+                v.try_convert(|f| yesno!(f.name.is_empty(), FromMdlValue::from(&f.value), f.unexpect()))
             }
         })*
     };

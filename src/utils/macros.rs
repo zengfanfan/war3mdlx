@@ -14,19 +14,31 @@ macro_rules! yesno {
 
 #[macro_export]
 macro_rules! yes {
-    ($cond:expr, $y:stmt) => {{ if $cond { $y } }};
+    ($cond:expr, $y:stmt) => {{
+        if $cond {
+            $y
+        }
+    }};
     ($var:ident = $expr:expr, $cond:expr, $y:stmt) => {{
         let $var = $expr;
-        if $cond { $y }
+        if $cond {
+            $y
+        }
     }};
 }
 
 #[macro_export]
 macro_rules! no {
-    ($cond:expr, $y:stmt) => {{ if !($cond) { $y } }};
+    ($cond:expr, $y:stmt) => {{
+        if !($cond) {
+            $y
+        }
+    }};
     ($var:ident = $expr:expr, $cond:expr, $y:stmt) => {{
         let $var = $expr;
-        if !($cond) { $y }
+        if !($cond) {
+            $y
+        }
     }};
 }
 
@@ -35,10 +47,10 @@ macro_rules! no {
 
 #[macro_export]
 macro_rules! match_istr {
-    ($s:expr, $( $left:literal => $right:expr ),+ $(, $_def:ident => $def:expr )? $(,)?) => {
+    ($s:expr, $( $($left:literal)|+ => $right:expr ),+ $(, $_def:ident => $def:expr )? $(,)?) => {
         match $s {
             $(
-                s if s.eq_ignore_ascii_case($left) => $right,
+                s if $(s.eq_ignore_ascii_case($left))||+ => $right,
             )+
             $( $_def => $def )?
         }

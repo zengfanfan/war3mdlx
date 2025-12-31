@@ -76,46 +76,6 @@ pub fn u32_to_ascii(n: u32) -> String {
     String::from_utf8_lossy(&bytes).into_owned()
 }
 
-//#region trait: typename
-
-#[macro_export]
-macro_rules! TNAMEL {
-    () => {
-        std::any::type_name::<Self>()
-    };
-    ($t:ty) => {
-        std::any::type_name::<$t>()
-    };
-}
-
-#[macro_export]
-macro_rules! TNAME {
-    () => {
-        crate::format::tname_last_seg_trim::<Self>(2)
-    };
-    ($t:ty) => {
-        crate::format::tname_last_seg_trim::<$t>(2)
-    };
-}
-
-#[allow(dead_code)]
-pub fn tname_long<T>(_: &T) -> &str {
-    std::any::type_name::<T>()
-}
-#[allow(dead_code)]
-pub fn tname<T>(_: &T) -> String {
-    tname_last_seg_trim::<T>(2)
-}
-
-pub fn tname_last_seg_trim<T>(n: u32) -> String {
-    let n = n as usize;
-    let full = TNAMEL!(T);
-    let parts: Vec<&str> = full.split("::").collect();
-    let len = parts.len();
-    if n >= len { full.to_string() } else { parts[len - n..].join("::") }
-}
-
-//#endregion
 //#region trait: Formatter
 
 pub trait Formatter {

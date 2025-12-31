@@ -13,9 +13,9 @@ macro_rules! MdlReadType2 {
         $(if $block.typ == F!("{}s", stringify!($ty)) {
             for a in $block.blocks.iter() {
                 if a.typ == $name {
-                    let name = yesno!(a.name.is_empty(), $var.len().s(), a.name.clone());
+                    let name = yesno!(a.name.is_empty(), $var.len().s(), F!("{:?}",a.name));
                     $var.push(<$ty>::read_mdl(a)
-                    .or_else(|e| ERR!("{}[{:?}]: {}", TNAME!($ty), name, e))?);
+                    .or_else(|e| ERR!("{}[{}]: {}", TNAME!($ty), name, e))?);
                 } else {
                     return a.unexpect();
                 }
@@ -27,8 +27,8 @@ macro_rules! MdlReadType2 {
 macro_rules! MdlReadType3 {
     ($block:expr, $( $ty:ty => $var:expr ),+ $(,)?) => {
         $(if $block.typ == stringify!($ty) {
-            let name = yesno!($block.name.is_empty(), $var.len().s(), $block.name.clone());
-            $var.push(<$ty>::read_mdl(&$block).or_else(|e| ERR!("{}[{:?}]: {}", TNAME!($ty), name, e))?);
+            let name = yesno!($block.name.is_empty(), $var.len().s(), F!("{:?}",$block.name));
+            $var.push(<$ty>::read_mdl(&$block).or_else(|e| ERR!("{}[{}]: {}", TNAME!($ty), name, e))?);
             return Ok(());
         })+
     };

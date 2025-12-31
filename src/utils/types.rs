@@ -1,5 +1,51 @@
 use crate::*;
 
+//#region typename
+
+#[macro_export]
+macro_rules! TNAMEL {
+    () => {
+        std::any::type_name::<Self>()
+    };
+    ($e:expr) => {
+        crate::types::tnamel($e)
+    };
+    ($t:ty) => {
+        std::any::type_name::<$t>()
+    };
+}
+
+#[macro_export]
+macro_rules! TNAME {
+    () => {
+        crate::types::tname_last_seg_trim::<Self>(1)
+    };
+    ($e:expr) => {
+        crate::types::tname($e)
+    };
+    ($t:ty) => {
+        crate::types::tname_last_seg_trim::<$t>(1)
+    };
+}
+
+#[allow(dead_code)]
+pub fn tnamel<T>(_: &T) -> &str {
+    std::any::type_name::<T>()
+}
+#[allow(dead_code)]
+pub fn tname<T>(_: &T) -> String {
+    tname_last_seg_trim::<T>(1)
+}
+
+pub fn tname_last_seg_trim<T>(n: u32) -> String {
+    let n = n as usize;
+    let full = std::any::type_name::<T>();
+    let parts: Vec<&str> = full.split("::").collect();
+    let len = parts.len();
+    if n >= len { full.to_string() } else { parts[len - n..].join("::") }
+}
+
+//#endregion
 //#region trait: CheckDefault, CheckValue
 
 pub trait _CheckDefault {

@@ -118,7 +118,7 @@ impl TextureAnim {
                 "Translation" => this.translation = Some(Animation::read_mdl(f)?),
                 "Rotation" => this.rotation = Some(Animation::read_mdl(f)?),
                 "Scaling" => this.scaling = Some(Animation::read_mdl(f)?),
-                _other => (),
+                _other => return f.unexpect(),
             );
         }
         return Ok(this);
