@@ -79,31 +79,22 @@ impl<T: TAnimation> Animation<T> {
         block.unexpect_blocks()?;
         let mut this = Build!();
         for f in &block.fields {
-            if f.name == "GlobalSeqId" {
-                this.global_seq_id = f.value.to()?;
-            } else {
-                no!(f.value.is_empty(), return f.unexpect());
-                match InterpolationType::from_str(f.name.as_str()) {
-                    InterpolationType::Error(_) => return f.unexpect(),
-                    _interp => this.interp_type = _interp,
-                }
-            }
+            match_istr!(f.name.as_str(),
+                "GlobalSeqId" => this.global_seq_id = f.value.to()?,
+                _other => this.interp_type = InterpolationType::from_mdl(f)?,
+            );
         }
         let has_tans = this.interp_type.has_tans();
         for f in &block.frames {
-            let mut kf = KeyFrame::<T>::default();
-            kf.frame = f.frame;
-            kf.value = f.value.to()?;
-            kf.has_tans = has_tans;
+            let mut kf = Build!(KeyFrame::<T>, frame:f.frame, has_tans:has_tans, value:f.value.to()?);
+            let (t, i, o) = (&block.typ, &f.intan, &f.outan);
             if has_tans {
-                if f.intan.is_empty() || f.outan.is_empty() {
-                    EXIT1!("Missing InTan or OutTan at line {}", f.value.line);
-                }
-                kf.itan = f.intan.to()?;
-                kf.otan = f.outan.to()?;
+                yes!(i.is_empty(), EXIT1!("Missing {} (in {t}) at line {}.", i.name, i.line));
+                yes!(o.is_empty(), EXIT1!("Missing {} (in {t}) at line {}.", o.name, o.line));
+                (kf.itan, kf.otan) = (i.to()?, o.to()?);
             } else {
-                no!(f.intan.is_empty(), EXIT1!("Unexpected InTan at line {}", f.intan.line));
-                no!(f.outan.is_empty(), EXIT1!("Unexpected OutTan at line {}", f.outan.line));
+                no!(i.is_empty(), EXIT1!("Unexpected {} (in {t}) at line {}.", i.name, i.line));
+                no!(o.is_empty(), EXIT1!("Unexpected {} (in {t}) at line {}.", o.name, o.line));
             }
             this.key_frames.push(kf);
         }
@@ -221,13 +212,13 @@ impl InterpolationType {
         }
     }
 
-    fn from_str(s: &str) -> Self {
-        match_istr!(s,
-            "DontInterp" => Self::DontInterp,
-            "Linear" => Self::Linear,
-            "Hermite" => Self::Hermite,
-            "Bezier" => Self::Bezier,
-            _err => Self::Error(-1),
+    fn from_mdl(f: &MdlField) -> Result<Self, MyError> {
+        match_istr!(f.name.as_str(),
+            "DontInterp" => f.expect_flag(Self::DontInterp),
+            "Linear" => f.expect_flag(Self::Linear),
+            "Hermite" => f.expect_flag(Self::Hermite),
+            "Bezier" => f.expect_flag(Self::Bezier),
+            _err => f.unexpect(),
         )
     }
 

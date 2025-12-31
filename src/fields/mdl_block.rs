@@ -45,9 +45,10 @@ impl MdlBlock {
 
     pub fn unexpect<T>(&self) -> Result<T, MyError> {
         let (t, n, l, s) = (&self.typ, &self.name, &self.line, &self.scope);
+        let typ = yesno!(n.is_empty(), F!("{:?}", t), t.s());
         let name = yesno!(n.is_empty(), "".s(), F!("({n:?})"));
         let scope = yesno!(s.is_empty(), "".s(), F!(" (in {s})"));
-        ERR!("Unexpected {t:?}{name}{scope} at line {l}.")
+        ERR!("Unexpected {typ}{name}{scope} at line {l}.")
     }
     pub fn unexpect_fields(&self) -> Result<(), MyError> {
         for f in &self.fields {
@@ -66,6 +67,19 @@ impl MdlBlock {
             return f.unexpect();
         }
         return Ok(());
+    }
+    pub fn to_array<T: FromMdlFieldArray>(&self, name: &str) -> Result<T, MyError> {
+        self.unexpect_blocks()?;
+        self.unexpect_frames()?;
+        return Ok(self.fields.to::<T>(name)?);
+    }
+    pub fn to_array_n<T: FromMdlFieldArray>(&self, name: &str, n: u32) -> Result<T, MyError> {
+        let a = self.to_array::<T>(name)?;
+        let (t, l) = (&self.typ, &self.line);
+        match a.len() == n {
+            true => Ok(a),
+            _ => ERR!("Expecting {n} {name} for {t} at line {l}, got {}.", a.len()),
+        }
     }
 }
 
@@ -108,8 +122,8 @@ impl MdlField {
         let name = yesno!(self.name.is_empty(), &self.value.raw, &self.name);
         ERR!("Unexpected {:?} (in {}) at line {}.", name, self.scope, self.line)
     }
-    pub fn expect_flag(&self) -> Result<&str, MyError> {
-        yesno!(self.value.is_empty(), Ok(self.name.as_str()), self.value.unexpect())
+    pub fn expect_flag<T>(&self, v: T) -> Result<T, MyError> {
+        yesno!(!self.name.is_empty() && self.value.is_empty(), Ok(v), self.value.unexpect())
     }
 }
 
@@ -147,12 +161,14 @@ impl MdlFrame {
         let mut inner = pair.into_inner();
         this.frame = inner.next().unwrap().as_str().parse().unwrap();
         this.value = MdlValue::from(inner.next().unwrap(), &this.scope)?;
+        this.intan = Build!(MdlValue, name:"InTan".s(),  line:this.value.line);
+        this.outan = Build!(MdlValue, name:"OutTan".s(), line:this.value.line);
         for p in inner {
             let f = MdlField::from(p, &this.scope)?;
             match_istr!(f.name.as_str(),
-                "Intan" => this.intan = f.value,
-                "OutTan" => this.outan = f.value,
-                _other => return f.unexpect(),
+                "InTan" => this.intan = f.value,
+                "OutTan"=> this.outan = f.value,
+                _other => f.unexpect()?,
             );
         }
         return Ok(this);
@@ -236,12 +252,19 @@ impl MdlValue {
     pub fn to<T: FromMdlValue>(&self) -> Result<T, MyError> {
         T::from(&self)
     }
+    pub fn to_ivec(&self, n: u32) -> Result<Vec<i32>, MyError> {
+        self.to::<Vec<i32>>().and_then(|v| yesno!(v.len() as u32 == n, Ok(v), self.expect(&F!("{n} integers"))))
+    }
+    pub fn to_fvec(&self, n: u32) -> Result<Vec<f32>, MyError> {
+        self.to::<Vec<f32>>().and_then(|v| yesno!(v.len() as u32 == n, Ok(v), self.expect(&F!("{n} numbers"))))
+    }
 
     pub fn unwrap_string(s: &str) -> String {
         let s = &s[1..s.len() - 1]; // remove quotes
         s.unescape()
     }
 
+    #[allow(unused)]
     pub fn as_str(&self) -> &str {
         match &self.typ {
             MdlValueType::String(s) => s,
@@ -318,6 +341,30 @@ macro_rules! impl_FromMdlValue_uint {
         )*
     };
 }
+macro_rules! impl_FromMdlValue_float {
+    ($($ty:ty),*) => {
+        $(
+            impl FromMdlValue for $ty {
+                fn from(v: &MdlValue) -> Result<Self, MyError> {
+                    match &v.typ {
+                        MdlValueType::Float(f) => Ok(*f),
+                        MdlValueType::Integer(i) => Ok(*i as $ty),
+                        _ => v.expect("number"),
+                    }
+                }
+            }
+            impl FromMdlValue for Vec<$ty> {
+                fn from(v: &MdlValue) -> Result<Self, MyError> {
+                    match &v.typ {
+                        MdlValueType::FloatArray(fv) => Ok(fv.clone()),
+                        MdlValueType::IntegerArray(iv) => Ok(iv.convert(|v| *v as $ty)),
+                        _ => v.expect("number array"),
+                    }
+                }
+            }
+        )*
+    };
+}
 macro_rules! impl_FromMdlValue_vec234 {
     ($($a:tt),*) => {
         $(paste! {
@@ -338,26 +385,8 @@ macro_rules! impl_FromMdlValue_vec234 {
 
 impl_FromMdlValue_int!(i8, i16, i32);
 impl_FromMdlValue_uint!(u8, u16, u32);
+impl_FromMdlValue_float!(f32);
 impl_FromMdlValue_vec234!(2, 3, 4);
-
-impl FromMdlValue for f32 {
-    fn from(v: &MdlValue) -> Result<Self, MyError> {
-        match &v.typ {
-            MdlValueType::Float(f) => Ok(*f),
-            MdlValueType::Integer(i) => Ok(*i as f32),
-            _ => v.expect("number"),
-        }
-    }
-}
-impl FromMdlValue for Vec<f32> {
-    fn from(v: &MdlValue) -> Result<Self, MyError> {
-        match &v.typ {
-            MdlValueType::FloatArray(fv) => Ok(fv.clone()),
-            MdlValueType::IntegerArray(iv) => Ok(iv.convert(|v| *v as f32)),
-            _ => v.expect("number array"),
-        }
-    }
-}
 
 impl FromMdlValue for String {
     fn from(v: &MdlValue) -> Result<Self, MyError> {
@@ -375,15 +404,11 @@ impl FromMdlValue for Vec<String> {
 }
 
 pub trait _ExtendMdlFieldArray {
-    fn to<T: FromMdlFieldArray>(&self) -> Result<T, MyError>;
-    fn to_noname<T: FromMdlFieldArray>(&self) -> Result<T, MyError>;
+    fn to<T: FromMdlFieldArray>(&self, name: &str) -> Result<T, MyError>;
 }
 impl _ExtendMdlFieldArray for Vec<MdlField> {
-    fn to<T: FromMdlFieldArray>(&self) -> Result<T, MyError> {
-        T::from(&self)
-    }
-    fn to_noname<T: FromMdlFieldArray>(&self) -> Result<T, MyError> {
-        T::from_noname(&self)
+    fn to<T: FromMdlFieldArray>(&self, name: &str) -> Result<T, MyError> {
+        T::from(&self, name)
     }
 }
 
@@ -391,10 +416,10 @@ impl _ExtendMdlFieldArray for Vec<MdlField> {
 //#region trait: FromMdlFieldArray
 
 pub trait FromMdlFieldArray {
-    fn from(v: &Vec<MdlField>) -> Result<Self, MyError>
+    fn from(v: &Vec<MdlField>, name: &str) -> Result<Self, MyError>
     where
         Self: Sized;
-    fn from_noname(v: &Vec<MdlField>) -> Result<Self, MyError>
+    fn len(&self) -> u32
     where
         Self: Sized;
 }
@@ -402,11 +427,11 @@ pub trait FromMdlFieldArray {
 macro_rules! impl_FromMdlFieldArray {
     ($($ty:ty),*) => {
         $(impl FromMdlFieldArray for Vec<$ty> {
-            fn from(v: &Vec<MdlField>) -> Result<Self, MyError> {
-                v.try_convert(|f| FromMdlValue::from(&f.value))
+            fn from(v: &Vec<MdlField>, name: &str) -> Result<Self, MyError> {
+                v.try_convert(|f| yesno!(f.name.eq_icase(name), FromMdlValue::from(&f.value), f.unexpect()))
             }
-            fn from_noname(v: &Vec<MdlField>) -> Result<Self, MyError> {
-                v.try_convert(|f| yesno!(f.name.is_empty(), FromMdlValue::from(&f.value), f.unexpect()))
+            fn len(&self) -> u32 {
+                self.len() as u32
             }
         })*
     };

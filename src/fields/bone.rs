@@ -26,11 +26,12 @@ impl Bone {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::Bone);
+        this.base.unexpect_mdl_blocks()?;
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "GeosetId" => this.geoset_id = f.value.to()?,
                 "GeosetAnimId" => this.geoanim_id = f.value.to()?,
-                _other => (),
+                _other => this.base.unexpect_mdl_field(f)?,
             );
         }
         return Ok(this);

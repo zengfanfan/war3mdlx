@@ -24,7 +24,7 @@ impl Version {
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "FormatVersion" => this.format_version = f.value.to()?,
-                _other => return f.unexpect(),
+                _other => f.unexpect()?,
             );
         }
         return Ok(this);

@@ -46,9 +46,9 @@ impl Texture {
             match_istr!(f.name.as_str(),
                 "ReplaceableId" => this.replace_id = f.value.to()?,
                 "Image" => this.path = f.value.to()?,
-                "WrapWidth" => this.flags.insert(TextureFlags::WrapWidth),
-                "WrapHeight" => this.flags.insert(TextureFlags::WrapHeight),
-                _other => return f.unexpect(),
+                "WrapWidth" => this.flags |= f.expect_flag(TextureFlags::WrapWidth)?,
+                "WrapHeight" => this.flags |= f.expect_flag(TextureFlags::WrapHeight)?,
+                _other => f.unexpect()?,
             );
         }
         return Ok(this);
@@ -122,7 +122,7 @@ impl TextureAnim {
                 "Translation" => this.translation = Some(Animation::read_mdl(f)?),
                 "Rotation" => this.rotation = Some(Animation::read_mdl(f)?),
                 "Scaling" => this.scaling = Some(Animation::read_mdl(f)?),
-                _other => return f.unexpect(),
+                _other => f.unexpect()?,
             );
         }
         return Ok(this);

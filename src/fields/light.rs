@@ -120,20 +120,20 @@ impl Light {
                 "Intensity" => this.intensity = f.value.to()?,
                 "AmbColor" => this.amb_color = f.value.to()?,
                 "AmbIntensity" => this.amb_intensity = f.value.to()?,
-                _other => this.typ = LightType::from_str(_other, this.typ),
+                _other => this.typ = this.base.unexpect_mdl_field(f).or(LightType::from_mdl(f))?,
             );
         }
 
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "AttenuationStart" => this.attenuate_start_anim = Some(Animation::read_mdl(b)?),
-                "AttenuationEnd" => this.attenuate_end_anim = Some(Animation::read_mdl(b)?),
-                "Color" => this.color_anim = Some(Animation::read_mdl(b)?),
-                "Intensity" => this.intensity_anim = Some(Animation::read_mdl(b)?),
-                "AmbColor" => this.amb_color_anim = Some(Animation::read_mdl(b)?),
-                "AmbIntensity" => this.amb_intensity_anim = Some(Animation::read_mdl(b)?),
-                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
-                _other => (),
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "AttenuationStart" => this.attenuate_start_anim = Some(Animation::read_mdl(f)?),
+                "AttenuationEnd" => this.attenuate_end_anim = Some(Animation::read_mdl(f)?),
+                "Color" => this.color_anim = Some(Animation::read_mdl(f)?),
+                "Intensity" => this.intensity_anim = Some(Animation::read_mdl(f)?),
+                "AmbColor" => this.amb_color_anim = Some(Animation::read_mdl(f)?),
+                "AmbIntensity" => this.amb_intensity_anim = Some(Animation::read_mdl(f)?),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(f)?),
+                _other => f.unexpect()?,
             );
         }
 
@@ -191,12 +191,12 @@ impl LightType {
         }
     }
 
-    fn from_str(s: &str, def: Self) -> Self {
-        match_istr!(s,
-            "Omnidirectional" => Self::Omnidirectional,
-            "Directional" => Self::Directional,
-            "Ambient" => Self::Ambient,
-            _err => def,
+    fn from_mdl(f: &MdlField) -> Result<Self, MyError> {
+        match_istr!(f.name.as_str(),
+            "Omnidirectional" => f.expect_flag(Self::Omnidirectional),
+            "Directional" => f.expect_flag(Self::Directional),
+            "Ambient" => f.expect_flag(Self::Ambient),
+            _err => f.unexpect(),
         )
     }
 

@@ -124,18 +124,18 @@ impl RibbonEmitter {
                 "Rows" => this.rows = f.value.to()?,
                 "Columns" => this.columns = f.value.to()?,
                 "MaterialID" => this.material_id = f.value.to()?,
-                _other => (),
+                _other => this.base.unexpect_mdl_field(f)?,
             );
         }
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "HeightAbove" => this.height_above_anim = Some(Animation::read_mdl(b)?),
-                "HeightBelow" => this.height_below_anim = Some(Animation::read_mdl(b)?),
-                "Alpha" => this.alpha_anim = Some(Animation::read_mdl(b)?),
-                "Color" => this.color_anim = Some(Animation::read_mdl(b)?),
-                "TextureSlot" => this.texslot_anim = Some(Animation::read_mdl(b)?),
-                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
-                _other => (),
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "HeightAbove" => this.height_above_anim = Some(Animation::read_mdl(f)?),
+                "HeightBelow" => this.height_below_anim = Some(Animation::read_mdl(f)?),
+                "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
+                "Color" => this.color_anim = Some(Animation::read_mdl(f)?),
+                "TextureSlot" => this.texslot_anim = Some(Animation::read_mdl(f)?),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(f)?),
+                _other => this.base.unexpect_mdl_block(f)?,
             );
         }
         if *mdl_rgb!() {

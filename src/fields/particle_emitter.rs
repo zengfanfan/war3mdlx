@@ -115,38 +115,39 @@ impl ParticleEmitter {
                 "Gravity" => this.gravity = f.value.to()?,
                 "Longitude" => this.longitude = f.value.to()?,
                 "Latitude" => this.latitude = f.value.to()?,
-                "EmitterUsesMDL" => this.base.flags.insert(NodeFlags::PE1UsesMdl),
-                "EmitterUsesTGA" => this.base.flags.insert(NodeFlags::PE1UsesTga),
-                _other => (),
+                "EmitterUsesMDL" => this.base.flags |= f.expect_flag(NodeFlags::PE1UsesMdl)?,
+                "EmitterUsesTGA" => this.base.flags |= f.expect_flag(NodeFlags::PE1UsesTga)?,
+                _other => this.base.unexpect_mdl_field(f)?,
             );
         }
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "Particle" => this.read_mdl_particle(b)?,
-                "EmissionRate" => this.emit_rate_anim = Some(Animation::read_mdl(b)?),
-                "Gravity" => this.gravity_anim = Some(Animation::read_mdl(b)?),
-                "Longitude" => this.longitude_anim = Some(Animation::read_mdl(b)?),
-                "Latitude" => this.latitude_anim = Some(Animation::read_mdl(b)?),
-                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
-                _other => (),
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "Particle" => this.read_mdl_particle(f)?,
+                "EmissionRate" => this.emit_rate_anim = Some(Animation::read_mdl(f)?),
+                "Gravity" => this.gravity_anim = Some(Animation::read_mdl(f)?),
+                "Longitude" => this.longitude_anim = Some(Animation::read_mdl(f)?),
+                "Latitude" => this.latitude_anim = Some(Animation::read_mdl(f)?),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(f)?),
+                _other => this.base.unexpect_mdl_block(f)?,
             );
         }
         return Ok(this);
     }
     fn read_mdl_particle(&mut self, block: &MdlBlock) -> Result<(), MyError> {
+        block.unexpect_frames()?;
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "Path" => self.path = f.value.to()?,
                 "LifeSpan" => self.lifespan = f.value.to()?,
                 "InitVelocity" => self.speed = f.value.to()?,
-                _other => (),
+                _other => f.unexpect()?,
             );
         }
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "LifeSpan" => self.lifespan_anim = Some(Animation::read_mdl(b)?),
-                "InitVelocity" => self.speed_anim = Some(Animation::read_mdl(b)?),
-                _other => (),
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "LifeSpan" => self.lifespan_anim = Some(Animation::read_mdl(f)?),
+                "InitVelocity" => self.speed_anim = Some(Animation::read_mdl(f)?),
+                _other => f.unexpect()?,
             );
         }
         return Ok(());

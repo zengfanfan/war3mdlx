@@ -58,7 +58,7 @@ impl Sequence {
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "MoveSpeed" => this.move_speed = f.value.to()?,
-                "NonLooping" => this.looping = false,
+                "NonLooping" => this.looping = f.expect_flag(false)?,
                 "Rarity" => this.rarity = f.value.to()?,
                 "BoundsRadius" => this.bounds_radius = f.value.to()?,
                 "MinimumExtent" => this.min_extent = f.value.to()?,
@@ -68,7 +68,7 @@ impl Sequence {
                     this.start_frame = interval.get(0).cloned().unwrap_or(0);
                     this.end_frame = interval.get(1).cloned().unwrap_or(0);
                 },
-                _other => return f.unexpect(),
+                _other => f.unexpect()?,
             );
         }
         return Ok(this);
@@ -80,7 +80,7 @@ impl Sequence {
         lines.push(F!("{indent}Anim \"{}\" {{", self.name.escape()));
         lines.push(F!("{indent2}Interval {{ {}, {} }},", self.start_frame, self.end_frame));
         lines.pushx_if_n0(&F!("{indent2}MoveSpeed"), &self.move_speed);
-        yes!(!self.looping, lines.push(F!("{indent2}NonLooping,")));
+        no!(self.looping, lines.push(F!("{indent2}NonLooping,")));
         lines.pushx_if_n0(&F!("{indent2}Rarity"), &self.rarity);
         if !(self.bounds_radius.is0() && self.min_extent.is0() && self.max_extent.is0()) {
             lines.pushx(&F!("{indent2}BoundsRadius"), &self.bounds_radius);

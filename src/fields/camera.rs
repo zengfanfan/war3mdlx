@@ -72,6 +72,7 @@ impl Camera {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_frames()?;
         let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
             match_istr!(f.name.as_str(),
@@ -79,30 +80,31 @@ impl Camera {
                 "FieldOfView" => this.field_of_view = f.value.to()?,
                 "FarClip" => this.far_clip = f.value.to()?,
                 "NearClip" => this.near_clip = f.value.to()?,
-                _other => (),
+                _other => f.unexpect()?,
             );
         }
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "Target" => this.read_mdl_target(b)?,
-                "Translation" => this.translation = Some(Animation::read_mdl(b)?),
-                "Rotation" => this.rotation = Some(Animation::read_mdl(b)?),
-                _other => (),
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "Target" => this.read_mdl_target(f)?,
+                "Translation" => this.translation = Some(Animation::read_mdl(f)?),
+                "Rotation" => this.rotation = Some(Animation::read_mdl(f)?),
+                _other => f.unexpect()?,
             );
         }
         return Ok(this);
     }
     pub fn read_mdl_target(&mut self, block: &MdlBlock) -> Result<(), MyError> {
+        block.unexpect_frames()?;
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "Position" => self.target = f.value.to()?,
-                _other => (),
+                _other => f.unexpect()?,
             );
         }
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "Translation" => self.target_translation = Some(Animation::read_mdl(b)?),
-                _other => (),
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "Translation" => self.target_translation = Some(Animation::read_mdl(f)?),
+                _other => f.unexpect()?,
             );
         }
         return Ok(());

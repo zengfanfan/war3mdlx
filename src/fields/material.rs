@@ -62,16 +62,16 @@ impl Material {
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "PriorityPlane" => this.priority_plane = f.value.to()?,
-                "ConstantColor" => this.flags.insert(MaterialFlags::ConstantColor),
-                "SortPrimsFarZ" => this.flags.insert(MaterialFlags::SortPrimsFarZ),
-                "FullResolution" => this.flags.insert(MaterialFlags::FullResolution),
-                _other => return f.unexpect(),
+                "ConstantColor" => this.flags |= f.expect_flag(MaterialFlags::ConstantColor)?,
+                "SortPrimsFarZ" => this.flags |= f.expect_flag(MaterialFlags::SortPrimsFarZ)?,
+                "FullResolution" => this.flags |= f.expect_flag(MaterialFlags::FullResolution)?,
+                _other => f.unexpect()?,
             );
         }
         for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Layer" => this.layers.push(Layer::read_mdl(f)?),
-                _other => return f.unexpect(),
+                _other => f.unexpect()?,
             );
         }
         return Ok(this);
@@ -125,19 +125,6 @@ bitflags! {
         const Unfogged = 1 << 5;
         const NoDepthTest = 1 << 6;
         const NoDepthSet = 1 << 7;
-    }
-}
-impl LayerFlags {
-    pub fn from_str(s: &str) -> Result<Self, MyError> {
-        match_istr!(s,
-            "Unshaded" => Ok(Self::Unshaded),
-            "SphereEnvMap" => Ok(Self::SphereEnvMap),
-            "TwoSided" => Ok(Self::TwoSided),
-            "Unfogged" => Ok(Self::Unfogged),
-            "NoDepthTest" => Ok(Self::NoDepthTest),
-            "NoDepthSet" => Ok(Self::NoDepthSet),
-            _other => ERR!("Unknown {}({s})", TNAME!()),
-        )
     }
 }
 
@@ -197,30 +184,25 @@ impl Layer {
         let mut this = Build!();
         for f in &block.fields {
             match_istr!(f.name.as_str(),
-                "FilterMode" => {
-                    this.filter_mode = FilterMode::from_str(f.value.as_str());
-                    if let FilterMode::Error(_) = this.filter_mode {
-                        EXIT1!("Unknown {} {:?} at line {}.", f.name, f.value.as_str(), f.line);
-                    }
-                },
+                "FilterMode" => this.filter_mode = FilterMode::from_mdl(f)?,
                 "TextureID" => this.texture_id = f.value.to()?,
                 "TVertexAnimId" => this.texture_anim_id = f.value.to()?,
+                "Unshaded" =>this.flags |= f.expect_flag(LayerFlags::Unshaded)?,
+                "SphereEnvMap" =>this.flags |= f.expect_flag(LayerFlags::SphereEnvMap)?,
+                "TwoSided" =>this.flags |= f.expect_flag(LayerFlags::TwoSided)?,
+                "Unfogged" =>this.flags |= f.expect_flag(LayerFlags::Unfogged)?,
+                "NoDepthTest" =>this.flags |= f.expect_flag(LayerFlags::NoDepthTest)?,
+                "NoDepthSet" =>this.flags |= f.expect_flag(LayerFlags::NoDepthSet)?,
                 "CoordId" => this.coordid = f.value.to()?,
                 "Alpha" => this.alpha = f.value.to()?,
-                _other => {
-                    if let Ok(v) = LayerFlags::from_str(f.expect_flag()?) {
-                        this.flags.insert(v);
-                    } else {
-                        return f.unexpect();
-                    }
-                },
+                _other => f.unexpect()?,
             );
         }
         for f in &block.blocks {
             match_istr!(f.typ.as_str(),
                 "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
                 "TextureID" => this.texid_anim = Some(Animation::read_mdl(f)?),
-                _other => return f.unexpect(),
+                _other => f.unexpect()?,
             );
         }
         return Ok(this);
@@ -283,17 +265,17 @@ impl FilterMode {
         }
     }
 
-    fn from_str(s: &str) -> Self {
-        match_istr!(s,
-            "None" => Self::None,
-            "Transparent" => Self::Transparent,
-            "Blend" => Self::Blend,
-            "Additive" => Self::Additive,
-            "AddAlpha" => Self::AddAlpha,
-            "Modulate" => Self::Modulate,
-            "Modulate2x" => Self::Modulate2x,
-            "AlphaKey" => Self::AlphaKey,
-            _err => Self::Error(-1),
+    fn from_mdl(f: &MdlField) -> Result<Self, MyError> {
+        match_istr!(f.value.raw.as_str(),
+            "None" => Ok(Self::None),
+            "Transparent" => Ok(Self::Transparent),
+            "Blend" => Ok(Self::Blend),
+            "Additive" => Ok(Self::Additive),
+            "AddAlpha" => Ok(Self::AddAlpha),
+            "Modulate" => Ok(Self::Modulate),
+            "Modulate2x" => Ok(Self::Modulate2x),
+            "AlphaKey" => Ok(Self::AlphaKey),
+            _err => ERR!("Unknown {} {_err:?} (in Material::Layer) at line {}.", f.name, f.line),
         )
     }
 

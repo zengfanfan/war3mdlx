@@ -29,10 +29,11 @@ impl EventObject {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut this = Build! { base: Node::read_mdl(block)? };
         this.base.flags.insert(NodeFlags::EventObject);
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "EventTrack" => this.track = EventTrack::read_mdl(b)?,
-                _other => (),
+        this.base.unexpect_mdl_fields()?;
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "EventTrack" => this.track = EventTrack::read_mdl(f)?,
+                _other => this.base.unexpect_mdl_block(f)?,
             );
         }
         return Ok(this);
@@ -74,13 +75,9 @@ impl EventTrack {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
-        let mut this = Build!();
-        for f in &block.fields {
-            if let MdlValueType::Integer(i) = &f.value.typ {
-                this.frames.push(*i);
-            }
-        }
-        return Ok(this);
+        block.unexpect_blocks()?;
+        block.unexpect_frames()?;
+        Ok(Build! { frames: block.to_array("")? })
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {

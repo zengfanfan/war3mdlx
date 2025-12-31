@@ -59,13 +59,13 @@ impl Attachment {
             match_istr!(f.name.as_str(),
                 "Path" => this.child_path = f.value.to()?,
                 "AttachmentID" => this.attachment_id = Some(f.value.to()?),
-                _other => (),
+                _other => this.base.unexpect_mdl_field(f)?,
             );
         }
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
-                _other => (),
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(f)?),
+                _other => this.base.unexpect_mdl_block(f)?,
             );
         }
         return Ok(this);

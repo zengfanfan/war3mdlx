@@ -206,12 +206,12 @@ impl ParticleEmitter2 {
                 "Length" => this.length = f.value.to()?,
                 "Width" => this.width = f.value.to()?,
 
-                "Alpha" => this.segment_alpha = f.value.to()?,
-                "ParticleScaling" => this.segment_scaling = f.value.to()?,
-                "LifeSpanUVAnim" => this.head_life = PE2UVAnim::read_mdl(&f.value),
-                "DecayUVAnim" => this.head_decay = PE2UVAnim::read_mdl(&f.value),
-                "TailUVAnim" => this.tail_life = PE2UVAnim::read_mdl(&f.value),
-                "TailDecayUVAnim" => this.tail_decay = PE2UVAnim::read_mdl(&f.value),
+                "Alpha" => this.segment_alpha = f.value.to_ivec(3)?.convert(|f| *f as u8),
+                "ParticleScaling" => this.segment_scaling = f.value.to_fvec(3)?,
+                "LifeSpanUVAnim" => this.head_life = PE2UVAnim::read_mdl(&f.value)?,
+                "DecayUVAnim" => this.head_decay = PE2UVAnim::read_mdl(&f.value)?,
+                "TailUVAnim" => this.tail_life = PE2UVAnim::read_mdl(&f.value)?,
+                "TailDecayUVAnim" => this.tail_decay = PE2UVAnim::read_mdl(&f.value)?,
 
                 "Rows" => this.rows = f.value.to()?,
                 "Columns" => this.columns = f.value.to()?,
@@ -222,38 +222,35 @@ impl ParticleEmitter2 {
                 "PriorityPlane" => this.priority_plane = f.value.to()?,
                 "ReplaceableId" => this.replace_id = f.value.to()?,
 
-                "Squirt" => this.squirt = true,
-                "Head" => head = true,
-                "Tail" => tail = true,
-                "Both" => (head, tail) = (true, true),
-                "SortPrimsFarZ" => this.base.flags.insert(NodeFlags::PE2SortPrimFarZ),
-                "LineEmitter" => this.base.flags.insert(NodeFlags::LineEmitter),
-                "ModelSpace" => this.base.flags.insert(NodeFlags::ModelSpace),
-                "Unshaded" => this.base.flags.insert(NodeFlags::PE2Unshaded),
-                "Unfogged" => this.base.flags.insert(NodeFlags::Unfogged),
-                "XYQuad" => this.base.flags.insert(NodeFlags::XYQuad),
-                _other => this.filter_mode = PE2FilterMode::from_str(f.name.as_str(), this.filter_mode),
+                "Squirt" => this.squirt = f.expect_flag(true)?,
+                "Head" => head = f.expect_flag(true)?,
+                "Tail" => tail = f.expect_flag(true)?,
+                "Both" => (head, tail) = f.expect_flag((true, true))?,
+                "SortPrimsFarZ" => this.base.flags |= f.expect_flag(NodeFlags::PE2SortPrimFarZ)?,
+                "LineEmitter" => this.base.flags |= f.expect_flag(NodeFlags::LineEmitter)?,
+                "ModelSpace" => this.base.flags |= f.expect_flag(NodeFlags::ModelSpace)?,
+                "Unshaded" => this.base.flags |= f.expect_flag(NodeFlags::PE2Unshaded)?,
+                "Unfogged" => this.base.flags |= f.expect_flag(NodeFlags::Unfogged)?,
+                "XYQuad" => this.base.flags |= f.expect_flag(NodeFlags::XYQuad)?,
+
+                _other => this.filter_mode = this.base.unexpect_mdl_field(f).or(PE2FilterMode::from_mdl(f))?,
             );
         }
 
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "SegmentColor" => this.segment_color = b.fields.to()?,
-                "Speed" => this.speed_anim = Some(Animation::read_mdl(b)?),
-                "Variation" => this.variation_anim = Some(Animation::read_mdl(b)?),
-                "Latitude" => this.latitude_anim = Some(Animation::read_mdl(b)?),
-                "Gravity" => this.gravity_anim = Some(Animation::read_mdl(b)?),
-                "EmissionRate" => this.emit_rate_anim = Some(Animation::read_mdl(b)?),
-                "Length" => this.length_anim = Some(Animation::read_mdl(b)?),
-                "Width" => this.width_anim = Some(Animation::read_mdl(b)?),
-                "Visibility" => this.visibility = Some(Animation::read_mdl(b)?),
-                _other => (),
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "SegmentColor" => this.segment_color = f.to_array_n("Color", 3)?,
+                "Speed" => this.speed_anim = Some(Animation::read_mdl(f)?),
+                "Variation" => this.variation_anim = Some(Animation::read_mdl(f)?),
+                "Latitude" => this.latitude_anim = Some(Animation::read_mdl(f)?),
+                "Gravity" => this.gravity_anim = Some(Animation::read_mdl(f)?),
+                "EmissionRate" => this.emit_rate_anim = Some(Animation::read_mdl(f)?),
+                "Length" => this.length_anim = Some(Animation::read_mdl(f)?),
+                "Width" => this.width_anim = Some(Animation::read_mdl(f)?),
+                "Visibility" => this.visibility = Some(Animation::read_mdl(f)?),
+                _other => this.base.unexpect_mdl_block(f)?,
             );
         }
-
-        this.segment_alpha.resize(3, 255);
-        this.segment_scaling.resize(3, 1.0);
-        this.segment_color.resize(3, Vec3::ONE);
 
         this.head_or_tail = yesno!(head && tail, HeadOrTail::Both, yesno!(tail, HeadOrTail::Tail, HeadOrTail::Head));
         return Ok(this);
@@ -332,14 +329,9 @@ pub struct PE2UVAnim {
 }
 
 impl PE2UVAnim {
-    pub fn read_mdl(value: &MdlValue) -> Self {
-        let mut this = Self { start: 0, end: 0, repeat: 1 };
-        if let MdlValueType::IntegerArray(iv) = &value.typ {
-            yes!(iv.len() > 0, this.start = iv[0]);
-            yes!(iv.len() > 1, this.end = iv[1]);
-            yes!(iv.len() > 2, this.repeat = iv[2]);
-        }
-        return this;
+    pub fn read_mdl(value: &MdlValue) -> Result<Self, MyError> {
+        let iv = value.to_ivec(3)?;
+        Ok(Self { start: iv[0], end: iv[1], repeat: iv[2] })
     }
 
     pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
@@ -437,13 +429,13 @@ impl PE2FilterMode {
         }
     }
 
-    fn from_str(s: &str, def: Self) -> Self {
-        match_istr!(s,
-            "Blend" => Self::Blend,
-            "Additive" => Self::Additive,
-            "Modulate" => Self::Modulate,
-            "AlphaKey" => Self::AlphaKey,
-            _err => def,
+    fn from_mdl(f: &MdlField) -> Result<Self, MyError> {
+        match_istr!(f.name.as_str(),
+            "Blend" => f.expect_flag(Self::Blend),
+            "Additive" => f.expect_flag(Self::Additive),
+            "Modulate" => f.expect_flag(Self::Modulate),
+            "AlphaKey" => f.expect_flag(Self::AlphaKey),
+            _err => f.unexpect(),
         )
     }
 

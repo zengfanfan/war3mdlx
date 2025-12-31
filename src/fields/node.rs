@@ -15,6 +15,13 @@ pub struct Node {
     pub rotation: Option<Animation<Vec4>>,
     #[dbg(formatter = "fmtxx")]
     pub scaling: Option<Animation<Vec3>>,
+
+    mdl_fields: HashSet<String>,
+    mdl_blocks: HashSet<String>,
+    #[default(Ok(()))]
+    mdl_unexpected_field: Result<(), MyError>,
+    #[default(Ok(()))]
+    mdl_unexpected_block: Result<(), MyError>,
 }
 
 impl Node {
@@ -70,39 +77,65 @@ impl Node {
     }
 
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
+        block.unexpect_frames()?;
         let mut this = Build! { name: block.name.clone() };
         for f in &block.fields {
-            match_istr!(f.name.as_str(),
+            let (n, mut hit) = (&f.name, true);
+            match_istr!(n,
                 "ObjectId" => this.object_id = f.value.to()?,
                 "Parent" => this.parent_id = f.value.to()?,
                 "DontInherit" => {
                     let flags: Vec<String> = f.value.to()?;
                     for s in &flags {
                         match_istr!(s.as_str(),
-                            "Translation" => this.flags.insert(NodeFlags::DontInheritT),
-                            "Rotation" => this.flags.insert(NodeFlags::DontInheritR),
-                            "Scaling" => this.flags.insert(NodeFlags::DontInheritS),
-                            _other => (),
+                            "Translation" => this.flags |= NodeFlags::DontInheritT,
+                            "Rotation" => this.flags |= NodeFlags::DontInheritR,
+                            "Scaling" => this.flags |= NodeFlags::DontInheritS,
+                            _other => f.unexpect()?,
                         );
                     }
                 },
-                "Billboarded" => this.flags.insert(NodeFlags::Billboarded),
-                "BillboardedLockX" => this.flags.insert(NodeFlags::BillboardedLockX),
-                "BillboardedLockY" => this.flags.insert(NodeFlags::BillboardedLockY),
-                "BillboardedLockZ" => this.flags.insert(NodeFlags::BillboardedLockZ),
-                "CameraAnchored" => this.flags.insert(NodeFlags::CameraAnchored),
-                _other => (),
+                "Billboarded" => this.flags |= f.expect_flag(NodeFlags::Billboarded)?,
+                "BillboardedLockX" => this.flags |= f.expect_flag(NodeFlags::BillboardedLockX)?,
+                "BillboardedLockY" => this.flags |= f.expect_flag(NodeFlags::BillboardedLockY)?,
+                "BillboardedLockZ" => this.flags |= f.expect_flag(NodeFlags::BillboardedLockZ)?,
+                "CameraAnchored" => this.flags |= f.expect_flag(NodeFlags::CameraAnchored)?,
+                _other => hit = false,
             );
+            if hit {
+                this.mdl_fields.insert(n.s());
+            } else if let Ok(()) = this.mdl_unexpected_field {
+                this.mdl_unexpected_field = f.unexpect();
+            }
         }
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "Translation" => this.translation = Some(Animation::read_mdl(b)?),
-                "Rotation" => this.rotation = Some(Animation::read_mdl(b)?),
-                "Scaling" => this.scaling = Some(Animation::read_mdl(b)?),
-                _other => (),
+        for f in &block.blocks {
+            let (t, mut hit) = (&f.typ, true);
+            match_istr!(t,
+                "Translation" => this.translation = Some(Animation::read_mdl(f)?),
+                "Rotation" => this.rotation = Some(Animation::read_mdl(f)?),
+                "Scaling" => this.scaling = Some(Animation::read_mdl(f)?),
+                _other => hit = false,
             );
+            if hit {
+                this.mdl_blocks.insert(t.s());
+            } else if let Ok(()) = this.mdl_unexpected_block {
+                this.mdl_unexpected_block = f.unexpect();
+            }
         }
         return Ok(this);
+    }
+
+    pub fn unexpect_mdl_field<T: Default>(&self, f: &MdlField) -> Result<T, MyError> {
+        yesno!(self.mdl_fields.contains(&f.name), Ok(T::default()), f.unexpect())
+    }
+    pub fn unexpect_mdl_block<T: Default>(&self, f: &MdlBlock) -> Result<T, MyError> {
+        yesno!(self.mdl_blocks.contains(&f.name), Ok(T::default()), f.unexpect())
+    }
+    pub fn unexpect_mdl_fields(&mut self) -> Result<(), MyError> {
+        std::mem::replace(&mut self.mdl_unexpected_field, Ok(()))
+    }
+    pub fn unexpect_mdl_blocks(&mut self) -> Result<(), MyError> {
+        std::mem::replace(&mut self.mdl_unexpected_block, Ok(()))
     }
 
     pub fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {

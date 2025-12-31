@@ -49,13 +49,13 @@ impl CollisionShape {
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "BoundsRadius" => this.bounds_radius = f.value.to()?,
-                _other => this.shape = CollisionType::from_str(_other, this.shape),
+                _other => this.shape = this.base.unexpect_mdl_field(f).or(CollisionType::from_mdl(f))?,
             );
         }
-        for b in &block.blocks {
-            match_istr!(b.typ.as_str(),
-                "Vertices" => this.vertices = b.fields.to()?,
-                _other => (),
+        for f in &block.blocks {
+            match_istr!(f.typ.as_str(),
+                "Vertices" => this.vertices = f.fields.to("")?,
+                _other => this.base.unexpect_mdl_block(f)?,
             );
         }
         this.vertices.resize(yesno!(this.shape == CollisionType::Box, 2, 1), Vec3::ZERO);
@@ -96,13 +96,13 @@ impl CollisionType {
         }
     }
 
-    fn from_str(s: &str, def: Self) -> Self {
-        match_istr!(s,
-            "Box" => Self::Box,
-            "Plane" => Self::Plane,
-            "Sphere" => Self::Sphere,
-            "Cylinder" => Self::Cylinder,
-            _err => def,
+    fn from_mdl(f: &MdlField) -> Result<Self, MyError> {
+        match_istr!(f.name.as_str(),
+            "Box" => f.expect_flag(Self::Box),
+            "Plane" => f.expect_flag(Self::Plane),
+            "Sphere" => f.expect_flag(Self::Sphere),
+            "Cylinder" => f.expect_flag(Self::Cylinder),
+            _err => f.unexpect(),
         )
     }
 

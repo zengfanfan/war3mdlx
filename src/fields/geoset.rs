@@ -228,7 +228,7 @@ impl Geoset {
         for (t, n) in self.face_types.iter().zip(self.face_vtxcnts.iter()) {
             if *t == tri {
                 if n % trin != 0 {
-                    wlog!("Expecting length of {t:?} (in {}) to be multiple of {trin}, but got {n}.", TNAME!());
+                    wlog!("Expecting length of {t:?} (in {}) to be multiple of {trin}, got {n}.", TNAME!());
                 }
             } else {
                 wlog!("OMG! {} other than {tri:?}({}): {:?}", TNAME!(&tri), tri.to(), self.face_types);
@@ -303,40 +303,29 @@ impl Geoset {
             match_istr!(f.name.as_str(),
                 "MaterialID" => this.material_id = f.value.to()?,
                 "SelectionGroup" => this.sel_group = f.value.to()?,
-                "Unselectable" => this.sel_type = 4,
+                "Unselectable" => this.sel_type |= f.expect_flag(4)?,
                 "BoundsRadius" | "MinimumExtent" | "MaximumExtent" => (),
-                _other => return f.unexpect(),
+                _other => f.unexpect()?,
             );
         }
         for a in &block.blocks {
-            a.unexpect_frames()?;
             match_istr!(a.typ.as_str(),
-                "Vertices" => {
-                    a.unexpect_blocks()?;
-                    this.vertices = a.fields.to_noname()?
-                },
-                "Normals" => {
-                    a.unexpect_blocks()?;
-                    this.normals = a.fields.to_noname()?
-                },
-                "TVertices" => {
-                    a.unexpect_blocks()?;
-                    this.uvss.push(a.fields.to_noname()?)
-                },
-                "VertexGroup" => {
-                    a.unexpect_blocks()?;
-                    this.vtxgrps = a.fields.to_noname()?
-                },
+                "Vertices" => this.vertices = a.to_array("")?,
+                "Normals" => this.normals = a.to_array("")?,
+                "TVertices" => this.uvss.push(a.to_array("")?),
+                "VertexGroup" => this.vtxgrps = a.to_array("")?,
                 "Faces" => {
                     a.unexpect_fields()?;
+                    a.unexpect_frames()?;
                     for b in &a.blocks { this.read_mdl_face(b)?; }
                 },
                 "Groups" => {
+                    a.unexpect_frames()?;
                     a.unexpect_blocks()?;
                     for f in &a.fields { this.read_mdl_matrices(f)?; }
                 },
                 "Anim" => this.anim_extents.push(BoundExtent::read_mdl(&a, true)?),
-                _other => return a.unexpect(),
+                _other => a.unexpect()?,
             );
         }
         this.nvs_count = this.uvss.len() as u32;
@@ -367,7 +356,7 @@ impl Geoset {
     }
     fn read_mdl_matrices(&mut self, field: &MdlField) -> Result<(), MyError> {
         let (n, v, l) = (&field.name, &field.value, field.line);
-        if !field.name.eq_icase("Matrices") {
+        if !n.eq_icase("Matrices") {
             EXIT1!("Unknown GroupType {n:?} at line {l}.");
         }
         let iv: Vec<i32> = v.to()?;
@@ -511,11 +500,11 @@ impl GeosetAnim {
         for f in &block.fields {
             match_istr!(f.name.as_str(),
                 "Alpha" => this.alpha = f.value.to()?,
-                "UseColor" => this.flags.insert(GeosetAnimFlags::UseColor),
-                "DropShadow" => this.flags.insert(GeosetAnimFlags::DropShadow),
+                "UseColor" => this.flags |= f.expect_flag(GeosetAnimFlags::UseColor)?,
+                "DropShadow" => this.flags |= f.expect_flag(GeosetAnimFlags::DropShadow)?,
                 "Color" => {
                     this.color = f.value.to()?;
-                    this.flags.insert(GeosetAnimFlags::UseColor);
+                    this.flags |= GeosetAnimFlags::UseColor;
                 },
                 "GeosetID" => this.geoset_id = f.value.to()?,
                 _other => (),
@@ -526,7 +515,7 @@ impl GeosetAnim {
                 "Alpha" => this.alpha_anim = Some(Animation::read_mdl(f)?),
                 "Color" => {
                     this.color_anim = Some(Animation::read_mdl(f)?);
-                    this.flags.insert(GeosetAnimFlags::UseColor);
+                    this.flags |= GeosetAnimFlags::UseColor;
                 },
                 _other => (),
             );

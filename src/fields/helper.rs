@@ -19,6 +19,8 @@ impl Helper {
     pub fn read_mdl(block: &MdlBlock) -> Result<Self, MyError> {
         let mut base: Node = Node::read_mdl(block)?;
         base.flags.insert(NodeFlags::Helper);
+        base.unexpect_mdl_fields()?;
+        base.unexpect_mdl_blocks()?;
         return Ok(Self { base });
     }
 
