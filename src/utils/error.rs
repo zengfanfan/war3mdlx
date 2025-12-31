@@ -54,7 +54,9 @@ impl From<ParseFloatError> for MyError {
 #[macro_export]
 macro_rules! ERR {
     ($($arg:tt)*) => {{
-        // if cfg!(debug_assertions) { panic!($($arg)*) }
-        core::result::Result::Err(crate::error::MyError::String(F!($($arg)*)))
+        #[allow(unused_mut)]
+        let mut s = F!($($arg)*);
+        // if cfg!(debug_assertions) && s.lines().nth(1).is_none() { s = F!("{}\n{}\n", s, debug_trace(0,6)); }
+        core::result::Result::Err(MyError::String(s))
     }};
 }

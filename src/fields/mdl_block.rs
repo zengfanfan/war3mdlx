@@ -104,14 +104,10 @@ impl MdlField {
         let mut first_ident = true;
         for p in inner {
             match p.as_rule() {
-                Rule::identifier | Rule::tankey => {
-                    if first_ident {
-                        this.name = p.as_str().s();
-                        this.value.name = this.name.s();
-                        first_ident = false;
-                    } else {
-                        this.value = MdlValue::from(p, &this.name)?;
-                    }
+                Rule::identifier | Rule::tankey if first_ident => {
+                    this.name = p.as_str().s();
+                    this.value.name = this.name.s();
+                    first_ident = false;
                 },
                 _value => this.value = MdlValue::from(p, &this.name)?,
             }

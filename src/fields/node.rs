@@ -129,7 +129,7 @@ impl Node {
         yesno!(self.mdl_fields.contains(&f.name), Ok(T::default()), f.unexpect())
     }
     pub fn unexpect_mdl_block<T: Default>(&self, f: &MdlBlock) -> Result<T, MyError> {
-        yesno!(self.mdl_blocks.contains(&f.name), Ok(T::default()), f.unexpect())
+        yesno!(self.mdl_blocks.contains(&f.typ), Ok(T::default()), f.unexpect())
     }
     pub fn unexpect_mdl_fields(&mut self) -> Result<(), MyError> {
         std::mem::replace(&mut self.mdl_unexpected_field, Ok(()))
