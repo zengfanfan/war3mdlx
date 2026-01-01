@@ -133,7 +133,7 @@ impl Light {
                 "AmbColor" => this.amb_color_anim = Some(Animation::read_mdl(f)?),
                 "AmbIntensity" => this.amb_intensity_anim = Some(Animation::read_mdl(f)?),
                 "Visibility" => this.visibility = Some(Animation::read_mdl(f)?),
-                _other => f.unexpect()?,
+                _other => this.base.unexpect_mdl_block(f)?,
             );
         }
 
