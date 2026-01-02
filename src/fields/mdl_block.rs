@@ -7,7 +7,7 @@ trait _ExtendPair {
 }
 impl _ExtendPair for Pair<'_, Rule> {
     fn lineno(&self) -> u32 {
-        self.as_span().start_pos().line_col().0 as u32
+        self.line_col().0 as u32
     }
 }
 
