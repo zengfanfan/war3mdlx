@@ -39,7 +39,11 @@ impl Model {
             match_istr!(f.name.as_str(),
                 "BoundsRadius" | "MinimumExtent" | "MaximumExtent" => (),
                 "BlendTime" => this.blend_time = f.value.to()?,
-                _other => yes!(f.name.is_empty() || f.value.is_empty(), f.unexpect()?),
+                _other => if _other.starts_with("Num") {
+                    _ = f.value.to::<i32>()?
+                } else {
+                    f.unexpect()?
+                },
             );
         }
         return Ok(this);

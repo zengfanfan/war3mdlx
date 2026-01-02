@@ -65,6 +65,7 @@ impl Sequence {
                 "MaximumExtent" => this.max_extent = f.value.to()?,
                 "Interval" => {
                     let interval: Vec<i32> = f.value.to()?;
+                    no!(interval.len()==2, return f.value.expect_but("2 integers", interval.len().s().as_str()));
                     this.start_frame = interval.get(0).cloned().unwrap_or(0);
                     this.end_frame = interval.get(1).cloned().unwrap_or(0);
                 },

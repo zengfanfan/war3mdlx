@@ -9,7 +9,7 @@ pub struct Attachment {
     pub _unknown: i32,
     #[dbg(fmt = "{:?}")]
     pub attachment_id: Option<i32>,
-    pub aindex: i32, // the order appears in the file
+    pub appear_order: i32, // the order appears in the file
 
     #[dbg(formatter = "fmtxx")]
     pub visibility: Option<Animation<f32>>,
@@ -41,7 +41,7 @@ impl Attachment {
         self.base.write_mdx(chunk)?;
         chunk.write_string(&self.child_path, Self::PATH_SIZE)?;
         chunk.write(&self._unknown)?;
-        chunk.write(&self.attachment_id.unwrap_or(self.aindex))?;
+        chunk.write(&self.attachment_id.unwrap_or(self.appear_order))?;
         MdxWriteAnim!(chunk, Self::ID_V => self.visibility);
         return Ok(());
     }
@@ -76,7 +76,7 @@ impl Attachment {
         let mut lines: Vec<String> = vec![];
         lines.append(&mut self.base.write_mdl(depth)?);
         if let Some(aid) = self.attachment_id {
-            lines.push_if(aid != self.aindex, F!("{indent}AttachmentID {},", aid));
+            lines.push_if(aid != self.appear_order, F!("{indent}AttachmentID {},", aid));
         }
         lines.pushx_if_n0(&F!("{indent}Path"), &self.child_path.escape_path());
         MdlWriteAnimIfSome!(lines, depth, "Visibility" => self.visibility);

@@ -1,7 +1,7 @@
 use crate::*;
 
 pub trait TAnimation: ReadFromCursor + WriteToCursor + FromMdlValue + std::fmt::Debug + Default + Formatter {}
-impl<T> TAnimation for T where T: ReadFromCursor + WriteToCursor + FromMdlValue + std::fmt::Debug + Default + Formatter {}
+impl<T: ReadFromCursor + WriteToCursor + FromMdlValue + std::fmt::Debug + Default + Formatter> TAnimation for T {}
 
 #[derive(Dbg, Default)]
 pub struct KeyFrame<T: TAnimation> {

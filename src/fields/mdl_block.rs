@@ -34,21 +34,25 @@ impl MdlBlock {
             match p.as_rule() {
                 Rule::identifier => this.typ = p.as_str().s(),
                 Rule::string => this.name = MdlValue::unwrap_string(p.as_str()),
-                Rule::block => this.blocks.push(MdlBlock::from(p, &this.typ)?),
-                Rule::field => this.fields.push(MdlField::from(p, &this.typ)?),
-                Rule::frame => this.frames.push(MdlFrame::from(p, &this.typ)?),
+                Rule::block => this.blocks.push(MdlBlock::from(p, &this.subscope().as_str())?),
+                Rule::field => this.fields.push(MdlField::from(p, &this.subscope().as_str())?),
+                Rule::frame => this.frames.push(MdlFrame::from(p, &this.subscope().as_str())?),
                 _other => (), // ignore integers
             }
         }
         return Ok(this);
     }
 
+    fn subscope(&self) -> String {
+        yesno!(self.name.is_empty(), self.typ.s(), F!("{} {:?}", &self.typ, &self.name))
+    }
+
     pub fn unexpect<T>(&self) -> Result<T, MyError> {
         let (t, n, l, s) = (&self.typ, &self.name, &self.line, &self.scope);
         let typ = yesno!(n.is_empty(), F!("{:?}", t), t.s());
-        let name = yesno!(n.is_empty(), "".s(), F!("({n:?})"));
-        let scope = yesno!(s.is_empty(), "".s(), F!(" (in {s})"));
-        ERR!("Unexpected {typ}{name}{scope} at line {l}.")
+        let name = yesno!(n.is_empty(), "".s(), F!(" {n:?}"));
+        let inscope = yesno!(s.is_empty(), "".s(), F!(" (in {s})"));
+        ERR!("Unexpected {typ}{name}{inscope} at line {l}")
     }
     pub fn unexpect_fields(&self) -> Result<(), MyError> {
         for f in &self.fields {
@@ -75,10 +79,11 @@ impl MdlBlock {
     }
     pub fn to_array_n<T: FromMdlFieldArray>(&self, name: &str, n: u32) -> Result<T, MyError> {
         let a = self.to_array::<T>(name)?;
-        let (t, l) = (&self.typ, &self.line);
+        let (scope, line) = (self.subscope(), &self.line);
+        let item_name = yesno!(name.is_empty(), yesno!(n > 1, "items", "item"), name);
         match a.len() == n {
             true => Ok(a),
-            _ => ERR!("Expecting {n} {name} for {t} at line {l}, got {}.", a.len()),
+            _ => ERR!("Expecting {n} {item_name} for {scope} at line {line}, got {}", a.len()),
         }
     }
 }
@@ -99,7 +104,7 @@ impl MdlField {
     pub fn from(pair: Pair<'_, Rule>, scope: &str) -> Result<Self, MyError> {
         let mut this = Build! {scope: scope.s(), line: pair.lineno()};
         this.value.line = this.line;
-        this.value.name = this.scope.s();
+        this.value.scope = this.scope.s();
         let inner = pair.into_inner();
         let mut first_ident = true;
         for p in inner {
@@ -109,7 +114,7 @@ impl MdlField {
                     this.value.name = this.name.s();
                     first_ident = false;
                 },
-                _value => this.value = MdlValue::from(p, &this.name)?,
+                _value => this.value = MdlValue::from(p, &this.name, scope)?,
             }
         }
         return Ok(this);
@@ -117,7 +122,7 @@ impl MdlField {
 
     pub fn unexpect<T>(&self) -> Result<T, MyError> {
         let name = yesno!(self.name.is_empty(), &self.value.raw, &self.name);
-        ERR!("Unexpected {:?} (in {}) at line {}.", name, self.scope, self.line)
+        ERR!("Unexpected {:?} (in {}) at line {}", name, self.scope, self.line)
     }
     pub fn expect_flag<T>(&self, v: T) -> Result<T, MyError> {
         yesno!(!self.name.is_empty() && self.value.is_empty(), Ok(v), self.value.unexpect())
@@ -154,12 +159,13 @@ pub struct MdlFrame {
 
 impl MdlFrame {
     pub fn from(pair: Pair<'_, Rule>, scope: &str) -> Result<Self, MyError> {
-        let mut this = Build! {scope: scope.s(), line: pair.lineno()};
+        let mut this = Build! { scope:scope.s(), line:pair.lineno() };
         let mut inner = pair.into_inner();
-        this.frame = inner.next().unwrap().as_str().parse().unwrap();
-        this.value = MdlValue::from(inner.next().unwrap(), &this.scope)?;
-        this.intan = Build!(MdlValue, name:"InTan".s(),  line:this.value.line);
-        this.outan = Build!(MdlValue, name:"OutTan".s(), line:this.value.line);
+        let fstr = inner.next().unwrap().as_str();
+        this.frame = fstr.parse().unwrap();
+        this.value = MdlValue::from(inner.next().unwrap(), fstr, &this.scope)?;
+        this.intan = Build!(MdlValue, name:"InTan".s(),  scope:scope.s(), line:this.value.line);
+        this.outan = Build!(MdlValue, name:"OutTan".s(), scope:scope.s(), line:this.value.line);
         for p in inner {
             let f = MdlField::from(p, &this.scope)?;
             match_istr!(f.name.as_str(),
@@ -172,7 +178,7 @@ impl MdlFrame {
     }
 
     pub fn unexpect<T>(&self) -> Result<T, MyError> {
-        ERR!("Unexpected '{}:' (in {}) at line {}.", self.frame, self.scope, self.line)
+        ERR!("Unexpected '{}:' (in {}) at line {}", self.frame, self.scope, self.line)
     }
 }
 
@@ -195,6 +201,7 @@ pub enum MdlValueType {
 #[derive(Debug, Default)]
 pub struct MdlValue {
     pub name: String,
+    pub scope: String,
     pub raw: String,
     pub typ: MdlValueType,
     pub line: u32,
@@ -207,17 +214,17 @@ impl Display for MdlValue {
 }
 
 impl MdlValue {
-    pub fn from(p: Pair<'_, Rule>, name: &str) -> Result<Self, MyError> {
+    pub fn from(p: Pair<'_, Rule>, name: &str, scope: &str) -> Result<Self, MyError> {
         let raw = p.as_str();
-        let mut this = Build! {name: name.s(), line: p.lineno(), raw: raw.s()};
+        let mut this = Build! {name:name.s(), scope:scope.s(), line: p.lineno(), raw:raw.s()};
         this.typ = match p.as_rule() {
             Rule::integer => MdlValueType::Integer(raw.parse()?),
             Rule::float => MdlValueType::Float(raw.parse()?),
             Rule::identifier => MdlValueType::Flag(raw.s()),
             Rule::string => MdlValueType::String(Self::unwrap_string(raw)),
-            Rule::identifier_array => {
-                MdlValueType::FlagArray(p.into_inner().into_iter().map(|p| p.as_str().s()).collect())
-            },
+            Rule::identifier_array => MdlValueType::FlagArray(
+                p.into_inner().into_iter().map(|p| p.as_str().s()).collect(),
+            ),
             Rule::number_array => {
                 let inner = p.into_inner();
                 let mut fv = Vec::<f32>::with_capacity(inner.len());
@@ -239,7 +246,11 @@ impl MdlValue {
                         fv.push(s.parse()?);
                     }
                 }
-                yesno!(iv.len() == fv.len(), MdlValueType::IntegerArray(iv), MdlValueType::FloatArray(fv))
+                yesno!(
+                    iv.len() == fv.len(),
+                    MdlValueType::IntegerArray(iv),
+                    MdlValueType::FloatArray(fv)
+                )
             },
             _impossible => MdlValueType::default(),
         };
@@ -250,10 +261,22 @@ impl MdlValue {
         T::from(&self)
     }
     pub fn to_ivec(&self, n: u32) -> Result<Vec<i32>, MyError> {
-        self.to::<Vec<i32>>().and_then(|v| yesno!(v.len() as u32 == n, Ok(v), self.expect(&F!("{n} integers"))))
+        let v = self.to::<Vec<i32>>()?;
+        if v.len() as u32 == n {
+            Ok(v)
+        } else {
+            let want = F!("{n} integer{}", yesno!(n > 1, "s", ""));
+            self.expect_but(&want, v.len().s().as_str())
+        }
     }
     pub fn to_fvec(&self, n: u32) -> Result<Vec<f32>, MyError> {
-        self.to::<Vec<f32>>().and_then(|v| yesno!(v.len() as u32 == n, Ok(v), self.expect(&F!("{n} numbers"))))
+        let v = self.to::<Vec<f32>>()?;
+        if v.len() as u32 == n {
+            Ok(v)
+        } else {
+            let want = F!("{n} number{}", yesno!(n > 1, "s", ""));
+            self.expect_but(&want, v.len().s().as_str())
+        }
     }
 
     pub fn unwrap_string(s: &str) -> String {
@@ -276,22 +299,27 @@ impl MdlValue {
 
     pub fn expect<T>(&self, s: &str) -> Result<T, MyError> {
         let forname = yesno!(self.name.is_empty(), "".s(), F!(" for {:?}", self.name));
+        let inscope = yesno!(self.scope.is_empty(), "".s(), F!(" (in {})", self.scope));
         let gottype = yesno!(self.is_empty(), "".s(), F!(", got {:?}", self.typ));
-        ERR!("Expecting {}{} at line {}{}.", s, forname, self.line, gottype)
+        ERR!("Expecting {s}{forname}{inscope} at line {}{gottype}", self.line)
+    }
+    pub fn expect_but<T>(&self, s: &str, got: &str) -> Result<T, MyError> {
+        let forname = yesno!(self.name.is_empty(), "".s(), F!(" for {:?}", self.name));
+        let inscope = yesno!(self.scope.is_empty(), "".s(), F!(" (in {})", self.scope));
+        ERR!("Expecting {s}{forname}{inscope} at line {}, got {got}", self.line)
     }
     pub fn unexpect<T>(&self) -> Result<T, MyError> {
         let forname = yesno!(self.name.is_empty(), "".s(), F!(" for {:?}", self.name));
-        ERR!("Unexpected {:?}{forname} at line {}.", self.raw, self.line)
+        let inscope = yesno!(self.scope.is_empty(), "".s(), F!(" (in {})", self.scope));
+        ERR!("Unexpected {:?}{forname}{inscope} at line {}", self.raw, self.line)
     }
 }
 
 //#endregion
 //#region trait: FromMdlValue
 
-pub trait FromMdlValue {
-    fn from(v: &MdlValue) -> Result<Self, MyError>
-    where
-        Self: Sized;
+pub trait FromMdlValue: Sized {
+    fn from(v: &MdlValue) -> Result<Self, MyError>;
 }
 
 macro_rules! impl_FromMdlValue_int {
@@ -302,7 +330,7 @@ macro_rules! impl_FromMdlValue_int {
                     match &v.typ {
                         MdlValueType::Integer(i) => Ok(*i as $ty),
                         MdlValueType::Flag(f) if f.eq_icase("None") || f.eq_icase("Multiple") => Ok(-1),
-                        _ => v.expect("integer"),
+                        _ => v.expect("an integer"),
                     }
                 }
             }
@@ -323,7 +351,11 @@ macro_rules! impl_FromMdlValue_uint {
         $(
             impl FromMdlValue for $ty {
                 fn from(v: &MdlValue) -> Result<Self, MyError> {
-                    if let MdlValueType::Integer(i) = &v.typ { Ok(yesno!(*i < 0, 0, *i as $ty)) } else { v.expect("integer") }
+                    if let MdlValueType::Integer(i) = &v.typ {
+                        Ok(yesno!(*i < 0, 0, *i as $ty))
+                    } else {
+                        v.expect("an integer")
+                    }
                 }
             }
             impl FromMdlValue for Vec<$ty> {
@@ -346,7 +378,7 @@ macro_rules! impl_FromMdlValue_float {
                     match &v.typ {
                         MdlValueType::Float(f) => Ok(*f),
                         MdlValueType::Integer(i) => Ok(*i as $ty),
-                        _ => v.expect("number"),
+                        _ => v.expect("a number"),
                     }
                 }
             }
@@ -362,7 +394,7 @@ macro_rules! impl_FromMdlValue_float {
         )*
     };
 }
-macro_rules! impl_FromMdlValue_vec234 {
+macro_rules! impl_FromMdlValue_vecN {
     ($($a:tt),*) => {
         $(paste! {
             impl FromMdlValue for [<Vec $a>] {
@@ -373,7 +405,11 @@ macro_rules! impl_FromMdlValue_vec234 {
                         MdlValueType::IntegerArray(iv) => iv.convert(|v| *v as f32),
                         _ => vec![],
                     };
-                    if vs.len() == LEN { Ok(Self::from_slice(vs.as_slice())) } else { v.expect(&F!("{} numbers", LEN)) }
+                    if vs.len() == LEN {
+                        Ok(Self::from_slice(vs.as_slice()))
+                    } else {
+                        v.expect(&F!("{LEN} numbers"))
+                    }
                 }
             }
         })*
@@ -383,7 +419,7 @@ macro_rules! impl_FromMdlValue_vec234 {
 impl_FromMdlValue_int!(i8, i16, i32);
 impl_FromMdlValue_uint!(u8, u16, u32);
 impl_FromMdlValue_float!(f32);
-impl_FromMdlValue_vec234!(2, 3, 4);
+impl_FromMdlValue_vecN!(2, 3, 4);
 
 impl FromMdlValue for String {
     fn from(v: &MdlValue) -> Result<Self, MyError> {
@@ -396,7 +432,11 @@ impl FromMdlValue for String {
 }
 impl FromMdlValue for Vec<String> {
     fn from(v: &MdlValue) -> Result<Self, MyError> {
-        if let MdlValueType::FlagArray(sv) = &v.typ { Ok(sv.clone()) } else { v.expect("string array") }
+        if let MdlValueType::FlagArray(sv) = &v.typ {
+            Ok(sv.clone())
+        } else {
+            v.expect("flag array")
+        }
     }
 }
 
@@ -412,13 +452,9 @@ impl _ExtendMdlFieldArray for Vec<MdlField> {
 //#endregion
 //#region trait: FromMdlFieldArray
 
-pub trait FromMdlFieldArray {
-    fn from(v: &Vec<MdlField>, name: &str) -> Result<Self, MyError>
-    where
-        Self: Sized;
-    fn len(&self) -> u32
-    where
-        Self: Sized;
+pub trait FromMdlFieldArray: Sized {
+    fn from(v: &Vec<MdlField>, name: &str) -> Result<Self, MyError>;
+    fn len(&self) -> u32;
 }
 
 macro_rules! impl_FromMdlFieldArray {

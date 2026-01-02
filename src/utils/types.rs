@@ -51,10 +51,7 @@ pub fn tname_last_seg_trim<T>(n: u32) -> String {
 pub trait _CheckDefault {
     fn isdef(&self) -> bool; //=::default()
 }
-impl<T> _CheckDefault for T
-where
-    T: Default + PartialEq,
-{
+impl<T: Default + PartialEq> _CheckDefault for T {
     fn isdef(&self) -> bool {
         *self == T::default()
     }
@@ -191,38 +188,6 @@ impl CheckValue for str {
     }
     fn isneg1(&self) -> bool {
         false
-    }
-}
-
-//#endregion
-//#region convert
-
-pub trait ConvertVec<A> {
-    fn convert<B, F>(&self, f: F) -> Vec<B>
-    where
-        F: Fn(&A) -> B;
-    fn try_convert<B, F>(&self, f: F) -> Result<Vec<B>, MyError>
-    where
-        F: Fn(&A) -> Result<B, MyError>;
-}
-
-impl<A> ConvertVec<A> for Vec<A> {
-    fn convert<B, F>(&self, f: F) -> Vec<B>
-    where
-        F: Fn(&A) -> B,
-    {
-        self.into_iter().map(f).collect()
-    }
-
-    fn try_convert<B, F>(&self, f: F) -> Result<Vec<B>, MyError>
-    where
-        F: Fn(&A) -> Result<B, MyError>,
-    {
-        let mut ret = Vec::with_capacity(self.len());
-        for a in self.iter() {
-            ret.push(f(a)?);
-        }
-        return Ok(ret);
     }
 }
 

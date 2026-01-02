@@ -162,10 +162,7 @@ impl<T: stdDebug> FormatterXX for Option<T> {
 pub trait _ExtendFormatter {
     fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError>;
 }
-impl<T> _ExtendFormatter for T
-where
-    T: Formatter,
-{
+impl<T: Formatter> _ExtendFormatter for T {
     fn write_mdl(&self, depth: u8) -> Result<Vec<String>, MyError> {
         Ok(vec![F!("{}{},", indent!(depth), fmtx(self))])
     }

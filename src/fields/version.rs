@@ -9,8 +9,19 @@ impl Version {
     pub const ID: u32 = MdlxMagic::VERS;
     pub const SUPPORTED_VERSION: [i32; 1] = [800];
 
+    fn validate(&self) -> Result<(), MyError> {
+        let ver = self.format_version;
+        let svers = Version::SUPPORTED_VERSION.to_vec();
+        if !svers.contains(&ver) {
+            EXIT1!("Unsupported version {ver} (must be {})", svers.to_or_string());
+        }
+        return Ok(());
+    }
+
     pub fn read_mdx(cur: &mut Cursor<&Vec<u8>>) -> Result<Self, MyError> {
-        Ok(Self { format_version: cur.readx()? })
+        let this = Self { format_version: cur.readx()? };
+        this.validate()?;
+        return Ok(this);
     }
 
     pub fn write_mdx(&self, chunk: &mut MdxChunk) -> Result<(), MyError> {
@@ -27,6 +38,7 @@ impl Version {
                 _other => f.unexpect()?,
             );
         }
+        this.validate()?;
         return Ok(this);
     }
 

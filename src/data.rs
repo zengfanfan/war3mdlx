@@ -30,24 +30,20 @@ impl MdlxData {
     pub fn read(path: &Path) -> Result<Self, MyError> {
         let ret = match path.ext_lower().as_str() {
             "mdl" => match std::fs::read_to_string(path) {
-                Err(e) => ERR!("Failed to read file {:?}: {}", path, e),
-                Ok(s) => Self::read_mdl(&s).or_else(|e| ERR!("Failed to read file {:?}: {}", path, e)),
+                Err(e) => Err(MyError::Io(e)),
+                Ok(s) => Self::read_mdl(&s).or_else(|e| Err(e)),
             },
             "mdx" => match std::fs::read(path) {
-                Err(e) => ERR!("Failed to read file {:?}: {}", path, e),
-                Ok(s) => Self::read_mdx(&s).or_else(|e| ERR!("Failed to read file {:?}: {}", path, e)),
+                Err(e) => Err(MyError::Io(e)),
+                Ok(s) => Self::read_mdx(&s).or_else(|e| Err(e)),
             },
-            _ => ERR!("Invalid input path: {:?}, expected *.mdl or *.mdx", path),
+            _ => EXIT1!("Invalid input path: {:?}, expecting *.mdl or *.mdx", path),
         };
         match ret {
-            Err(_) => return ret,
+            Err(e) => EXIT1!("Failed to read file {:?}: {}.", path, e),
             Ok(mut this) => {
-                let fver = this.version.format_version;
-                if !Version::SUPPORTED_VERSION.contains(&fver) {
-                    EXIT1!("Unsupported version {fver} (should be in {:?}): {path:?}", Version::SUPPORTED_VERSION);
-                }
                 for (i, a) in this.attachments.iter_mut().enumerate() {
-                    a.aindex = i as i32;
+                    a.appear_order = i as i32;
                 }
                 return Ok(this);
             },

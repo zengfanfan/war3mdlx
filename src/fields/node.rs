@@ -91,7 +91,7 @@ impl Node {
                             "Translation" => this.flags |= NodeFlags::DontInheritT,
                             "Rotation" => this.flags |= NodeFlags::DontInheritR,
                             "Scaling" => this.flags |= NodeFlags::DontInheritS,
-                            _other => f.unexpect()?,
+                            _other => f.value.expect_but("'Translation', 'Rotation', or 'Scaling'", _other)?,
                         );
                     }
                 },
