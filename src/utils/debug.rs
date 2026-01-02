@@ -2,8 +2,7 @@ use crate::*;
 
 //#region Backtrace
 
-#[allow(dead_code)]
-#[cfg(debug_assertions)]
+#[allow(unused)]
 pub fn debug_trace(skip: i32, depth: i32) -> String {
     let mut lines: Vec<String> = vec![];
     let mut count = -(skip + 4);

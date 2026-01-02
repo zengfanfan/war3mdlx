@@ -1,5 +1,6 @@
 use bitflags::bitflags;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt, WriteBytesExt};
+use chrono::{DateTime, Local};
 use derive_debug::Dbg;
 use glam::{Vec2, Vec3, Vec4};
 use lazy_static::lazy_static;
@@ -46,6 +47,10 @@ macro_rules! EXIT {
 macro_rules! EXIT1 {
     () => {{ return Ok(()); }};
     ($($arg:tt)*) => {{ return ERR!($($arg)*); }};
+}
+
+lazy_static! {
+    static ref StartTime: DateTime<Local> = Local::now();
 }
 
 fn _main() -> Result<(), MyError> {
