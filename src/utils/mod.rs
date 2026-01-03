@@ -3,6 +3,7 @@ pub mod error;
 pub mod format;
 pub mod logging;
 pub mod macros;
+pub mod time;
 pub mod types;
 
 #[allow(unused_imports)]
@@ -12,4 +13,5 @@ pub use format::*;
 pub use logging::*;
 #[allow(unused_imports)]
 pub use macros::*;
+pub use time::*;
 pub use types::*;

@@ -1,12 +1,10 @@
 use crate::*;
 use clap::{ArgAction, Parser};
 
-enum CheckResult {
-    Ok,
-    ExpectFileDir,
-    ExpectMDL,
-    ExpectMDX,
-    ExpectMDLX,
+//#region Args
+
+lazy_static! {
+    pub static ref ARGS: Args = Args::parse();
 }
 
 #[derive(Debug, Parser, Clone)]
@@ -30,7 +28,13 @@ pub struct Args {
     pub overwrite: bool,
     #[arg(long, short = 'e', help = "Stop walking the directory hierarchy when an error occurs")]
     pub stop_on_error: bool,
-    #[arg(long, short = 'd', default_value_t = 255, value_name = "0..255", help = "Max depth of directory traversal")]
+    #[arg(
+        long,
+        short = 'd',
+        default_value_t = 255,
+        value_name = "0..255",
+        help = "Max depth of directory traversal"
+    )]
     pub max_depth: u8,
 
     #[arg(
@@ -46,7 +50,7 @@ pub struct Args {
         long,
         short = 'n',
         value_name = "CR|LF|CRLF",
-        value_parser = ["CR", "LF", "CRLF"],
+        value_parser = validate_line_ending,
         default_value = "CRLF",
         help = "Used when writing text files",
     )]
@@ -60,29 +64,56 @@ pub struct Args {
         help = "Used when writing text files (e.g. 1t: one tab, 4s: four spaces)",
     )]
     pub indent: String,
-    #[arg(skip)]
-    pub indents: HashMap<u8, String>,
 
     #[arg(long, short, help = "Do not print log messages")]
     pub quiet: bool,
     #[arg(long, short, action = ArgAction::Count, help = "Print verbose log messages (-vv very verbose)")]
     pub verbose: u8,
-    #[arg(skip)]
-    pub log_level: LogLevel,
 }
 
+fn validate_line_ending(s: &str) -> Result<String, String> {
+    match_istr!(s,
+        "CR" => Ok("\r".s()),
+        "LF" => Ok("\n".s()),
+        "CRLF" => Ok("\r\n".s()),
+        _other => Err("must be CR, LF or CRLF".s())
+    )
+}
 fn validate_indent(s: &str) -> Result<String, String> {
-    let re = Regex::new(r"^[0-9]+[st]$").unwrap();
-    if re.is_match(s) { Ok(s.to_string()) } else { Err("must be digits followed by 's' or 't'".into()) }
+    let re = Regex::new(r"^[0-9]{1,4}[st]$").unwrap();
+    if re.is_match(s) {
+        let len = s.len();
+        let n = &s[..len - 1];
+        let c = s.as_bytes()[len - 1] as char;
+        let c = yesno!(c == 't', '\t', ' ');
+        Ok(c.s().repeat(n.parse().unwrap()))
+    } else {
+        Err("must be 1~4 digits followed by 's' or 't'".s())
+    }
 }
 
-impl Args {
-    pub fn init() -> &'static Self {
-        Self::set_instance(Self::parse())
+//#endregion
+//#region CLI
+
+#[derive(PartialEq)]
+enum CheckResult {
+    Ok,
+    ExpectFileDir,
+    ExpectMDL,
+    ExpectMDX,
+    ExpectMDLX,
+}
+
+#[derive(Debug)]
+pub struct CLI;
+
+impl CLI {
+    pub fn new() -> Self {
+        Self {}
     }
 
     pub fn execute(&self, worker: &mut Worker) -> Result<(), MyError> {
-        let input = PathBuf::from(&self.input);
+        let input = PathBuf::from(&ARGS.input);
         match self.check_input(&input) {
             CheckResult::ExpectFileDir => EXIT1!("Not an existing file or directory: {:?}", input),
             CheckResult::ExpectMDLX => EXIT1!("Invalid input: {:?}, expect *.mdl or *.mdx", input),
@@ -95,12 +126,12 @@ impl Args {
         }
     }
 
-    fn guess_output_ext(&self, inext: &str) -> &str {
-        if self.mdl2x {
+    fn guess_outext(&self, inext: &str) -> &str {
+        if ARGS.mdl2x {
             "mdx"
-        } else if self.mdx2l {
+        } else if ARGS.mdx2l {
             "mdl"
-        } else if inext == "mdl" {
+        } else if inext.eq_icase("mdl") {
             "mdx"
         } else {
             "mdl"
@@ -108,9 +139,9 @@ impl Args {
     }
 
     fn handle_file(&self, worker: &mut Worker, input: PathBuf) -> Result<(), MyError> {
-        let mut output = match &self.output {
+        let mut output = match &ARGS.output {
             Some(o) => PathBuf::from(o),
-            None => input.with_extension(self.guess_output_ext(input.extension().unwrap().to_str().unwrap())),
+            None => input.with_extension(self.guess_outext(input.ext())),
         };
 
         let opath = output.display().to_string();
@@ -119,7 +150,7 @@ impl Args {
             CheckResult::ExpectMDLX => EXIT1!("Invalid path: {}, expect *.mdl or *.mdx", opath),
             CheckResult::ExpectMDL => EXIT1!("Invalid path: {}, expect *.mdl", opath),
             CheckResult::ExpectMDX => EXIT1!("Invalid path: {}, expect *.mdx", opath),
-            _ok => output = if output.is_dir() { output.join(input.file_name().unwrap()) } else { output },
+            _ok => yes!(output.is_dir(), output = output.join(input.base_name())),
         };
 
         yes!(input.same_as(&output), EXIT!("Input and output are the same, do nothing."));
@@ -129,22 +160,26 @@ impl Args {
     }
 
     fn handle_dir(&self, worker: &mut Worker, input: PathBuf) -> Result<(), MyError> {
-        let output = self.output.as_ref().and_then(|o| Some(PathBuf::from(o))).unwrap_or(input.to_path_buf());
+        let output = match ARGS.output.as_ref() {
+            Some(s) => PathBuf::from(s),
+            None => input.to_path_buf(),
+        };
         if !output.is_dir() {
             EXIT1!("Output is not an existing directory: {}", output.fmtx());
         }
 
-        for entry in WalkDir::new(&input).max_depth(self.max_depth as usize + 1).into_iter().filter_map(|e| e.ok()) {
+        let max_depth = ARGS.max_depth as usize + 1;
+        for entry in WalkDir::new(&input).max_depth(max_depth).into_iter().filter_map(|e| e.ok()) {
             let ifile = entry.into_path();
-            if !ifile.is_file() || !matches!(self.check_input(&ifile), CheckResult::Ok) {
+            if !ifile.is_file() || self.check_input(&ifile) != CheckResult::Ok {
                 continue;
             }
 
-            let ofile = match self.flat {
-                true => output.join(ifile.file_name().unwrap()),
-                false => output.join(ifile.strip_prefix(&input).unwrap()),
+            let ofile = match ARGS.flat {
+                true => output.join(ifile.base_name()),
+                false => output.join(ifile.relative_to(&input)),
             }
-            .with_extension(self.guess_output_ext(ifile.ext_lower().as_str()));
+            .with_extension(self.guess_outext(ifile.ext()));
 
             self.process_file(worker, ifile, ofile);
         }
@@ -157,9 +192,9 @@ impl Args {
         if path.is_dir() {
             CheckResult::Ok
         } else if path.is_file() {
-            if self.mdl2x && ext != "mdl" {
+            if ARGS.mdl2x && ext != "mdl" {
                 CheckResult::ExpectMDL
-            } else if self.mdx2l && ext != "mdx" {
+            } else if ARGS.mdx2l && ext != "mdx" {
                 CheckResult::ExpectMDX
             } else if ext != "mdl" && ext != "mdx" {
                 CheckResult::ExpectMDLX
@@ -176,9 +211,9 @@ impl Args {
         if path.is_dir() {
             CheckResult::Ok
         } else {
-            if self.mdl2x && ext != "mdx" {
+            if ARGS.mdl2x && ext != "mdx" {
                 CheckResult::ExpectMDX
-            } else if self.mdx2l && ext != "mdl" {
+            } else if ARGS.mdx2l && ext != "mdl" {
                 CheckResult::ExpectMDL
             } else if ext != "mdl" && ext != "mdx" {
                 CheckResult::ExpectMDLX
@@ -189,7 +224,7 @@ impl Args {
     }
 
     fn process_file(&self, worker: &mut Worker, input: PathBuf, output: PathBuf) {
-        if output.exists() && !self.overwrite {
+        if output.exists() && !ARGS.overwrite {
             log!("Skipped existing output: {}", output.fmtx());
             worker.skip_job();
         } else {
@@ -199,6 +234,7 @@ impl Args {
     }
 }
 
+//#endregion
 //#region [global] args
 
 macro_rules! getter {
@@ -207,83 +243,71 @@ macro_rules! getter {
             #[macro_export]
             macro_rules! $field {
                 () => {
-                    &crate::cli::Args::instance().$field
+                    &ARGS.$field
                 };
             }
         )+
     };
 }
+
+getter!(line_ending, precision, stop_on_error, mdl_rgb);
+
+//#endregion
+//#region [global] log level
+
+lazy_static! {
+    pub static ref _LOG_LEVEL: LogLevel = init_log_level();
+}
+
+fn init_log_level() -> LogLevel {
+    yesno!(
+        ARGS.quiet,
+        LogLevel::Warn,
+        match ARGS.verbose {
+            1 => LogLevel::Verbose,
+            2 => LogLevel::Verbose2,
+            3.. => LogLevel::Verbose3,
+            _ => LogLevel::default(),
+        }
+    )
+}
+
+pub fn log_level() -> &'static LogLevel {
+    &_LOG_LEVEL
+}
+
+//#endregion
+//#region [global] indent
+
+lazy_static! {
+    static ref INDENTS: HashMap<u8, String> = init_indents();
+}
+
+fn init_indents() -> HashMap<u8, String> {
+    let mut m = HashMap::new();
+    let s = &ARGS.indent;
+    for i in 0..10 {
+        m.insert(i, s.repeat(i as usize));
+    }
+    return m;
+}
+
+pub fn _indent(depth: u8) -> &'static str {
+    match &depth {
+        0 => "",
+        1 => ARGS.indent.as_str(),
+        d => INDENTS.get(d).expect(&F!("Invalid indent depth: {d}")),
+    }
+}
+
 #[macro_export]
 macro_rules! indent {
     () => {
-        &crate::cli::Args::instance().indent
+        Args.indent
     };
     ($depth:expr) => {
-        crate::cli::Args::instance().indent(&$depth)
+        _indent($depth)
     };
-}
-
-getter!(log_level, line_ending, precision, stop_on_error, overwrite, start_time, mdl_rgb);
-
-static mut G_ARGS: Option<&'static Args> = None;
-
-impl Args {
-    pub fn instance() -> &'static Self {
-        unsafe { G_ARGS.expect("Args not initialized! [impossible]") }
-    }
-    fn set_instance(mut args: Self) -> &'static Self {
-        args.set_log_level();
-        args.set_line_ending();
-        args.set_indent();
-        /* not thread-safe: make sure it is in main thread and before creating any other thread */
-        no!(Worker::is_main(), panic!("{} must be initialized in main thread!", TNAMEL!()));
-        let boxed: Box<Self> = Box::new(args);
-        let static_ref: &'static Self = Box::leak(boxed);
-        unsafe {
-            G_ARGS = Some(static_ref);
-            return static_ref;
-        }
-    }
-
-    fn set_log_level(&mut self) {
-        self.log_level = yesno!(
-            self.quiet,
-            LogLevel::Warn,
-            match self.verbose {
-                1 => LogLevel::Verbose,
-                2 => LogLevel::Verbose2,
-                3.. => LogLevel::Verbose3,
-                _ => LogLevel::default(),
-            }
-        );
-    }
-
-    fn set_indent(&mut self) {
-        let len = self.indent.len();
-        let n = &self.indent[..len - 1];
-        let t = self.indent.as_bytes()[len - 1] as char;
-        self.indent = yesno!(t == 't', '\t', ' ').to_string().repeat(n.parse().unwrap());
-        for i in 0..10 {
-            self.indents.insert(i, self.indent.repeat(i as usize));
-        }
-    }
-    pub fn indent(&self, depth: &u8) -> &str {
-        match depth {
-            0 => "",
-            1 => &self.indent,
-            _ => self.indents.get(depth).expect(&F!("Invalid indent depth: {depth}")),
-        }
-    }
-
-    fn set_line_ending(&mut self) {
-        self.line_ending = match self.line_ending.as_str() {
-            "CR" => "\r",
-            "LF" => "\n",
-            "CRLF" => "\r\n",
-            _ => "",
-        }
-        .to_string();
-    }
 }
 
 //#endregion

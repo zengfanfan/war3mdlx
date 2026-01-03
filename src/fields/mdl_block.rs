@@ -1,6 +1,6 @@
 use crate::*;
 
-//#region trait: _ExtendPair
+//#region trait: ExtendPair
 
 trait _ExtendPair {
     fn lineno(&self) -> u32;

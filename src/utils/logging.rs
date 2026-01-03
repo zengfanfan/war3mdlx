@@ -15,7 +15,7 @@ pub enum LogLevel {
 
 #[macro_export]
 macro_rules! check_log_level {
-    (::$item:ident) => {{ *log_level!() <= crate::logging::LogLevel::$item }};
+    (::$item:ident) => {{ *log_level() <= crate::logging::LogLevel::$item }};
 }
 
 //#endregion

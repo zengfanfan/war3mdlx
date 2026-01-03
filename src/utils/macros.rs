@@ -106,3 +106,18 @@ macro_rules! Build {
 }
 
 //#endregion
+//#region EXIT
+
+#[macro_export]
+macro_rules! EXIT {
+    () => {{ return Ok(()); }};
+    ($($arg:tt)*) => {{ log!($($arg)*); EXIT!(); }};
+}
+
+#[macro_export]
+macro_rules! EXIT1 {
+    () => {{ return Ok(()); }};
+    ($($arg:tt)*) => {{ return ERR!($($arg)*); }};
+}
+
+//#endregion

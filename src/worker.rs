@@ -4,7 +4,7 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-//#region input output data
+//#region Job
 
 #[derive(Debug)]
 struct Job {
@@ -15,26 +15,33 @@ struct Job {
 #[derive(Debug)]
 enum JobResult {
     Ok,
-    Err(String),
+    Err,
 }
 
-#[derive(Clone)]
+//#endregion
+//#region StopSignal
+
+#[derive(Clone, Default)]
 struct StopSignal {
     signal: Arc<AtomicBool>,
 }
 impl StopSignal {
-    pub fn stop(&self) {
+    pub fn set(&self) {
         self.signal.store(true, Ordering::SeqCst)
     }
-    pub fn should_stop(&self) -> bool {
+    pub fn get(&self) -> bool {
         self.signal.load(Ordering::SeqCst)
     }
+}
+lazy_static! {
+    static ref STOP: StopSignal = StopSignal { signal: Arc::new(AtomicBool::new(false)) };
 }
 
 //#endregion
 
+#[derive(Default)]
 pub struct Worker {
-    start_time: i128,
+    start: i128,
     total: i32,
     ok: i32,
     skip: i32,
@@ -45,32 +52,25 @@ pub struct Worker {
 }
 
 impl Worker {
-    pub fn is_main() -> bool {
-        thread::current().name() == Some("main")
-    }
-
     pub fn init() -> Self {
         let (jobtx, jobrx) = channel::<Job>();
         let (restx, resrx) = channel::<JobResult>();
         let jobrx = Arc::new(Mutex::new(jobrx)); // to share it across threads
-        let mut this = Self {
-            jobtx: Some(jobtx),
-            resrx: Some(resrx),
-            ok: 0,
-            skip: 0,
-            fail: 0,
-            total: 0,
-            workers: vec![],
-            start_time: timestamp_ms() as i128,
-        };
-        let stop_signal = StopSignal { signal: Arc::new(AtomicBool::new(false)) };
+        let mut this = Build! { start: timestamp_ms(), jobtx: Some(jobtx), resrx: Some(resrx) };
+        let stop_signal = STOP.clone();
+
+        let old_hook = panic::take_hook();
+        panic::set_hook(Box::new(move |info| {
+            STOP.set();
+            old_hook(info);
+        }));
 
         let ncpus = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1).max(1);
         for id in 0..ncpus {
             let jobrx = Arc::clone(&jobrx);
             let restx = restx.clone();
-            let stop_signal = stop_signal.clone();
-            let handle = thread::spawn(move || Self::thread(id, jobrx, restx, stop_signal));
+            let stop = stop_signal.clone();
+            let handle = thread::spawn(move || Self::thread(id, jobrx, restx, stop));
             this.workers.push(handle);
         }
 
@@ -82,29 +82,34 @@ impl Worker {
         self.skip += 1;
     }
     pub fn add_job(&mut self, input: PathBuf, output: PathBuf) {
+        yes!(STOP.get(), return);
         self.total += 1;
-        match &self.jobtx {
-            None => eprintln!("sender is closed"),
-            Some(tx) => _ = tx.send(Job { input, output }),
+        if let Some(tx) = &self.jobtx {
+            _ = tx.send(Job { input, output })
         }
     }
 
-    fn thread(_id: usize, rx: Arc<Mutex<Receiver<Job>>>, tx: Sender<JobResult>, stop_signal: StopSignal) {
+    fn thread(_id: usize, rx: Arc<Mutex<Receiver<Job>>>, tx: Sender<JobResult>, stop: StopSignal) {
         let stop_on_error = *stop_on_error!();
         let mut dead = false;
-        while !(dead || stop_signal.should_stop()) {
+        while !(dead || stop.get()) {
+            // *Q: why using let instead of directly assigning?
+            // *A: To release lock as soon as possible.
             let job = {
                 let receiver = rx.lock().unwrap();
                 receiver.recv() // block until a job is available
             };
             dead = match job {
                 Err(_) => true, // caused by drop(sender)
-                Ok(job) => match MdlxData::read(&job.input).and_then(|mut a| a.write(&job.output)) {
-                    Ok(_) => tx.send(JobResult::Ok).is_err(),
-                    Err(e) => {
-                        yes!(stop_on_error, stop_signal.stop());
-                        tx.send(JobResult::Err(e.to_string())).is_err()
-                    },
+                Ok(job) => {
+                    match MdlxData::read(&job.input).and_then(|mut a| a.write(&job.output)) {
+                        Ok(_) => tx.send(JobResult::Ok).is_err(),
+                        Err(e) => {
+                            elog!("{}", e);
+                            yes!(stop_on_error, stop.set());
+                            tx.send(JobResult::Err).is_err()
+                        },
+                    }
                 },
             };
         }
@@ -114,13 +119,11 @@ impl Worker {
         let stop_on_error = *stop_on_error!();
         if let Some(rx) = &self.resrx {
             while let Ok(result) = rx.recv() {
-                match result {
-                    JobResult::Ok => self.ok += 1,
-                    JobResult::Err(e) => {
-                        self.fail += 1;
-                        elog!("{}", e);
-                        yes!(stop_on_error, break);
-                    },
+                if let JobResult::Ok = result {
+                    self.ok += 1;
+                } else {
+                    self.fail += 1;
+                    yes!(stop_on_error, break);
                 }
             }
         }
@@ -132,11 +135,11 @@ impl Worker {
         self.resrx = None; // close the receiver
 
         for h in self.workers {
-            // ?: do not return error, just log and keep going
-            h.join().unwrap_or_else(|e| elog!("Failed to join thread: {:?}", e));
+            // ?: do not return error, just ignore and keep going
+            _ = h.join();
         }
 
-        let time = timestamp_ms() as i128 - self.start_time;
+        let time = timestamp_ms() - self.start;
         let (ok, skip, error) = (self.ok, self.skip, self.fail);
         print!("Converted {ok} files");
         yes!(skip > 0, print!(", {skip} skipped"));
@@ -146,22 +149,3 @@ impl Worker {
         return Ok(());
     }
 }
-
-//#region timestamp
-
-#[allow(dead_code)]
-pub fn timestamp_ms() -> u128 {
-    let now = std::time::SystemTime::now();
-    let duration = now.duration_since(std::time::UNIX_EPOCH).unwrap();
-    return duration.as_millis();
-}
-
-#[allow(dead_code)]
-pub fn timestamp_logstr() -> String {
-    let ms = timestamp_ms();
-    let s = ms / 1000;
-    let m = s / 60 % 60;
-    return F!("{:02}:{:02}.{:03}", m, s % 60, ms % 1000);
-}
-
-//#endregion

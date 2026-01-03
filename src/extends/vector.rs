@@ -1,6 +1,6 @@
 use crate::*;
 
-//#region trait: _ExtendVectorReverse
+//#region trait: ExtendVector
 
 pub trait _ExtendVector {
     fn to_or_string(&self) -> String;
@@ -8,13 +8,19 @@ pub trait _ExtendVector {
 
 impl<T: Display> _ExtendVector for Vec<T> {
     fn to_or_string(&self) -> String {
+        self.as_slice().to_or_string()
+    }
+}
+
+impl<T: Display> _ExtendVector for [T] {
+    fn to_or_string(&self) -> String {
         match self.len() {
             0 => String::new(),
             1 => self[0].s(),
             2 => F!("{} or {}", self[0], self[1]),
-            _len => {
-                let left = self[.._len - 1].convert(|a| a.s()).join(", ");
-                let right = &self[_len - 1];
+            len => {
+                let left = self[..len - 1].convert(|a| a.s()).join(", ");
+                let right = &self[len - 1];
                 F!("{} or {}", left, right)
             },
         }
@@ -22,7 +28,7 @@ impl<T: Display> _ExtendVector for Vec<T> {
 }
 
 //#endregion
-//#region trait: _ExtendVectorReverse
+//#region trait: ExtendVectorReverse
 
 pub trait _ExtendVectorReverse {
     fn reverse(&self) -> Self;
@@ -59,7 +65,7 @@ impl _ExtendVectorReverse for Vec4 {
 //#endregion
 //#region convert
 
-pub trait ConvertVec<A> {
+pub trait _ConvertVec<A> {
     fn convert<B, F>(&self, f: F) -> Vec<B>
     where
         F: Fn(&A) -> B;
@@ -68,7 +74,7 @@ pub trait ConvertVec<A> {
         F: Fn(&A) -> Result<B, MyError>;
 }
 
-impl<A> ConvertVec<A> for Vec<A> {
+impl<A> _ConvertVec<A> for Vec<A> {
     fn convert<B, F>(&self, f: F) -> Vec<B>
     where
         F: Fn(&A) -> B,
@@ -88,7 +94,7 @@ impl<A> ConvertVec<A> for Vec<A> {
     }
 }
 
-impl<A> ConvertVec<A> for [A] {
+impl<A> _ConvertVec<A> for [A] {
     fn convert<B, F>(&self, f: F) -> Vec<B>
     where
         F: Fn(&A) -> B,

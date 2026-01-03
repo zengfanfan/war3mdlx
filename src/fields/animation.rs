@@ -136,7 +136,7 @@ macro_rules! MdlWriteAnim {
     ($lines:ident, $depth:expr, $( $name:expr => $avar:expr ),+ $(,)?) => {
         $(
             let anim = &$avar;
-            let indent = indent!(&$depth);
+            let indent = indent!($depth);
             $lines.push(F!("{}{} {} {{", indent, $name, anim.key_frames.len()));
             $lines.append(anim.write_mdl($depth + 1)?.as_mut());
             $lines.push(F!("{}}}", indent));
@@ -261,7 +261,7 @@ impl<T: TAnimation> Formatter for Vec<KeyFrame<T>> {
 }
 
 //#endregion
-//#region _ExtendSomeAnimation
+//#region ExtendSomeAnimation
 
 pub trait _ExtendSomeAnimation {
     fn calc_mdx_size(&self) -> u32;

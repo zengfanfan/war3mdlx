@@ -4,6 +4,7 @@ use path_clean::PathClean;
 pub trait _ExtendPath {
     fn ext(&self) -> &str;
     fn ext_lower(&self) -> String;
+    fn base_name(&self) -> &str;
     fn same_as(&self, other: &Self) -> bool;
     fn shorten(&self, max_len: usize) -> String;
     fn fmtx(&self) -> String;
@@ -16,6 +17,13 @@ impl _ExtendPath for Path {
     }
     fn ext_lower(&self) -> String {
         self.ext().to_lowercase()
+    }
+
+    fn base_name(&self) -> &str {
+        match self.file_name() {
+            Some(s) => s.to_str().unwrap_or(""),
+            None => "",
+        }
     }
 
     fn same_as(&self, other: &Self) -> bool {

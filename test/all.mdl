@@ -26,9 +26,9 @@ Version {
     FormatVersion 800,
 }
 Model "ALLMIXED" {
-    BoundsRadius 456.789001,
-    MinimumExtent { 111.099998, 222.220001, 333.333008 },
-    MaximumExtent { 444.444, 555.55603, 666.666992 },
+    BoundsRadius 456.789,
+    MinimumExtent { 111.1, 222.22, 333.333 },
+    MaximumExtent { 444.444, 555.555, 666.666 },
     BlendTime 155,
 }
 // single line comment
@@ -198,20 +198,20 @@ Geoset {
         { -20, -20, 40 },
     }
     Normals 14 {
-        { -0.577328, 0.577361, 0.577361 },
-        { 0.577328, -0.577361, 0.577361 },
-        { 0.577372, 0.577339, 0.577339 },
-        { -0.577328, -0.577361, -0.577361 },
-        { 0.577372, -0.577339, -0.577339 },
-        { -0.577372, -0.577339, 0.577339 },
-        { -0.577372, 0.577339, -0.577339 },
-        { -0.577328, -0.577361, -0.577361 },
-        { 0.577328, 0.577361, -0.577361 },
-        { -0.577328, -0.577361, -0.577361 },
-        { -0.577372, 0.577339, -0.577339 },
-        { -0.577328, 0.577361, 0.577361 },
-        { -0.577372, -0.577339, 0.577339 },
-        { -0.577372, -0.577339, 0.577339 },
+        { -0.5773, 0.5774, 0.5774 },
+        { 0.5773, -0.5774, 0.5774 },
+        { 0.5774, 0.5773, 0.5773 },
+        { -0.5773, -0.5774, -0.5774 },
+        { 0.5774, -0.5773, -0.5773 },
+        { -0.5774, -0.5773, 0.5773 },
+        { -0.5774, 0.5773, -0.5773 },
+        { -0.5773, -0.5774, -0.5774 },
+        { 0.5773, 0.5774, -0.5774 },
+        { -0.5773, -0.5774, -0.5774 },
+        { -0.5774, 0.5773, -0.5773 },
+        { -0.5773, 0.5774, 0.5774 },
+        { -0.5774, -0.5773, 0.5773 },
+        { -0.5774, -0.5773, 0.5773 },
     }
     TVertices 14 {
         { 0.875, 0.5 },
@@ -254,21 +254,21 @@ Geoset {
         Matrices { 0 },
         Matrices { 0, 1, 2, 3 },
     }
-    BoundsRadius 41.698601,
+    BoundsRadius 41.6986,
     MinimumExtent { -20, -20, 0 },
     MaximumExtent { 20, 20, 40 },
     Anim {
-        BoundsRadius 41.698601,
+        BoundsRadius 41.6986,
         MinimumExtent { -20, -20, 0 },
         MaximumExtent { 20, 20, 40 },
     }
     Anim {
-        BoundsRadius 41.698601,
+        BoundsRadius 41.6986,
         MinimumExtent { -20, -20, 0 },
         MaximumExtent { 20, 20, 40 },
     }
     Anim {
-        BoundsRadius 41.698601,
+        BoundsRadius 41.6986,
         MinimumExtent { -20, -20, 0 },
         MaximumExtent { 20, 20, 40 },
     }
@@ -282,7 +282,7 @@ GeosetAnim {
     // [flags] = DropShadow|UseColor = 3, but [ToolA] set it to 0x1b, why?
     DropShadow,
     static Alpha 0.5,
-    static Color { 0.129412, 0.870588, 0.435294 },
+    static Color { 0.1294, 0.8706, 0.4353 },
 }
 GeosetAnim {
     GeosetId 0,
@@ -325,7 +325,7 @@ Bone "child" {
             OutTan { 4, 5, 6 },
         2: { 2, 0.2, 2.2 },
             InTan { 7.8, 9, 0.1 },
-            OutTan { 20, 303, 40.400002 },
+            OutTan { 20, 303, 40.4 },
     }
     Rotation 4 {
         Linear,
@@ -488,7 +488,6 @@ Helper "HELP anims" {
 }
 Attachment "ATAH" {
     ObjectId 4,
-    Path "path",
     Translation 1 {
         DontInterp,
         0: { 0,0,0 },
@@ -510,6 +509,7 @@ Attachment "ATAH" {
             InTan  { 331.11,332.12,333.13 },
             OutTan { 331.21,332.22,333.23 },
     }
+    Path "path",
     Visibility 2 {
         Linear,
         0: 1,
@@ -522,8 +522,8 @@ ParticleEmitter "P1.0" {
 ParticleEmitter "PERM" {
     ObjectId 5,
     // [ToolA] If both [EmitterUsesTGA] and [EmitterUsesMDL] are present, only the last one is set.
-    EmitterUsesTGA,
     EmitterUsesMDL,
+    EmitterUsesTGA,
     static EmissionRate 111,
     static Gravity 444,
     static Longitude 555,
@@ -537,7 +537,6 @@ ParticleEmitter "PERM" {
 ParticleEmitter "PERM anim" {
     ObjectId 51,
     Parent 5,
-    EmitterUsesTGA,
     Translation 1 {
         DontInterp,
         0: { 0,0,0 },
@@ -559,6 +558,7 @@ ParticleEmitter "PERM anim" {
             InTan  { 331.11,332.12,333.13 },
             OutTan { 331.21,332.22,333.23 },
     }
+    EmitterUsesTGA,
     // MPQ/MDX Animation order: no MDXs use animations other than Visibility (KPEV).
     EmissionRate 2 {
         Linear,
@@ -588,12 +588,12 @@ ParticleEmitter "PERM anim" {
     Particle {
         LifeSpan 2 {
             Linear,
-            650: 61.099998,
+            650: 61.1,
             651: 60.5,
         }
         InitVelocity 2 {
             Linear,
-            750: 71.099998,
+            750: 71.1,
             751: 70.5,
         }
         Path "88.88",
@@ -688,32 +688,32 @@ ParticleEmitter2 "PRE2 anim" {
     Variation 2 {
         Linear,
         2123: 21.23,
-        2456: 24.559999,
+        2456: 24.56,
     }
     Latitude 2 {
         Linear,
         3123: 31.23,
-        3456: 34.560001,
+        3456: 34.56,
     }
     Gravity 2 {
         Linear,
         4123: 41.23,
-        4456: 44.560001,
+        4456: 44.56,
     }
     EmissionRate 2 {
         Linear,
         5123: 51.23,
-        5456: 54.560001,
+        5456: 54.56,
     }
     Length 2 {
         Linear,
-        7123: 71.230003,
-        7456: 74.559998,
+        7123: 71.23,
+        7456: 74.56,
     }
     Width 2 {
         Linear,
         6123: 61.23,
-        6456: 64.559998,
+        6456: 64.56,
     }
     Visibility 2 {
         Linear,
@@ -774,18 +774,18 @@ RibbonEmitter "RIBE anim" {
     //      Abilities/Spells/Human/Resurrect/Resurrecttarget.mdx: "KRHA", "KRHB"
     HeightAbove 2 {
         DontInterp,
-        1123: 412.299988,
-        1456: 445.600006,
+        1123: 412.3,
+        1456: 445.6,
     }
     HeightBelow 2 {
         DontInterp,
-        2123: 512.299988,
-        2456: 545.599976,
+        2123: 512.3,
+        2456: 545.6,
     }
     Alpha 2 {
         DontInterp,
-        3123: 612.299988,
-        3456: 645.599976,
+        3123: 612.3,
+        3456: 645.6,
     }
     Color 2 {
         Bezier,
@@ -798,17 +798,41 @@ RibbonEmitter "RIBE anim" {
     }
     Visibility 2 {
         Linear,
-        3010: 310.100006,
+        3010: 310.1,
         3020: 32.02,
     }
 }
 EventObject "SNDxASHP" {
     ObjectId 8,
+    Translation 1 {
+        DontInterp,
+        0: { 0,0,0 },
+    }
+    Rotation 2 {
+        Linear,
+        1100: { 11.1,11.2,11.3,11.4 },
+        1200: { 12.1,12.2,12.3,12.4 },
+    }
+    Scaling 3 {
+        Hermite,
+        3100: { 31.1,31.2,31.3 },
+            InTan  { 31.11,31.21,31.31 },
+            OutTan { 31.12,31.22,31.32 },
+        3200: { 32.1,32.2,32.3 },
+            InTan  { 3211,3212,3213 },
+            OutTan { 3212,3213,3214 },
+        3300: { 331,332,333 },
+            InTan  { 331.11,332.12,333.13 },
+            OutTan { 331.21,332.22,333.23 },
+    }
     EventTrack 3 {
         1,
         22,
         333,
     }
+}
+CollisionShape "BOXy" {
+    ObjectId 9,
     Translation 1 {
         DontInterp,
         0: { 0,0,0 },
@@ -830,34 +854,10 @@ EventObject "SNDxASHP" {
             InTan  { 331.11,332.12,333.13 },
             OutTan { 331.21,332.22,333.23 },
     }
-}
-CollisionShape "BOXy" {
-    ObjectId 9,
     Box,
     Vertices 2 {
         { 11, 22, 33 },
         { 44, 55, 66 },
-    }
-    Translation 1 {
-        DontInterp,
-        0: { 0,0,0 },
-    }
-    Rotation 2 {
-        Linear,
-        1100: { 11.1,11.2,11.3,11.4 },
-        1200: { 12.1,12.2,12.3,12.4 },
-    }
-    Scaling 3 {
-        Hermite,
-        3100: { 31.1,31.2,31.3 },
-            InTan  { 31.11,31.21,31.31 },
-            OutTan { 31.12,31.22,31.32 },
-        3200: { 32.1,32.2,32.3 },
-            InTan  { 3211,3212,3213 },
-            OutTan { 3212,3213,3214 },
-        3300: { 331,332,333 },
-            InTan  { 331.11,332.12,333.13 },
-            OutTan { 331.21,332.22,333.23 },
     }
 }
 CollisionShape "SPRE" {
@@ -878,8 +878,8 @@ Camera "Name" {
     // -- [ToolA] set to some random or uninitialized value which is definitely wrong.
 }
 Camera "Camera01" {
-    Position { 141.421005, 455.100006, 426.183014 },
-    FieldOfView 0.785398,
+    Position { 141.421, 455.1, 426.183 },
+    FieldOfView 0.7854,
     FarClip 10000,
     NearClip 1,
     // [ToolA] convert 'Translation' to "KTTR" and 'Target/Translation' to "KCTR",
@@ -891,7 +891,7 @@ Camera "Camera01" {
         456: { 4, 5, 6 },
     }
     Target {
-        Position { 66.660004, 77.800003, 888 },
+        Position { 66.66, 77.8, 888 },
         Translation 2 {
             Linear,
             123: { 11, 22, 33 },

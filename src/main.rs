@@ -17,6 +17,7 @@ use std::env;
 use std::fmt::{Debug as stdDebug, Display, Formatter as stdFormatter, Result as stdResult};
 use std::fs;
 use std::io::{Cursor, Error as ioError, Read, Write};
+use std::panic;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use walkdir::WalkDir;
@@ -38,25 +39,14 @@ use mdl::*;
 use utils::*;
 use worker::*;
 
-#[macro_export]
-macro_rules! EXIT {
-    () => {{ return Ok(()); }};
-    ($($arg:tt)*) => {{ log!($($arg)*); EXIT!(); }};
-}
-#[macro_export]
-macro_rules! EXIT1 {
-    () => {{ return Ok(()); }};
-    ($($arg:tt)*) => {{ return ERR!($($arg)*); }};
-}
-
 lazy_static! {
-    static ref StartTime: DateTime<Local> = Local::now();
+    pub static ref StartTime: DateTime<Local> = Local::now();
 }
 
 fn _main() -> Result<(), MyError> {
-    let args = Args::init();
+    let cli = CLI::new();
     let mut worker = Worker::init();
-    args.execute(&mut worker)?;
+    cli.execute(&mut worker)?;
     return worker.join();
 }
 
